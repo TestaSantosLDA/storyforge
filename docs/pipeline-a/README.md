@@ -40,7 +40,7 @@ Everything else is automated QA. After Gate B, Stages 2–4 run automatically un
 
 - Claude plans 5–10 second shots from the scene breakdown and narration timing; each shot gets one illustration (Flux 2 Klein 4B, local) using the characters' approved reference images and the channel style.
 - MVP animation is storybook-style camera motion rendered with FFmpeg; AI video (Wan 2.2) is a later swap behind the same interface.
-- QA (Claude vision): planned characters only, consistency with references, style, artifacts, safety, trademark resemblance; 3 retries per shot, then `needs_attention`.
+- QA (Claude vision): planned characters only, who does what, consistency with references, style, artifacts, safety, trademark resemblance; 3 retries per shot, then `needs_attention`.
 
 ## Stage 4 — Assembly
 

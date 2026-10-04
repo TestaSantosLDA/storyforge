@@ -35,3 +35,6 @@ __pycache__/
 .vscode/
 *.iml
 .DS_Store
+
+# Throwaway experiments
+/spikes/
