@@ -19,6 +19,9 @@ public record StoryforgeProperties(
         @DefaultValue Visuals visuals,
         @DefaultValue Clips clips,
         @DefaultValue Gpu gpu,
+        @DefaultValue Llm llm,
+        @DefaultValue Voices voices,
+        @DefaultValue Script script,
         @DefaultValue("false") boolean madeForKids) {
 
     /**
@@ -83,5 +86,40 @@ public record StoryforgeProperties(
     }
 
     public record Gpu(@DefaultValue("15m") Duration leaseTtl) {
+    }
+
+    /** Which Claude runs the AI steps. {@code claude-code}: the local CLI on the user's plan. */
+    public record Llm(
+            @DefaultValue("claude-code") String engine,
+            @DefaultValue("claude") String command,
+            /** Empty: the CLI's default model. */
+            String model,
+            @DefaultValue("10m") Duration timeout,
+            /** Outage / usage-limit retries before flagging; never counted as strikes. */
+            @DefaultValue("3") int unavailableRetries,
+            @DefaultValue("30s") Duration firstBackoff,
+            /** When a usage limit is hit and the CLI gives no reset time, try again after this long. */
+            @DefaultValue("1h") Duration limitRetryAfter) {
+    }
+
+    /**
+     * Voices a character may be given. Kokoro English voice ids; the narrator is fixed and never assigned to a
+     * character. The narrator is a placeholder until the human picks one from the Kokoro samples.
+     */
+    public record Voices(
+            @DefaultValue("kokoro") String engine,
+            @DefaultValue("bm_george") String narrator,
+            @DefaultValue({"af_heart", "af_bella", "af_nicole", "af_sarah", "af_sky", "af_nova", "af_river",
+                    "am_adam", "am_michael", "am_puck", "am_fenrir", "am_echo", "am_eric", "am_liam", "am_onyx",
+                    "bf_emma", "bf_isabella", "bf_alice", "bf_lily", "bm_lewis", "bm_daniel", "bm_fable"})
+            java.util.List<String> available) {
+    }
+
+    /** Script length check: roughly 400–650 words for 3–5 minutes (Stage 1 script QA). */
+    public record Script(
+            @DefaultValue("130") int wordsPerMinute,
+            @DefaultValue("0.2") double tolerance,
+            @DefaultValue("400") int minWords,
+            @DefaultValue("650") int maxWords) {
     }
 }

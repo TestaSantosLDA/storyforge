@@ -11,6 +11,8 @@ cd backend && ./mvnw spring-boot:run
 
 Tests need Docker running (they start their own Postgres): `cd backend && ./mvnw test`.
 
+Story and script writing run through the Claude Code CLI on your Claude plan: install it and sign in (`claude`) on the same machine. No API key is needed.
+
 ## Docs
 
 - [Overview](docs/00-overview.md): concept, audience, style, architecture, hosting

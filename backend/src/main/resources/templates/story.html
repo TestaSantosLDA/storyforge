@@ -25,6 +25,10 @@
         </dl>
 
         <div class="row">
+            <a class="button primary" th:if="${story.status.name() == 'AWAITING_STORY_APPROVAL'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Review story and cast</a>
+            <a class="button primary" th:if="${story.status.name() == 'AWAITING_SCRIPT_APPROVAL'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Review script</a>
+            <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Story drafts</a>
+            <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Script drafts</a>
             <a class="button" th:if="${queued}" th:href="@{/stories/{id}/edit(id=${story.id})}">Edit</a>
             <form th:if="${queued}" th:action="@{/stories/{id}/delete(id=${story.id})}" method="post"
                   onsubmit="return confirm('Delete this story?')">

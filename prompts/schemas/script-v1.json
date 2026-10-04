@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["lines", "scenes"],
+  "properties": {
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "speaker", "text"],
+        "properties": {
+          "id": {"type": "string"},
+          "speaker": {"type": "string"},
+          "text": {"type": "string"}
+        }
+      }
+    },
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "visual_description", "mood", "line_ids"],
+        "properties": {
+          "id": {"type": "string"},
+          "visual_description": {"type": "string"},
+          "mood": {"type": "string", "enum": ["calm", "playful", "tense_but_gentle", "happy_ending"]},
+          "line_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}
