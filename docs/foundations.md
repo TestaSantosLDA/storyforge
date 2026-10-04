@@ -50,7 +50,6 @@ Every attempt is logged with its cost, which is added to `story.cost_usd`. If th
 ## Still open (from the design review)
 
 - Clip job vs clip statuses (Pipeline B) are not modelled yet; they come with B0.
-- Whether rejections routed back from final review count against Gate A/B budgets and can archive a finished video.
 - Whether a Gate A per-character "redo the look" counts as a story rejection.
 
 ## Scenarios
