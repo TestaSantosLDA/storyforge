@@ -2,9 +2,19 @@
 
 Local pipeline that turns story concepts into narrated, animated family stories for YouTube, plus vertical clips for Shorts, TikTok and Instagram Reels.
 
+## Run locally
+
+```bash
+docker compose up -d
+cd backend && ./mvnw spring-boot:run
+```
+
+Tests need Docker running (they start their own Postgres): `cd backend && ./mvnw test`.
+
 ## Docs
 
 - [Overview](docs/00-overview.md): concept, audience, style, architecture, hosting
+- [Foundations](docs/foundations.md): stack, status classification, restart sweep, GPU lease, cost budget
 - **Pipeline A — long-form YouTube** ([summary](docs/pipeline-a/README.md))
   - [Stage 0 — Topics, story queue & management page](docs/pipeline-a/stage-0-topics-queue-management-page.md)
   - [Stage 1 — Story & script generation](docs/pipeline-a/stage-1-story-and-script.md)

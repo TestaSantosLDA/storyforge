@@ -10,7 +10,7 @@ The specs in `docs/` are the source of truth. Read `docs/00-overview.md` first, 
 - **Local AI sidecar:** Python (FastAPI) for models that only exist in Python: Kokoro TTS, Whisper transcription, Flux 2 Klein 4B image generation. Runs natively, **not in Docker** (Docker on a Mac cannot use the Apple GPU).
 - **Media:** FFmpeg, installed per machine.
 - **LLM / vision:** Claude API for story, script, shot planning, clip selection, metadata, rejection analysis and image QA.
-- **Database:** local relational DB.
+- **Database:** PostgreSQL, run locally with `docker compose up -d` (see `docs/foundations.md`).
 - **Source control:** GitHub, for versioning only. No GitHub Actions, no scheduler.
 
 ## Non-negotiable architecture rules
@@ -72,7 +72,7 @@ Side states: `needs_attention`, `clip_killed`.
 
 Build and test one stage at a time, in pipeline order, each against its scenarios table:
 
-1. **Foundations:** Spring project, DB schema (topics, stories, characters, attempts/logs), config, `AssetStorage` (local), status/transition service with transactional "pick next".
+1. **Foundations** (`docs/foundations.md`, done): Spring project, DB schema (topics, stories, characters, attempts/logs), config, `AssetStorage` (local), status/transition service with transactional "pick next".
 2. **Stage 0:** management page — topics, stories, queue with drag-to-reorder, Run, archive/restore, views per status.
 3. **Stage 1:** story + cast (Gate A, with character reference sheets), script (Gate B), retry counters, character files. Needs the sidecar's image endpoint for reference sheets.
 4. **Python sidecar:** TTS, transcription and image endpoints with device auto-detection.

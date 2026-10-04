@@ -1,0 +1,15 @@
+# Local development database. Only Postgres runs in Docker; the Python sidecar runs natively (see CLAUDE.md).
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: storyforge
+      POSTGRES_USER: storyforge
+      POSTGRES_PASSWORD: storyforge
+    ports:
+      - "5432:5432"
+    volumes:
+      - storyforge-db:/var/lib/postgresql/data
+
+volumes:
+  storyforge-db:
