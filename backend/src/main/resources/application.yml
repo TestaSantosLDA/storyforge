@@ -1,0 +1,21 @@
+spring:
+  application.name: storyforge
+  datasource:
+    url: ${STORYFORGE_DB_URL:jdbc:postgresql://localhost:5432/storyforge}
+    username: ${STORYFORGE_DB_USER:storyforge}
+    password: ${STORYFORGE_DB_PASSWORD:storyforge}
+  jpa:
+    open-in-view: false
+    hibernate.ddl-auto: validate
+
+storyforge:
+  paths:
+    # Generated audio, images and video: outside the repo.
+    assets: ${STORYFORGE_ASSETS_DIR:${user.home}/storyforge-assets}
+    # Character files and prompt templates are versioned in the repo (paths relative to backend/).
+    characters: ${STORYFORGE_CHARACTERS_DIR:../characters}
+    prompts: ${STORYFORGE_PROMPTS_DIR:../prompts}
+  pipeline:
+    max-concurrent-stories: 1
+    story-cost-budget-usd: 10.00
+  made-for-kids: false

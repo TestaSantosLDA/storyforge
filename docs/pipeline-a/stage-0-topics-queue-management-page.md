@@ -32,7 +32,11 @@ Stage 0 is the local management page and the data behind it: topics (universes),
 | `notes` | Text | Optional guidance |
 | `queue_position` | Number | Order in the single, channel-wide queue; meaningful only while `queued` |
 | `status` | Enum | Single source of truth for pipeline position |
-| Retry counters | Numbers | Four counters used by Stage 1, all start at 0 |
+| `resume_status` | Enum | Set only in `needs_attention`: the working status Resume returns to |
+| `attention_reason` | Text | Why the story was flagged |
+| `topic_snapshot` | Text | Topic description captured at Run |
+| Retry counters | Numbers | Four used by Stage 1 plus `final_rejections` (Stage 4), all start at 0 |
+| `cost_usd` | Number | Sum of every attempt's cost; crossing the budget flags the story |
 | `archive_reason` | Enum | Empty unless archived |
 | `created_at` / `updated_at` | Timestamp | Audit |
 
@@ -118,6 +122,6 @@ Once a story leaves `queued`, it is locked: no edit, delete or reorder.
 - A topic is a universe with a description only; casts are generated per story in Stage 1.
 - One channel-wide queue of stories; drag to reorder; Run starts the first story.
 - Stories are editable and deletable only while `queued`; restored stories go to the bottom.
-- Several stories can be in flight, capped by `max_concurrent_stories` (default 1 during development). Stories at a human gate count as in flight.
+- Several stories can be in flight, capped by `max_concurrent_stories` (default 1 during development). Stories at a human gate or in `needs_attention` count as in flight (see `docs/foundations.md`).
 - Character files live in the repo, one per character, recurring or one-off.
 - No duplicate-story detection in the MVP.
