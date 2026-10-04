@@ -124,3 +124,13 @@ table.history { width: 100%; border-collapse: collapse; font-size: .9rem; }
     .facts { grid-template-columns: 1fr; }
     .facts dt { margin-top: .4rem; }
 }
+
+a.button.primary { background: var(--sage); border-color: var(--sage); color: #fff; font-weight: 600; }
+h3 { font-size: 1rem; margin: 1rem 0 .5rem; display: flex; gap: .5rem; align-items: center; }
+.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: .3rem; }
+.checks li { display: flex; gap: .5rem; align-items: baseline; }
+.checks li.ok > span:first-child { color: var(--sage); }
+.checks li.bad > span:first-child { color: var(--brick); }
+.scene { border-top: 1px solid var(--line); padding-top: .5rem; margin-top: .75rem; }
+.line { margin: .35rem 0; }
+.line strong { display: inline-block; min-width: 6.5rem; color: var(--blue); }

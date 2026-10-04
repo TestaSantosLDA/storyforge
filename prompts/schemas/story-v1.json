@@ -1,0 +1,48 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "outline", "beats", "moral", "reused_characters", "new_characters"],
+  "properties": {
+    "title": {"type": "string"},
+    "outline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["setup", "problem", "journey", "resolution", "moral_moment"],
+      "properties": {
+        "setup": {"type": "string"},
+        "problem": {"type": "string"},
+        "journey": {"type": "string"},
+        "resolution": {"type": "string"},
+        "moral_moment": {"type": "string"}
+      }
+    },
+    "beats": {"type": "array", "minItems": 3, "items": {"type": "string"}},
+    "moral": {"type": "string"},
+    "reused_characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "role_in_story"],
+        "properties": {"id": {"type": "string"}, "role_in_story": {"type": "string"}}
+      }
+    },
+    "new_characters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "kind", "personality", "visual_description", "proposed_voice", "reason"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$"},
+          "name": {"type": "string"},
+          "kind": {"type": "string", "enum": ["recurring", "one_off"]},
+          "personality": {"type": "string"},
+          "visual_description": {"type": "string"},
+          "proposed_voice": {"type": "string"},
+          "reason": {"type": "string"}
+        }
+      }
+    }
+  }
+}

@@ -39,6 +39,10 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
             """, nativeQuery = true)
     boolean anyStartedInTopic(long topicId);
 
+    @Query("select s.id from Story s where s.status = com.storyforge.story.StoryStatus.NEEDS_ATTENTION "
+            + "and s.autoResumeAt <= :now")
+    List<Long> findDueForAutoResume(java.time.Instant now);
+
     long countByStatusIn(Collection<StoryStatus> statuses);
 
     List<Story> findByStatusIn(Collection<StoryStatus> statuses);
