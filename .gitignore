@@ -1,0 +1,37 @@
+# Generated assets (audio, images, video) — keep outside the repo or here, never committed
+assets/
+output/
+*.mp4
+*.mov
+*.wav
+*.mp3
+*.png
+*.jpg
+!docs/**/*.png
+
+# Secrets and local config
+.env
+*.local.yml
+*.local.yaml
+application-local.*
+
+# Model caches
+models/
+.cache/
+
+# Java / Spring
+target/
+build/
+.gradle/
+*.class
+
+# Python sidecar
+__pycache__/
+.venv/
+*.pyc
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
