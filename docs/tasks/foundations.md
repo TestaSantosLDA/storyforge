@@ -25,7 +25,7 @@ Record of what Foundations covers and where it stands. Spec: [docs/foundations.m
 
 - [ ] Push and open the PR once PR #1 (spike findings) is merged
 - [ ] Set a real per-story cost budget (placeholder: $10)
-- [ ] Decide: do rejections routed back from final review count against Gate A/B budgets (and can they archive a finished video)?
+- [x] Decided: video rejections count only against `final_rejections`, never the story/script counters (Stage 4 doc updated)
 - [ ] Decide: does a Gate A "redo this character's look" count as a story rejection?
 - [ ] Pipeline B clip job / clip statuses (comes with B0)
 

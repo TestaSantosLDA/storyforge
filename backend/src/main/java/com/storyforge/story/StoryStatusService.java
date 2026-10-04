@@ -6,6 +6,7 @@ import com.storyforge.log.StatusChangeRepository;
 import com.storyforge.topic.Topic;
 import java.util.EnumSet;
 import java.util.Set;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Limit;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,13 +27,15 @@ public class StoryStatusService {
     private final StatusChangeRepository changes;
     private final QueueLock queueLock;
     private final StoryforgeProperties props;
+    private final ApplicationEventPublisher events;
 
     StoryStatusService(StoryRepository stories, StatusChangeRepository changes, QueueLock queueLock,
-            StoryforgeProperties props) {
+            StoryforgeProperties props, ApplicationEventPublisher events) {
         this.stories = stories;
         this.changes = changes;
         this.queueLock = queueLock;
         this.props = props;
+        this.events = events;
     }
 
     /** Adds a story at the bottom of the queue as {@code queued}. Validation of fields belongs to Stage 0. */
@@ -91,6 +94,13 @@ public class StoryStatusService {
      */
     @Transactional
     public Story flag(long storyId, StoryStatus expectedFrom, String reason, String triggeredBy) {
+        return flag(storyId, expectedFrom, reason, triggeredBy, null);
+    }
+
+    /** As {@link #flag}, and resume automatically at {@code autoResumeAt} (e.g. when a usage limit resets). */
+    @Transactional
+    public Story flag(long storyId, StoryStatus expectedFrom, String reason, String triggeredBy,
+            java.time.Instant autoResumeAt) {
         Story story = lockExpecting(storyId, expectedFrom);
         StoryStatus resumeTo = story.getStatus();
         if (resumeTo.kind() != StoryStatus.Kind.WORKING) {
@@ -99,6 +109,7 @@ public class StoryStatusService {
         move(story, StoryStatus.NEEDS_ATTENTION, triggeredBy, reason);
         story.setResumeStatus(resumeTo);
         story.setAttentionReason(reason);
+        story.setAutoResumeAt(autoResumeAt);
         return story;
     }
 
@@ -180,8 +191,10 @@ public class StoryStatusService {
         // Keep the leaving side's state consistent before the row is flushed (DB checks enforce it too).
         if (from == StoryStatus.NEEDS_ATTENTION) {
             story.setResumeStatus(null);
+            story.setAutoResumeAt(null);
         }
         log(story, from, to, triggeredBy, reason);
+        events.publishEvent(new StoryEnteredStatus(story.getId(), to));
     }
 
     private void log(Story story, StoryStatus from, StoryStatus to, String triggeredBy, String reason) {

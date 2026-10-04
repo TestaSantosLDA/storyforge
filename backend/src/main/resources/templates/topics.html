@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Topics')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('topics')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1>Topics</h1>
+    <p class="muted">A topic is a universe. Its cast is created per story.</p>
+
+    <p class="empty" th:if="${topics.isEmpty()}">No topics yet.</p>
+    <ul class="list" th:unless="${topics.isEmpty()}">
+        <li th:each="t : ${topics}">
+            <a th:href="@{/topics/{id}(id=${t.id})}" th:text="${t.name}">Topic</a>
+            <span class="muted clamp" th:text="${t.description}"></span>
+        </li>
+    </ul>
+
+    <section class="card">
+        <h2>New topic</h2>
+        <p class="flash error" th:if="${errors}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+        <form th:action="@{/topics}" method="post" class="grid">
+            <label>Name
+                <input name="name" th:value="${name}" placeholder="Fox &amp; Owl in Whisperwood">
+                <small class="err" th:if="${errors?.get('name')}" th:text="${errors.get('name')}"></small>
+            </label>
+            <label>Description
+                <textarea name="description" rows="4" th:text="${description}"
+                          placeholder="The universe, its setting and feel"></textarea>
+                <small class="err" th:if="${errors?.get('description')}" th:text="${errors.get('description')}"></small>
+            </label>
+            <div><button class="primary" type="submit">Create topic</button></div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${story.concept})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="card">
+        <p class="muted"><a th:href="@{/topics/{id}(id=${story.topic.id})}" th:text="${story.topic.name}">Topic</a></p>
+        <h1 th:text="${story.concept}">Concept</h1>
+        <p><span th:replace="~{fragments/layout :: status(${story.status})}"></span></p>
+        <dl class="facts">
+            <dt>Moral</dt><dd th:text="${story.moral}"></dd>
+            <dt>Target length</dt><dd th:text="${story.targetLengthMin} + ' min'"></dd>
+            <dt th:if="${story.notes}">Notes</dt><dd th:if="${story.notes}" th:text="${story.notes}"></dd>
+            <dt th:if="${queued}">Queue position</dt><dd th:if="${queued}" th:text="${story.queuePosition}"></dd>
+            <dt th:if="${story.attentionReason}">Why it stopped</dt>
+            <dd th:if="${story.attentionReason}" th:text="${story.attentionReason}"></dd>
+            <dt th:if="${story.resumeStatus}">Resume goes to</dt>
+            <dd th:if="${story.resumeStatus}" th:text="${#strings.replace(story.resumeStatus.dbValue(), '_', ' ')}"></dd>
+            <dt th:if="${story.archiveReason}">Archived because</dt>
+            <dd th:if="${story.archiveReason}" th:text="${#strings.replace(#strings.toLowerCase(story.archiveReason.name()), '_', ' ')}"></dd>
+            <dt>Spent</dt><dd th:text="'$' + ${#numbers.formatDecimal(story.costUsd, 1, 2)}"></dd>
+        </dl>
+
+        <div class="row">
+            <a class="button primary" th:if="${story.status.name() == 'AWAITING_STORY_APPROVAL'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Review story and cast</a>
+            <a class="button primary" th:if="${story.status.name() == 'AWAITING_SCRIPT_APPROVAL'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Review script</a>
+            <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Story drafts</a>
+            <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Script drafts</a>
+            <a class="button" th:if="${queued}" th:href="@{/stories/{id}/edit(id=${story.id})}">Edit</a>
+            <form th:if="${queued}" th:action="@{/stories/{id}/delete(id=${story.id})}" method="post"
+                  onsubmit="return confirm('Delete this story?')">
+                <button class="danger" type="submit">Delete</button>
+            </form>
+            <form th:if="${story.status.name() == 'NEEDS_ATTENTION'}" th:action="@{/stories/{id}/resume(id=${story.id})}" method="post">
+                <button class="primary" type="submit">Resume</button>
+            </form>
+            <form th:if="${story.status.name() == 'ARCHIVED'}" th:action="@{/stories/{id}/restore(id=${story.id})}" method="post">
+                <button class="primary" type="submit">Restore to queue</button>
+            </form>
+        </div>
+        <p class="muted" th:unless="${queued}">This story has started, so it can't be edited or deleted.</p>
+    </section>
+
+    <section class="card">
+        <h2>History</h2>
+        <table class="history">
+            <thead><tr><th>When</th><th>From</th><th>To</th><th>By</th><th>Why</th></tr></thead>
+            <tbody>
+            <tr th:each="h : ${history}">
+                <td th:text="${#temporals.format(h.changedAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td th:text="${h.fromStatus} ? ${#strings.replace(h.fromStatus.dbValue(), '_', ' ')} : '—'"></td>
+                <td th:text="${#strings.replace(h.toStatus.dbValue(), '_', ' ')}"></td>
+                <td th:text="${h.triggeredBy}"></td>
+                <td th:text="${h.reason}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+</main>
+</body>
+</html>

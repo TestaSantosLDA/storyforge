@@ -9,7 +9,7 @@ The specs in `docs/` are the source of truth. Read `docs/00-overview.md` first, 
 - **Backend:** Java + Spring Boot. Orchestration, database, management page, all stage logic.
 - **Local AI sidecar:** Python (FastAPI) for models that only exist in Python: Kokoro TTS, Whisper transcription, Flux 2 Klein 4B image generation. Runs natively, **not in Docker** (Docker on a Mac cannot use the Apple GPU).
 - **Media:** FFmpeg, installed per machine.
-- **LLM / vision:** Claude API for story, script, shot planning, clip selection, metadata, rejection analysis and image QA.
+- **LLM / vision:** Claude for story, script, shot planning, clip selection, metadata, rejection analysis and image QA, behind an `LlmEngine` interface. MVP: the locally installed Claude Code CLI run headlessly (`claude -p`, structured JSON output) on the owner's Claude plan; later: the Claude API, by config (`storyforge.llm.engine`). A usage limit flags the story with the reset time and resumes it automatically.
 - **Database:** PostgreSQL, run locally with `docker compose up -d` (see `docs/foundations.md`).
 - **Source control:** GitHub, for versioning only. No GitHub Actions, no scheduler.
 
@@ -22,6 +22,7 @@ The specs in `docs/` are the source of truth. Read `docs/00-overview.md` first, 
    - `VoiceEngine` (MVP: Kokoro; later: Chatterbox)
    - `ImageEngine` (MVP: Flux 2 Klein 4B, quantized)
    - `AnimationEngine` (MVP: `StorybookAnimator` via FFmpeg; later: Wan 2.2 image-to-video)
+   - `LlmEngine` (MVP: Claude Code CLI on the owner's plan; later: Claude API)
 4. **Never store the same thing twice; never redo what passed.** Generated assets are cached by a hash of their inputs (text, voice/model, settings, engine version). Restarts and retries only regenerate what is missing or failed.
 5. **A failure stops and flags.** QA failure past its retry budget, or an unrecoverable error, sets `needs_attention` (or `archived` where the doc says so). Nothing broken flows downstream.
 6. **External API outages never count as strikes.** Back off and retry, then flag.

@@ -16,6 +16,8 @@ import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * A story row (docs/pipeline-a/stage-0 "Story"). The status is changed only through {@link StoryStatusService},
@@ -52,6 +54,8 @@ public class Story {
     private ArchiveReason archiveReason;
 
     private String topicSnapshot;
+
+    private Instant autoResumeAt;
 
     private int storyQaRetries;
     private int storyRejections;
@@ -112,8 +116,42 @@ public class Story {
         this.archiveReason = archiveReason;
     }
 
+    void setAutoResumeAt(Instant autoResumeAt) {
+        this.autoResumeAt = autoResumeAt;
+    }
+
     void setTopicSnapshot(String topicSnapshot) {
         this.topicSnapshot = topicSnapshot;
+    }
+
+    void updateDetails(String concept, String moral, int targetLengthMin, String notes) {
+        this.concept = concept;
+        this.moral = moral;
+        this.targetLengthMin = targetLengthMin;
+        this.notes = notes;
+    }
+
+    /** Field values for the change log. */
+    public Map<String, Object> details() {
+        var m = new LinkedHashMap<String, Object>();
+        m.put("topic_id", topic.getId());
+        m.put("concept", concept);
+        m.put("moral", moral);
+        m.put("target_length_min", targetLengthMin);
+        m.put("notes", notes);
+        m.put("queue_position", queuePosition);
+        m.put("status", status.dbValue());
+        return m;
+    }
+
+    int increment(StoryCounter c) {
+        return switch (c) {
+            case STORY_QA_RETRIES -> ++storyQaRetries;
+            case STORY_REJECTIONS -> ++storyRejections;
+            case SCRIPT_QA_RETRIES -> ++scriptQaRetries;
+            case SCRIPT_REJECTIONS -> ++scriptRejections;
+            case FINAL_REJECTIONS -> ++finalRejections;
+        };
     }
 
     void resetCounters() {
@@ -194,5 +232,17 @@ public class Story {
 
     public BigDecimal getCostUsd() {
         return costUsd;
+    }
+
+    public Instant getAutoResumeAt() {
+        return autoResumeAt;
+    }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 }

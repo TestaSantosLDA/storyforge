@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Gate B · ' + ${story.concept})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('awaiting')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <p class="muted"><a th:href="@{/stories/{id}(id=${story.id})}">← Story</a> · Gate B: script</p>
+
+    <p class="empty" th:unless="${draft}">No script draft yet. It appears here when Claude's draft passes QA.</p>
+
+    <th:block th:if="${draft}">
+        <section class="card">
+            <p class="muted" th:text="'Version ' + ${draft.version()} + ' · ' + ${draft.reviewState()} + ' · ' + ${wordCount} + ' words'"></p>
+            <h1 th:text="${approvedStory} ? ${approvedStory.title()} : ${story.concept}">Title</h1>
+            <div th:each="sc : ${scenes}" class="scene">
+                <h3>
+                    <span th:text="${sc.id()}"></span>
+                    <span class="status" th:text="${#strings.replace(sc.mood(), '_', ' ')}"></span>
+                </h3>
+                <p class="muted small" th:text="${sc.visualDescription()}"></p>
+                <p th:each="l : ${sc.lines()}" class="line">
+                    <strong th:text="${l.speaker()}"></strong>
+                    <span th:text="${l.text()}"></span>
+                </p>
+            </div>
+        </section>
+
+        <section class="card" th:unless="${checks.isEmpty()}">
+            <h2>QA checks</h2>
+            <ul class="checks">
+                <li th:each="c : ${checks}" th:classappend="${c.pass()} ? 'ok' : 'bad'">
+                    <span th:text="${c.pass()} ? '✓' : '✗'"></span>
+                    <span th:text="${#strings.replace(c.name(), '_', ' ')}"></span>
+                    <span class="muted small" th:text="${c.source()}"></span>
+                </li>
+            </ul>
+        </section>
+
+        <section class="card" th:if="${approvedStory}">
+            <h2>Approved story beats</h2>
+            <ol><li th:each="b : ${approvedStory.beats()}" th:text="${b}"></li></ol>
+        </section>
+
+        <section class="card" th:if="${waiting}">
+            <h2>Decide</h2>
+            <div class="row">
+                <form th:action="@{/stories/{id}/gate-b/approve(id=${story.id})}" method="post">
+                    <button class="primary" type="submit">Approve script</button>
+                </form>
+                <form th:action="@{/stories/{id}/gate-b/kill(id=${story.id})}" method="post"
+                      onsubmit="return confirm('Kill this story? Approved characters stay in the roster.')">
+                    <button class="danger" type="submit">Kill</button>
+                </form>
+            </div>
+            <form th:action="@{/stories/{id}/gate-b/regenerate(id=${story.id})}" method="post" class="grid" style="margin-top:1rem">
+                <label>Regenerate with notes
+                    <textarea name="notes" rows="3" required placeholder="What to change in the script"></textarea>
+                </label>
+                <p class="muted small" th:text="'Rejections so far: ' + ${story.scriptRejections} + ' (the 3rd archives the story)'"></p>
+                <div><button type="submit">Regenerate</button></div>
+            </form>
+        </section>
+    </th:block>
+
+    <section class="card" th:if="${versions.size() > 1}">
+        <h2>Earlier versions</h2>
+        <ul class="list">
+            <li th:each="v : ${versions}" th:unless="${v.id() == draft?.id()}">
+                <span th:text="'Version ' + ${v.version()} + ' · ' + ${v.reviewState()}"></span>
+                <span class="muted" th:if="${v.reviewerNotes()}" th:text="'Notes: ' + ${v.reviewerNotes()}"></span>
+            </li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>
