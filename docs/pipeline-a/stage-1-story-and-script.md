@@ -55,6 +55,7 @@ Stage 1 turns a story concept into an approved story, an approved cast, and an a
 ### Character reference images (generated in Step 1A)
 
 - For every **new** character, a reference sheet is generated in parallel with the story: front view, side view, and a few expressions, all in the channel style. Existing characters reuse their stored images.
+- **Until the image sidecar exists (build step 4), reference sheets are not generated:** Gate A shows a placeholder and approves the cast without images. When the sidecar lands, sheets are generated for every character that has none, and need a quick approval.
 - The **front view is generated first** and the side view and expressions are generated from it as a reference, so the whole sheet shows one design.
 - Automated QA: one character per image, channel style followed, matches the character's visual description, **clean anatomy (correct count of tails, ears, limbs, eyes)**, visually distinct from every character in the full roster, no resemblance to known trademarked characters. Anatomy matters here more than anywhere else: Stage 3 copies the reference faithfully, flaws included (the 2026-10-04 spike's two-tailed fox reappeared in later scenes).
 - A failing sheet is regenerated automatically and counts toward `story_qa_retries`.
@@ -116,6 +117,8 @@ Each gate has its own two counters; either limit reached archives the story.
 | 9 | Any script counter reaches its limit | Archive with reason; characters approved at Gate A stay in the roster | `archived` |
 | 10 | Reviewer kills at Gate B | Archive; approved characters stay in the roster | `archived` |
 | 11 | LLM API error or timeout | Backoff retries, not counted as strikes; then flag | `needs_attention` |
+| 11b | Claude usage limit reached | No backoff; flag with the reset time (or retry in 1 h if none is given) and resume automatically when it passes; never a strike | `needs_attention` → `story_in_progress` / `script_in_progress` |
+| 11c | Answer doesn't match the required structure | Counts as a failed Format check | `story_in_progress` / `script_in_progress` |
 | 12 | Waiting at either gate for a long time | No timeout; visible in the page's "awaiting approval" list | unchanged |
 | 13 | App restarts mid-generation | Rows stuck in an `_in_progress` status are re-run; attempt not double-counted | unchanged |
 | 14 | Archived story restored | Back to the bottom of the queue; all four counters reset; restarts at Step 1A; history kept | `queued` |
@@ -137,6 +140,13 @@ Each gate has its own two counters; either limit reached archives the story.
 | any `_in_progress` | API failure after retries | `needs_attention` |
 | `needs_attention` | Resume | the step that failed |
 | `archived` | Restore | `queued` |
+
+## How it runs (MVP)
+
+- Claude is reached through the local Claude Code CLI (`claude -p`) with no tools, no saved session, the channel system prompt, and a JSON schema the answer must match. Prompt templates and schemas are versioned files in `prompts/`.
+- QA is two layers: code checks (cast ids, name and voice clashes, word count, cast lock, speaker tags, scene mapping) and a separate Claude call that judges the rest (structure, moral, fidelity, tone).
+- A counter archives the story when it reaches its limit (the 5th QA failure, the 3rd rejection).
+- Every draft that passes QA is stored as a numbered version (`story_draft`); rejected versions keep the reviewer's notes, which go into the next attempt.
 
 ## Logging
 

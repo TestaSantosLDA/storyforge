@@ -55,6 +55,8 @@ public class Story {
 
     private String topicSnapshot;
 
+    private Instant autoResumeAt;
+
     private int storyQaRetries;
     private int storyRejections;
     private int scriptQaRetries;
@@ -114,6 +116,10 @@ public class Story {
         this.archiveReason = archiveReason;
     }
 
+    void setAutoResumeAt(Instant autoResumeAt) {
+        this.autoResumeAt = autoResumeAt;
+    }
+
     void setTopicSnapshot(String topicSnapshot) {
         this.topicSnapshot = topicSnapshot;
     }
@@ -136,6 +142,16 @@ public class Story {
         m.put("queue_position", queuePosition);
         m.put("status", status.dbValue());
         return m;
+    }
+
+    int increment(StoryCounter c) {
+        return switch (c) {
+            case STORY_QA_RETRIES -> ++storyQaRetries;
+            case STORY_REJECTIONS -> ++storyRejections;
+            case SCRIPT_QA_RETRIES -> ++scriptQaRetries;
+            case SCRIPT_REJECTIONS -> ++scriptRejections;
+            case FINAL_REJECTIONS -> ++finalRejections;
+        };
     }
 
     void resetCounters() {
@@ -216,6 +232,10 @@ public class Story {
 
     public BigDecimal getCostUsd() {
         return costUsd;
+    }
+
+    public Instant getAutoResumeAt() {
+        return autoResumeAt;
     }
 
     public Instant getCreatedAt() {
