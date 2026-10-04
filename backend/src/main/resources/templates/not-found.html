@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Not found')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('')}"></header>
+<main>
+    <h1>Not found</h1>
+    <p class="muted">There is no <span th:text="${what}"></span>. <a th:href="@{/queue}">Back to the queue</a>.</p>
+</main>
+</body>
+</html>

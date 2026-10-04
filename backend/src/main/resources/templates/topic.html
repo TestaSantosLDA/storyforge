@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${topic.name})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('topics')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1 th:text="${topic.name}">Topic</h1>
+
+    <section class="card">
+        <form th:action="@{/topics/{id}/description(id=${topic.id})}" method="post" class="grid">
+            <label>Description
+                <textarea name="description" rows="4" th:text="${topic.description}"></textarea>
+            </label>
+            <p class="muted small">Edits apply to stories started afterwards. Stories already running keep the description they started with.</p>
+            <div><button type="submit">Save description</button></div>
+        </form>
+    </section>
+
+    <section class="card">
+        <div class="row between">
+            <h2>Stories</h2>
+            <a class="button" th:href="@{/stories/new(topicId=${topic.id})}">Add story</a>
+        </div>
+        <p class="empty" th:if="${stories.isEmpty()}">No stories yet.</p>
+        <ul class="list" th:unless="${stories.isEmpty()}">
+            <li th:each="s : ${stories}">
+                <a th:href="@{/stories/{id}(id=${s.id})}" th:text="${s.concept}">Concept</a>
+                <span th:replace="~{fragments/layout :: status(${s.status})}"></span>
+            </li>
+        </ul>
+    </section>
+
+    <section class="card">
+        <h2>Characters</h2>
+        <p class="empty" th:if="${characters.isEmpty()}">No characters yet. They are created when a story's cast is approved.</p>
+        <ul class="list" th:unless="${characters.isEmpty()}">
+            <li th:each="c : ${characters}">
+                <strong th:text="${c.name()}">Name</strong>
+                <span class="muted" th:text="${#strings.replace(#strings.toLowerCase(c.kind()), '_', '-')}"></span>
+                <span class="muted clamp" th:text="${c.visualDescription()}"></span>
+            </li>
+        </ul>
+    </section>
+
+    <form th:action="@{/topics/{id}/delete(id=${topic.id})}" method="post"
+          onsubmit="return confirm('Delete this topic and its queued stories?')">
+        <button class="danger" type="submit">Delete topic</button>
+    </form>
+</main>
+</body>
+</html>

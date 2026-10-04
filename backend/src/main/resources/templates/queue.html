@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Queue')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('queue')}"></header>
+<main th:attr="data-state=${state}">
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="run-bar">
+        <div>
+            <h1>Queue</h1>
+            <p class="muted">
+                <span th:text="${stories.size()}">0</span> waiting ·
+                <span th:text="${inFlight}">0</span> of <span th:text="${cap}">1</span> in flight
+            </p>
+        </div>
+        <form th:action="@{/queue/run}" method="post">
+            <button class="primary" type="submit" th:disabled="${!canRun}"
+                    th:title="${stories.isEmpty()} ? 'Nothing to run' : (${inFlight >= cap} ? ${'Already ' + inFlight + ' in flight (limit ' + cap + ')'} : 'Start the story at the top')">
+                Run top story
+            </button>
+        </form>
+    </section>
+
+    <p class="empty" th:if="${stories.isEmpty()}">The queue is empty. Add a story below.</p>
+
+    <ol id="queue" class="queue" th:unless="${stories.isEmpty()}">
+        <li th:each="s, it : ${stories}" draggable="true" th:attr="data-id=${s.id}">
+            <span class="grip" aria-hidden="true">⋮⋮</span>
+            <span class="pos" th:text="${it.count}">1</span>
+            <div class="body">
+                <a th:href="@{/stories/{id}(id=${s.id})}" th:text="${s.concept}">Concept</a>
+                <span class="muted" th:text="${s.topic.name} + ' · ' + ${s.targetLengthMin} + ' min'">Topic · 4 min</span>
+            </div>
+            <a class="small" th:href="@{/stories/{id}/edit(id=${s.id})}">Edit</a>
+        </li>
+    </ol>
+    <p class="hint muted" th:unless="${stories.isEmpty()}">Drag to reorder. Changes save immediately.</p>
+
+    <section class="card">
+        <h2>Add a story</h2>
+        <p class="muted" th:if="${topics.isEmpty()}">Create a <a th:href="@{/topics}">topic</a> first.</p>
+        <form th:unless="${topics.isEmpty()}" th:action="@{/stories}" method="post" class="grid">
+            <label>Topic
+                <select name="topicId" required>
+                    <option th:each="t : ${topics}" th:value="${t.id}" th:text="${t.name}"></option>
+                </select>
+            </label>
+            <label>Concept
+                <textarea name="concept" rows="2" required placeholder="The idea Claude expands into a story"></textarea>
+            </label>
+            <label>Moral <input name="moral" required></label>
+            <label>Target length (minutes) <input name="targetLengthMin" type="number" min="3" max="5" value="4"></label>
+            <label>Notes <textarea name="notes" rows="2" placeholder="Optional guidance"></textarea></label>
+            <div><button type="submit">Add to queue</button></div>
+        </form>
+    </section>
+</main>
+<script th:src="@{/js/queue.js}"></script>
+</body>
+</html>
