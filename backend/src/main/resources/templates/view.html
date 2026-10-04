@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${view.title()})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav(${view.slug()})}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1 th:text="${view.title()}">View</h1>
+    <p class="muted" th:text="${view.blurb()}"></p>
+
+    <p class="empty" th:if="${stories.isEmpty()}">Nothing here.</p>
+    <table class="history" th:unless="${stories.isEmpty()}">
+        <thead><tr><th>Story</th><th>Topic</th><th>Status</th><th>Detail</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="s : ${stories}">
+            <td><a th:href="@{/stories/{id}(id=${s.id})}" th:text="${s.concept}"></a></td>
+            <td th:text="${s.topic.name}"></td>
+            <td><span th:replace="~{fragments/layout :: status(${s.status})}"></span></td>
+            <td class="muted" th:text="${s.attentionReason} ?: (${s.archiveReason} ? ${#strings.replace(#strings.toLowerCase(s.archiveReason.name()), '_', ' ')} : '')"></td>
+            <td>
+                <form th:if="${s.status.name() == 'NEEDS_ATTENTION'}" th:action="@{/stories/{id}/resume(id=${s.id})}" method="post">
+                    <button type="submit">Resume</button>
+                </form>
+                <form th:if="${s.status.name() == 'ARCHIVED'}" th:action="@{/stories/{id}/restore(id=${s.id})}" method="post">
+                    <button type="submit">Restore</button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>

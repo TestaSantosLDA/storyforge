@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${storyId == null} ? 'New story' : 'Edit story')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('queue')}"></header>
+<main>
+    <h1 th:text="${storyId == null} ? 'New story' : 'Edit story'">New story</h1>
+    <p class="flash error" th:if="${errors}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+
+    <form method="post" class="card grid"
+          th:action="${storyId == null} ? @{/stories} : @{/stories/{id}(id=${storyId})}">
+        <label>Topic
+            <select name="topicId" th:disabled="${storyId != null}">
+                <option value="" th:if="${storyId == null}">Pick a topic</option>
+                <option th:each="t : ${topics}" th:value="${t.id}" th:text="${t.name}"
+                        th:selected="${form.topicId() == t.id}"></option>
+            </select>
+            <input type="hidden" name="topicId" th:if="${storyId != null}" th:value="${form.topicId()}">
+            <small class="err" th:if="${errors?.get('topicId')}" th:text="${errors.get('topicId')}"></small>
+        </label>
+        <label>Concept
+            <textarea name="concept" rows="3" th:text="${form.concept()}"></textarea>
+            <small class="err" th:if="${errors?.get('concept')}" th:text="${errors.get('concept')}"></small>
+        </label>
+        <label>Moral
+            <input name="moral" th:value="${form.moral()}">
+            <small class="err" th:if="${errors?.get('moral')}" th:text="${errors.get('moral')}"></small>
+        </label>
+        <label>Target length (minutes)
+            <input name="targetLengthMin" type="number" th:value="${form.targetLengthMin()}">
+            <small class="err" th:if="${errors?.get('targetLengthMin')}" th:text="${errors.get('targetLengthMin')}"></small>
+        </label>
+        <label>Notes <textarea name="notes" rows="3" th:text="${form.notes()}"></textarea></label>
+        <div class="row">
+            <button class="primary" type="submit" th:text="${storyId == null} ? 'Add to queue' : 'Save'">Save</button>
+            <a th:href="${storyId == null} ? @{/queue} : @{/stories/{id}(id=${storyId})}">Cancel</a>
+        </div>
+    </form>
+</main>
+</body>
+</html>

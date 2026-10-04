@@ -53,4 +53,8 @@ public class StatusChange {
     public String getReason() {
         return reason;
     }
+
+    public Instant getChangedAt() {
+        return changedAt;
+    }
 }
