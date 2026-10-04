@@ -34,8 +34,10 @@ Stage 3 turns the approved scenes and the narration timing into animated shots i
 
 ## Step 3B — Image generation
 
-- Engine: **Flux 2 Klein 4B** (Apache 2.0), quantized to fit the 6 GB GPU, behind an `ImageEngine` interface.
-- Each image is generated from: the shot description + the channel style block + the setting + the reference images of every character in the shot (the model takes up to 4 references).
+- Engine: **Flux 2 Klein 4B** (Apache 2.0), transformer and text encoder quantized to 4-bit (NF4), 4 steps, behind an `ImageEngine` interface.
+- Each image is generated from: the shot description + the channel style block + the setting + the reference images of every character in the shot + every character's full visual description.
+- **Reference budget:** at most 4 reference images per shot, each downscaled to 512 px on its long side (config values). With 1–2 characters, each character gets front + side; with 3–4 characters, front only.
+- **Action phrasing:** the prompt gives each character's action as its own sentence naming that character ("Hazel reads the book aloud. Bramble listens."), because who-does-what is the weakest point with two or more characters.
 - Rendered at the model's 16:9 size, then upscaled to 1920×1080.
 - Shots with more than 4 characters: the shot planner keeps at most 4 characters per shot.
 
@@ -45,7 +47,8 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 
 | Check | Pass condition |
 | --- | --- |
-| Characters | Exactly the planned characters are present; no extras |
+| Characters | Exactly the planned characters are present; no extras, no duplicates of a character |
+| Action | Each character does what the shot plan says (who does what is not swapped) |
 | Consistency | Each character matches their reference images (shape, colours, clothing) |
 | Style | Follows the channel style; muted palette, no saturated colours |
 | Artifacts | No extra limbs, broken faces, melted objects, or garbled text |
@@ -88,7 +91,8 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 | --- | --- | --- | --- |
 | 1 | Happy path | Shots planned, every image and clip passes QA; Stage 4 starts | `visuals_done` |
 | 2 | Character looks different from their reference | Consistency failure; regenerate that shot (up to 3) | `visuals_in_progress` |
-| 3 | Extra unplanned character appears | Characters check fails; regenerate | `visuals_in_progress` |
+| 3 | Extra unplanned character appears, or a character is drawn twice | Characters check fails; regenerate | `visuals_in_progress` |
+| 3b | Characters are right but their actions are swapped | Action check fails; regenerate with the actions restated | `visuals_in_progress` |
 | 4 | Image looks like a known trademarked character | Trademark check fails; regenerate with the resemblance named as a negative | `visuals_in_progress` |
 | 5 | Colours come out too vivid | Style check fails; regenerate | `visuals_in_progress` |
 | 6 | A shot fails 3 times | Flag with failing shots listed | `needs_attention` |
@@ -96,7 +100,7 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 | 8 | GPU runs out of memory | Retry once at lower settings; then flag (not counted as a shot attempt) | `needs_attention` |
 | 9 | App restarts mid-stage | Cached passing images and clips are kept; only missing ones are generated | `visuals_in_progress` |
 | 10 | Vision QA API unavailable | Backoff retries, not counted as attempts; then flag | `needs_attention` |
-| 11 | Long render time on the 6 GB GPU | Expected; the stage runs unattended and the page shows progress per shot | `visuals_in_progress` |
+| 11 | Long render time | Expected (about 10–25 s per image measured); the stage runs unattended and the page shows progress per shot | `visuals_in_progress` |
 
 ## Status transitions
 
@@ -121,7 +125,9 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 ## Decisions
 
 - Animated storybook for the MVP; AI video later behind the same interface.
-- Flux 2 Klein 4B (Apache 2.0), quantized for the 6 GB GPU. Models with non-commercial licenses are excluded.
+- Flux 2 Klein 4B (Apache 2.0), NF4-quantized. Models with non-commercial licenses are excluded. Validated by the 2026-10-04 spike (`docs/spikes/2026-10-04-flux-consistency.md`): with references, 9/10 shots usable within 3 tries; peak about 4.7 GB VRAM with 4 references at 512 px, so it fits a 6 GB card.
+- References are mandatory: without them, 3/10 spike shots went off-model.
+- Fallback if consistency fails in production: a small LoRA per recurring character trained on the Klein 4B base weights, used together with references.
 - Channel style: classic storybook animation, muted palette including soft reds; studios are never named in prompts.
 - Character references are approved at Gate A; Stage 3 has no human gate.
 - 3 automatic retries per shot, then `needs_attention`. Shots are 5–10 seconds, at most 4 characters each.

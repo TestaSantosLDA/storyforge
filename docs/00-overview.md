@@ -14,6 +14,7 @@
 - **Every character gets a character file**, including one-off characters a script introduces. The file holds name, personality, visual description, reference images, and assigned voice.
 - The full character roster is checked whenever a new character is created, so no new character looks or sounds like an existing one.
 - Character files are versioned in the repo (text); reference images live in the assets directory under keep-forever retention.
+- A character's identifying features are large shapes and colours (fur, clothing, accessories), never tiny details, because the image model does not draw tiny details reliably.
 - **One fixed narrator voice** across the whole channel, as its signature; characters get their own voices.
 - **One queue of stories** across all topics; Run starts the story at the top.
 
@@ -52,7 +53,7 @@ One style for the whole channel: **classic storybook animation**, a vintage hand
 
 ## Animation Approach
 
-- MVP: **animated storybook**. Illustrated shots brought to life with camera motion (slow zooms, pans) and transitions, rendered locally with FFmpeg. Zero cost, runs on the current 6 GB GPU.
+- MVP: **animated storybook**. Illustrated shots brought to life with camera motion (slow zooms, pans) and transitions, rendered locally with FFmpeg. Zero cost, runs on a 6 GB GPU (the dev machine has an 8 GB RTX 3060 Ti).
 - Later: full AI video per shot (Wan 2.2, Apache 2.0), via a hosted API or on a stronger machine. The animation step sits behind an `AnimationEngine` interface, so switching is a config change.
 
 ## Platform & Account Structure

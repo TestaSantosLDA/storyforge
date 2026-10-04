@@ -31,7 +31,7 @@ Stage 1 turns a story concept into an approved story, an approved cast, and an a
 - Claude expands the concept into a story outline: setup, problem, journey, resolution, and the moment the moral lands.
 - Alongside it, Claude produces the cast for this story:
   - **Existing characters** from the topic are reused by reference and must behave consistently with their character files.
-  - **New characters** are proposed with name, personality, visual description, proposed voice, recurring or one-off flag, and the reason they exist in this plot.
+  - **New characters** are proposed with name, personality, visual description (its identifying features must be large shapes and colours, such as fur colour, clothing, or spectacles; details smaller than an ear are not reliably drawn), proposed voice, recurring or one-off flag, and the reason they exist in this plot.
 - The fixed channel narrator is always present and is not part of the cast.
 
 ### Automated QA — story
@@ -55,7 +55,8 @@ Stage 1 turns a story concept into an approved story, an approved cast, and an a
 ### Character reference images (generated in Step 1A)
 
 - For every **new** character, a reference sheet is generated in parallel with the story: front view, side view, and a few expressions, all in the channel style. Existing characters reuse their stored images.
-- Automated QA: one character per image, channel style followed, matches the character's visual description, visually distinct from every character in the full roster, no resemblance to known trademarked characters.
+- The **front view is generated first** and the side view and expressions are generated from it as a reference, so the whole sheet shows one design.
+- Automated QA: one character per image, channel style followed, matches the character's visual description, **clean anatomy (correct count of tails, ears, limbs, eyes)**, visually distinct from every character in the full roster, no resemblance to known trademarked characters. Anatomy matters here more than anywhere else: Stage 3 copies the reference faithfully, flaws included (the 2026-10-04 spike's two-tailed fox reappeared in later scenes).
 - A failing sheet is regenerated automatically and counts toward `story_qa_retries`.
 - Gate A shows each new character's reference sheet next to their description and reason. Regenerate-with-notes can target one character's look (e.g. "make the frog smaller and greener") without redoing the whole story.
 - On Approve, the images are saved under the character's file (keep-forever retention). Stage 3 uses them as references for every image of that character.
