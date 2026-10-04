@@ -79,7 +79,7 @@ Triggered by every final rejection; status `analyzing_rejection`.
 ## Retry budget
 
 - `final_rejections` counter, limit **3**. On the third rejection the story goes to `needs_attention` rather than the archive, since story, script, audio and visuals are already invested; a reviewer then decides to continue or kill.
-- Rejections routed back to Gate A or B also count against those gates' own budgets.
+- A video rejection counts only against `final_rejections`, even when it is routed back to the story or script. It never touches the Gate A/B counters, so a finished video can't be archived by a late rejection (decided 2026-10-04).
 
 ## Scenarios
 
