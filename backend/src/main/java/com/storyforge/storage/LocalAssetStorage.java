@@ -21,7 +21,7 @@ public class LocalAssetStorage implements AssetStorage {
 
     @Autowired
     LocalAssetStorage(StoryforgeProperties props) {
-        this(props.paths().assets());
+        this(props.paths().assetsDir());
     }
 
     LocalAssetStorage(Path root) {

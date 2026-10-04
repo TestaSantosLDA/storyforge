@@ -21,7 +21,23 @@ public record StoryforgeProperties(
         @DefaultValue Gpu gpu,
         @DefaultValue("false") boolean madeForKids) {
 
-    public record Paths(Path assets, Path characters, Path prompts) {
+    /**
+     * Bound as strings: Spring's String-to-Path conversion treats a relative value like {@code ../characters} as a
+     * classpath resource and rejects it.
+     */
+    public record Paths(String assets, String characters, String prompts) {
+
+        public Path assetsDir() {
+            return Path.of(assets);
+        }
+
+        public Path charactersDir() {
+            return Path.of(characters);
+        }
+
+        public Path promptsDir() {
+            return Path.of(prompts);
+        }
     }
 
     public record Pipeline(

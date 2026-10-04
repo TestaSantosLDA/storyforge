@@ -32,7 +32,7 @@ public class CharacterStore {
 
     @Autowired
     CharacterStore(StoryforgeProperties props) {
-        this(props.paths().characters());
+        this(props.paths().charactersDir());
     }
 
     CharacterStore(Path dir) {

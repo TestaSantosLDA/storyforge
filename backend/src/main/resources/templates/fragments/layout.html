@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Storyforge'">Storyforge</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+
+<header th:fragment="nav(active)" class="topbar">
+    <a class="brand" th:href="@{/queue}">Storyforge</a>
+    <nav>
+        <a th:href="@{/queue}" th:classappend="${active == 'queue'} ? 'on'">Queue</a>
+        <a th:href="@{/topics}" th:classappend="${active == 'topics'} ? 'on'">Topics</a>
+        <a th:href="@{/views/in-progress}" th:classappend="${active == 'in-progress'} ? 'on'">In progress</a>
+        <a th:href="@{/views/awaiting}" th:classappend="${active == 'awaiting'} ? 'on'">Awaiting approval</a>
+        <a th:href="@{/views/attention}" th:classappend="${active == 'attention'} ? 'on'">Needs attention</a>
+        <a th:href="@{/views/published}" th:classappend="${active == 'published'} ? 'on'">Published</a>
+        <a th:href="@{/views/archive}" th:classappend="${active == 'archive'} ? 'on'">Archive</a>
+    </nav>
+</header>
+
+<div th:fragment="flash">
+    <p class="flash notice" th:if="${notice}" th:text="${notice}" role="status"></p>
+    <p class="flash error" th:if="${error}" th:text="${error}" role="alert"></p>
+</div>
+
+<span th:fragment="status(s)" class="status" th:classappend="'k-' + ${#strings.toLowerCase(s.kind())}"
+      th:text="${#strings.replace(s.dbValue(), '_', ' ')}">queued</span>
+
+</body>
+</html>

@@ -125,3 +125,7 @@ Once a story leaves `queued`, it is locked: no edit, delete or reorder.
 - Several stories can be in flight, capped by `max_concurrent_stories` (default 1 during development). Stories at a human gate or in `needs_attention` count as in flight (see `docs/foundations.md`).
 - Character files live in the repo, one per character, recurring or one-off.
 - No duplicate-story detection in the MVP.
+- No login in the MVP: every page action is logged as `user:local`.
+- Two open tabs: the queue page checks a small fingerprint of the stored queue every few seconds and reloads when it changes (scenario 13).
+- Deleting a topic counts a restored story as started, because it left the queue once; the check uses the status history.
+- A story can't move to another topic by editing; delete it and add it again under the other topic.
