@@ -16,8 +16,11 @@ Record of what Stage 1 covers and where it stands. Spec: [stage-1](../pipeline-a
 - [x] Status-driven dispatcher: entering a working status starts its step after commit
 - [x] Tests: every Stage 1 scenario with a scripted fake Claude
 - [x] Real run on the dev machine through Claude Code
+- [x] Gate A: redraw one new character with optional instructions (folded into its description); not a rejection
 
 ## Open
+
+- [ ] Per-story outfit or accessory changes for returning characters (Stage 3 shot prompts, not their reference sheets)
 
 - [ ] Character reference sheets: need the image sidecar (build step 4); Gate A shows a placeholder until then
 - [ ] Pick the narrator voice (placeholder `bm_george`) from the Kokoro samples

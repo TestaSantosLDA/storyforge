@@ -56,8 +56,9 @@ public class StoryStep {
             // Resumed after the sidecar was down: the text already passed, only the sheets are missing.
             var pending = drafts.latest(storyId, Drafts.Kind.STORY).filter(d -> "pending".equals(d.reviewState()));
             if (pending.isPresent() && stories.findById(storyId).orElseThrow().getStatus() == StoryStatus.STORY_IN_PROGRESS) {
-                if (sheetsDone(storyId, pending.get())) {
-                    toGate(storyId, pending.get());
+                Drafts.Draft draft = applyRedraws(storyId, pending.get());
+                if (sheetsDone(storyId, draft)) {
+                    toGate(storyId, draft);
                 }
                 return;
             }
@@ -118,6 +119,36 @@ public class StoryStep {
         } catch (StatusConflictException e) {
             log.info("story {} changed while step 1A ran: {}", storyId, e.getMessage());
         }
+    }
+
+    /** Folds Gate A redraw instructions into each character's description (Claude rewrites it positively). */
+    private Drafts.Draft applyRedraws(long storyId, Drafts.Draft draft) {
+        if (draft.redrawNotes() == null) {
+            return draft;
+        }
+        Map<String, String> notes = Json.MAPPER.readValue(draft.redrawNotes(),
+                Json.MAPPER.getTypeFactory().constructMapType(LinkedHashMap.class, String.class, String.class));
+        StoryContent content = Json.read(draft.content(), StoryContent.class);
+        List<StoryContent.NewCharacter> updated = new java.util.ArrayList<>();
+        for (StoryContent.NewCharacter c : content.newCharacters()) {
+            String note = notes.get(c.id());
+            if (note == null || note.isBlank()) {
+                updated.add(c);
+                continue;
+            }
+            AiCalls.Outcome o = ai.call(storyId, STAGE, "character_redesign", "character-redesign-v1",
+                    "character-redesign-v1", Map.of("name", c.name(), "description", c.visualDescription(),
+                            "instructions", note));
+            String description = o.ok() ? Json.MAPPER.readTree(o.json()).path("visual_description").asString()
+                    : c.visualDescription() + " " + note;
+            updated.add(new StoryContent.NewCharacter(c.id(), c.name(), c.kind(), c.personality(), description,
+                    c.proposedVoice(), c.reason()));
+        }
+        StoryContent changed = new StoryContent(content.title(), content.outline(), content.beats(), content.moral(),
+                content.reusedCharacters(), updated);
+        drafts.setContent(draft.id(), Json.write(changed));
+        drafts.clearRedrawNotes(draft.id());
+        return drafts.get(draft.id());
     }
 
     private void toGate(long storyId, Drafts.Draft draft) {

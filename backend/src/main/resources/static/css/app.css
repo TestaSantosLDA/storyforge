@@ -137,3 +137,5 @@ h3 { font-size: 1rem; margin: 1rem 0 .5rem; display: flex; gap: .5rem; align-ite
 
 .sheet { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
 .sheet img { height: 160px; width: auto; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+
+.redraw { display: grid; gap: .4rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px dashed var(--line); }

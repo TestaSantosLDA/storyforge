@@ -117,6 +117,29 @@ public class Gates {
     }
 
     /**
+     * Gate A: redraw one new character's reference sheet, optionally with instructions, without touching the story
+     * or the other characters. Not a rejection. The request is a new draft version; the step folds the instructions
+     * into the character's description (positive wording) and redraws only that sheet, then returns to Gate A.
+     */
+    @Transactional
+    public void redrawCharacter(long storyId, String characterId, String instructions, String by) {
+        Drafts.Draft draft = pending(storyId, Drafts.Kind.STORY);
+        StoryContent content = Json.read(draft.content(), StoryContent.class);
+        StoryContent.NewCharacter c = content.newCharacters().stream().filter(n -> n.id().equals(characterId))
+                .findFirst().orElseThrow(() -> InvalidInputException.of("character",
+                        "Only characters new in this story can be redrawn here. Existing characters keep their look."));
+        Map<String, ReferenceSheets.Sheet> sheetsById = draft.sheets() == null ? new java.util.LinkedHashMap<>()
+                : new java.util.LinkedHashMap<>(Json.MAPPER.readValue(draft.sheets(), Json.MAPPER.getTypeFactory()
+                        .constructMapType(java.util.LinkedHashMap.class, String.class, ReferenceSheets.Sheet.class)));
+        sheetsById.remove(characterId);
+        String note = instructions == null ? "" : instructions.strip();
+        drafts.addRedraw(draft, Json.write(sheetsById), Json.write(Map.of(characterId, note)));
+        drafts.review(draft.id(), "superseded", "redraw " + c.name() + (note.isEmpty() ? "" : ": " + note));
+        status.transition(storyId, StoryStatus.AWAITING_STORY_APPROVAL, StoryStatus.STORY_IN_PROGRESS, by,
+                "redraw " + c.name() + (note.isEmpty() ? "" : ": " + note));
+    }
+
+    /**
      * From a flagged later stage (e.g. a line that can't be read, or narration too long): regenerate the script
      * with notes. Counts as a script rejection (Stage 2 scenario 6); the limit archives the story.
      */

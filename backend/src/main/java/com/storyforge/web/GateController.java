@@ -140,6 +140,18 @@ class GateController {
         return "redirect:/stories/" + id;
     }
 
+    @PostMapping("/stories/{id}/gate-a/characters/{characterId}/redraw")
+    String redraw(@PathVariable long id, @PathVariable String characterId,
+            @RequestParam(required = false) String instructions, RedirectAttributes flash) {
+        try {
+            gates.redrawCharacter(id, characterId, instructions, Actor.LOCAL);
+            flash.addFlashAttribute("notice", "Redrawing this character. The page updates when the new sheet is ready.");
+        } catch (InvalidInputException e) {
+            flash.addFlashAttribute("error", String.join(" ", e.fieldErrors().values()));
+        }
+        return "redirect:/stories/" + id;
+    }
+
     @PostMapping("/stories/{id}/gate-{gate}/kill")
     String kill(@PathVariable long id, @PathVariable String gate, RedirectAttributes flash) {
         gates.kill(id, gate(gate), Actor.LOCAL);

@@ -148,4 +148,40 @@ class ReferenceSheetsTest extends DbTest {
         assertThat(drafts.all(id, Drafts.Kind.STORY)).extracting(Drafts.Draft::reviewState)
                 .containsExactly("pending", "abandoned");
     }
+
+    @Test
+    void redraw_one_character_folds_the_instructions_into_its_description_and_redraws_only_its_sheet() {
+        storyStep.run(id);
+        int imagesBefore = images.requests.size();
+        claude.then("character-redesign", "{\"visual_description\":\"small round hedgehog with a plain teal collar\"}");
+
+        gates.redrawCharacter(id, "pip-the-hedgehog", "swap the scarf for a plain teal collar", "user:t");
+        assertThat(story().getStatus()).isEqualTo(STORY_IN_PROGRESS);
+        storyStep.run(id);
+
+        assertThat(story().getStatus()).isEqualTo(AWAITING_STORY_APPROVAL);
+        assertThat(story().getStoryRejections()).as("a redraw is not a rejection").isZero();
+        assertThat(claude.requests("story")).as("story text untouched").hasSize(1);
+        assertThat(claude.requests("character-redesign").getFirst().userPrompt())
+                .contains("swap the scarf for a plain teal collar", "small round hedgehog with a mustard scarf");
+        assertThat(images.requests).hasSize(imagesBefore + 3);
+        assertThat(images.requests.get(imagesBefore).prompt()).contains("plain teal collar").doesNotContain("mustard");
+        var versions = drafts.all(id, Drafts.Kind.STORY);
+        assertThat(versions).extracting(Drafts.Draft::reviewState).containsExactly("pending", "superseded");
+        assertThat(versions.getFirst().content()).contains("plain teal collar");
+        assertThat(versions.getFirst().sheets()).contains("/v2/pip-the-hedgehog/");
+
+        gates.approveStory(id, "user:t");
+        assertThat(characters.get("pip-the-hedgehog").orElseThrow().visualDescription()).contains("plain teal collar");
+    }
+
+    @Test
+    void returning_characters_cannot_be_redrawn() {
+        storyStep.run(id);
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> gates.redrawCharacter(id, "someone-else", "new hat", "user:t"))
+                .isInstanceOf(com.storyforge.validation.InvalidInputException.class)
+                .hasMessageContaining("Only characters new in this story");
+        assertThat(story().getStatus()).isEqualTo(AWAITING_STORY_APPROVAL);
+    }
 }

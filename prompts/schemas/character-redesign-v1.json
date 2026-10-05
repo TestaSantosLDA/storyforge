@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["visual_description"],
+  "properties": {
+    "visual_description": {"type": "string"}
+  }
+}
