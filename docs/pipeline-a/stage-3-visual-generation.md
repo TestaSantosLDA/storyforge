@@ -73,7 +73,7 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 
 ## Retry rules
 
-- A failing image or clip is regenerated automatically, up to **3 times per shot**, with the failed check fed back into the prompt.
+- A failing image or clip is regenerated automatically, up to **3 times per shot**. An image retry is a fresh draw with a new seed; the failed check is never written into the image prompt, because naming a flaw ("not plaid") makes the image model draw it (seen in the 2026-10-05 reference-sheet run). Where a fix needs different wording, restate the wanted feature positively (e.g. "navy-and-white striped neckerchief").
 - If a shot still fails, the story goes to `needs_attention` listing the failing shots. Passing shots are kept.
 - Not archived: story, script and audio are already approved.
 
@@ -93,7 +93,7 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 | 2 | Character looks different from their reference | Consistency failure; regenerate that shot (up to 3) | `visuals_in_progress` |
 | 3 | Extra unplanned character appears, or a character is drawn twice | Characters check fails; regenerate | `visuals_in_progress` |
 | 3b | Characters are right but their actions are swapped | Action check fails; regenerate with the actions restated | `visuals_in_progress` |
-| 4 | Image looks like a known trademarked character | Trademark check fails; regenerate with the resemblance named as a negative | `visuals_in_progress` |
+| 4 | Image looks like a known trademarked character | Trademark check fails; regenerate with a new seed (the resemblance is not named in the prompt) | `visuals_in_progress` |
 | 5 | Colours come out too vivid | Style check fails; regenerate | `visuals_in_progress` |
 | 6 | A shot fails 3 times | Flag with failing shots listed | `needs_attention` |
 | 7 | Scene needs more than 4 characters together | Shot planner splits it into shots of at most 4 | `visuals_in_progress` |

@@ -55,10 +55,13 @@ Stage 1 turns a story concept into an approved story, an approved cast, and an a
 ### Character reference images (generated in Step 1A)
 
 - For every **new** character, a reference sheet is generated in parallel with the story: front view, side view, and a few expressions, all in the channel style. Existing characters reuse their stored images.
-- **Until the image sidecar exists (build step 4), reference sheets are not generated:** Gate A shows a placeholder and approves the cast without images. When the sidecar lands, sheets are generated for every character that has none, and need a quick approval.
+- Sheets are made by the local sidecar (Flux 2 Klein 4B) after the story text passes QA, since the new cast is only known then. Claude checks them by opening the three image files. If the sidecar is down, the story is flagged without a strike; Resume regenerates only the missing sheets, not the story. With `storyforge.images.engine=none` sheets are skipped and Gate A says so.
+- On approval the sheet is copied to `characters/<id>/` in the assets directory (keep-forever) and listed in the character file's `reference_images`.
+- The front view is a **three-quarter** front view: straight-on, tailed animals got a tail on each side.
 - The **front view is generated first** and the side view and expressions are generated from it as a reference, so the whole sheet shows one design.
 - Automated QA: one character per image, channel style followed, matches the character's visual description, **clean anatomy (correct count of tails, ears, limbs, eyes)**, visually distinct from every character in the full roster, no resemblance to known trademarked characters. Anatomy matters here more than anywhere else: Stage 3 copies the reference faithfully, flaws included (the 2026-10-04 spike's two-tailed fox reappeared in later scenes).
-- A failing sheet is regenerated automatically and counts toward `story_qa_retries`.
+- A failing sheet is redrawn automatically with a new seed and the same prompt (failures are never named in the image prompt; see Stage 3 retry rules), up to 3 draws per character (`storyforge.images.sheet-attempts`). If none passes, the best draw goes to Gate A with its failed checks shown, and the reviewer approves it anyway or regenerates. **Changed 2026-10-05:** sheet draws no longer count toward `story_qa_retries`; in the first real runs, three new characters used up all five retries and archived a good story.
+- Sheet QA allows for the channel style's rounded bodies; it fails a design only for a wrong or missing colour, clothing item or accessory, or for the three images disagreeing.
 - Gate A shows each new character's reference sheet next to their description and reason. Regenerate-with-notes can target one character's look (e.g. "make the frog smaller and greener") without redoing the whole story.
 - On Approve, the images are saved under the character's file (keep-forever retention). Stage 3 uses them as references for every image of that character.
 

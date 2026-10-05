@@ -76,7 +76,7 @@ Build and test one stage at a time, in pipeline order, each against its scenario
 1. **Foundations** (`docs/foundations.md`, done): Spring project, DB schema (topics, stories, characters, attempts/logs), config, `AssetStorage` (local), status/transition service with transactional "pick next".
 2. **Stage 0:** management page — topics, stories, queue with drag-to-reorder, Run, archive/restore, views per status.
 3. **Stage 1:** story + cast (Gate A, with character reference sheets), script (Gate B), retry counters, character files. Needs the sidecar's image endpoint for reference sheets.
-4. **Python sidecar:** TTS, transcription and image endpoints with device auto-detection.
+4. **Python sidecar** (`sidecar/`): image endpoint done (Flux 2 Klein, used for Stage 1 reference sheets); TTS and transcription come with Stage 2. Device auto-detection.
 5. **Stage 2:** per-line audio, transcript QA, timing manifest, pronunciation dictionary.
 6. **Stage 3:** shot planning, image generation + vision QA, storybook animation.
 7. **Stage 4:** music library import, assembly, subtitles, final review, rejection analysis and routing.

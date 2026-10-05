@@ -17,6 +17,12 @@ public interface AssetStorage {
 
     boolean exists(String key);
 
+    /**
+     * A local file path for tools that need one (e.g. Claude reading an image). Empty if the key doesn't exist.
+     * A remote implementation would download to a temp file.
+     */
+    Optional<java.nio.file.Path> localPath(String key);
+
     /** Returns true if something was deleted. */
     boolean delete(String key) throws IOException;
 }

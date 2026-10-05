@@ -41,6 +41,11 @@ class AiCalls {
 
     Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
             Map<String, String> vars) {
+        return call(storyId, stage, step, promptVersion, schemaVersion, vars, List.of());
+    }
+
+    Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
+            Map<String, String> vars, List<java.nio.file.Path> images) {
         PromptLibrary.Prompt prompt = prompts.render(promptVersion, vars);
         String system = prompts.text(SYSTEM_PROMPT);
         String schema = prompts.schema(schemaVersion);
@@ -49,7 +54,7 @@ class AiCalls {
                 .versions(promptVersion + "+" + SYSTEM_PROMPT + "+" + schemaVersion, null, llm.engineName())
                 .inputs(InputHash.of(system, prompt.text(), schema), Json.write(vars));
         try {
-            LlmResult r = llm.call(new LlmRequest(prompt.version(), system, prompt.text(), schema));
+            LlmResult r = llm.call(new LlmRequest(prompt.version(), system, prompt.text(), schema, images));
             attempt.versions(promptVersion + "+" + SYSTEM_PROMPT + "+" + schemaVersion, r.model(), llm.engineName());
             attemptLog.record(attempt.result("ok", r.raw(), null, null, r.billedUsd(), null));
             return new Outcome(r.json(), null);
@@ -69,7 +74,12 @@ class AiCalls {
 
     /** Claude-judged QA: returns the checks it reports. */
     List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars) {
-        Outcome o = call(storyId, stage, step, promptVersion, "qa-v1", vars);
+        return judge(storyId, stage, step, promptVersion, vars, List.of());
+    }
+
+    List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars,
+            List<java.nio.file.Path> images) {
+        Outcome o = call(storyId, stage, step, promptVersion, "qa-v1", vars, images);
         if (!o.ok()) {
             // The judge itself failed to answer in shape: not the story's fault.
             throw new LlmUnavailableException("QA answer did not match its schema: " + o.badOutput());

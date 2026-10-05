@@ -31,6 +31,15 @@ class Flags {
         this.config = props.llm();
     }
 
+    void imagesUnavailable(long storyId, StoryStatus from, RuntimeException e, String trigger) {
+        try {
+            status.flag(storyId, from, "Image sidecar unavailable: " + e.getMessage()
+                    + ". Start the sidecar, then Resume.", trigger);
+        } catch (StatusConflictException ignored) {
+            log.info("story {} not flagged: it moved on", storyId);
+        }
+    }
+
     void unavailable(long storyId, StoryStatus from, LlmUnavailableException e, String trigger) {
         try {
             if (e instanceof UsageLimitException limit) {

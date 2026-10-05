@@ -22,6 +22,8 @@ public record StoryforgeProperties(
         @DefaultValue Llm llm,
         @DefaultValue Voices voices,
         @DefaultValue Script script,
+        @DefaultValue Images images,
+        @DefaultValue Style style,
         @DefaultValue("false") boolean madeForKids) {
 
     /**
@@ -113,6 +115,27 @@ public record StoryforgeProperties(
                     "am_adam", "am_michael", "am_puck", "am_fenrir", "am_echo", "am_eric", "am_liam", "am_onyx",
                     "bf_emma", "bf_isabella", "bf_alice", "bf_lily", "bm_lewis", "bm_daniel", "bm_fable"})
             java.util.List<String> available) {
+    }
+
+    /** Image generation. {@code none} skips reference sheets (e.g. on a machine without the sidecar). */
+    public record Images(
+            @DefaultValue("sidecar") String engine,
+            @DefaultValue("http://127.0.0.1:8765") String sidecarUrl,
+            @DefaultValue("10m") Duration timeout,
+            @DefaultValue("1024") int sheetSize,
+            /** Draws per character before the best one goes to Gate A with its failed checks shown. */
+            @DefaultValue("3") int sheetAttempts,
+            /** How long to wait for the GPU lease before flagging. */
+            @DefaultValue("30m") Duration gpuWait) {
+    }
+
+    /**
+     * The channel style block added to every image prompt (docs/00-overview.md "Visual Style"). Described by its
+     * ingredients only; never names a studio or franchise.
+     */
+    public record Style(
+            @DefaultValue("Classic storybook animation still, vintage hand-drawn look. Hand-drawn characters with clean, slightly soft ink outlines and simple cel shading with one shadow tone, no gradients. Painted watercolour and gouache background, softer and less detailed than the characters. Muted palette of warm creams, sage greens, dusty blues, soft ochres and muted brick and rust reds, no saturated colours. Rounded, expressive characters with big readable faces, mid-century feature-animation tradition. Light paper grain over everything.")
+            String block) {
     }
 
     /** Script length check: roughly 400–650 words for 3–5 minutes (Stage 1 script QA). */
