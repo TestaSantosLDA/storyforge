@@ -80,3 +80,38 @@ def test_out_of_memory_and_missing_weights_have_distinct_statuses(monkeypatch):
 def test_references_are_shrunk_to_the_limit():
     assert _shrink(Image.new("RGB", (1024, 768)), 512).size == (512, 384)
     assert _shrink(Image.new("RGB", (300, 200)), 512).size == (300, 200)
+
+
+class StubSpeech:
+    tts_loaded = stt_loaded = True
+
+    def synthesize(self, text, voice, speed):
+        import numpy as np
+        import soundfile as sf
+        buf = io.BytesIO()
+        sf.write(buf, np.zeros(2400, dtype="float32"), 24000, subtype="PCM_16", format="WAV")
+        return buf.getvalue(), {"duration": 0.1, "peak": 0.5, "max_silence": 0.0, "clipped_samples": 0}
+
+    def transcribe(self, wav):
+        return "hello there"
+
+
+def test_tts_and_transcribe(monkeypatch):
+    monkeypatch.setattr(app_module, "SPEECH", StubSpeech())
+    c = TestClient(app_module.app)
+    r = c.post("/tts", json={"text": "Hello there.", "voice": "bm_george"})
+    assert r.status_code == 200 and r.headers["content-type"] == "audio/wav"
+    assert r.headers["X-Duration"] == "0.1" and r.headers["X-Clipped-Samples"] == "0"
+    assert c.post("/tts", json={"text": "x", "voice": "nobody"}).status_code == 422
+    assert c.post("/transcribe", content=r.content).json()["text"] == "hello there"
+    assert "bm_george" in c.get("/voices").json()["voices"]
+
+
+def test_silence_analysis_finds_inner_gaps():
+    import numpy as np
+    from storyforge_sidecar.speech import analyse
+    tone = 0.3 * np.sin(np.linspace(0, 2000, 24000)).astype("float32")
+    audio = np.concatenate([tone, np.zeros(48000, dtype="float32"), tone])
+    stats = analyse(audio)
+    assert 1.9 <= stats["max_silence"] <= 2.1
+    assert stats["duration"] == 4.0

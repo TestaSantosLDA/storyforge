@@ -7,13 +7,17 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from fastapi import Request
+
 from .device import pick_device, vram_info
 from .image_engine import KleinEngine, models_dir
+from .speech import STT_VERSION, TTS_VERSION, VOICES, Speech
 
 app = FastAPI(title="storyforge-sidecar")
 
 DEVICE = pick_device()
 IMAGE = KleinEngine(models_dir(), DEVICE, os.environ.get("STORYFORGE_IMAGE_QUANT", "nf4"))
+SPEECH = Speech(DEVICE)
 
 
 class ImageRequest(BaseModel):
@@ -33,7 +37,11 @@ def health():
         "status": "ok",
         "device": DEVICE,
         "gpu": vram_info(DEVICE),
-        "models": {"image": {"version": IMAGE.version, "loaded": IMAGE.loaded}},
+        "models": {
+            "image": {"version": IMAGE.version, "loaded": IMAGE.loaded},
+            "tts": {"version": TTS_VERSION, "loaded": SPEECH.tts_loaded},
+            "stt": {"version": STT_VERSION, "loaded": SPEECH.stt_loaded},
+        },
     }
 
 
@@ -59,3 +67,35 @@ def image(req: ImageRequest):
     if result.peak_vram_gb is not None:
         headers["X-Peak-Vram-Gb"] = str(result.peak_vram_gb)
     return Response(result.png, media_type="image/png", headers=headers)
+
+
+class TtsRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=2000)
+    voice: str
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
+
+
+@app.get("/voices")
+def voices():
+    return {"engine": TTS_VERSION, "voices": VOICES}
+
+
+@app.post("/tts", responses={200: {"content": {"audio/wav": {}}}})
+def tts(req: TtsRequest):
+    if req.voice not in VOICES:
+        raise HTTPException(422, f"unknown voice {req.voice}")
+    try:
+        wav, stats = SPEECH.synthesize(req.text, req.voice, req.speed)
+    except ValueError as e:
+        raise HTTPException(422, str(e))
+    headers = {"X-Engine-Version": TTS_VERSION, "X-Duration": str(stats["duration"]), "X-Peak": str(stats["peak"]),
+               "X-Max-Silence": str(stats["max_silence"]), "X-Clipped-Samples": str(stats["clipped_samples"])}
+    return Response(wav, media_type="audio/wav", headers=headers)
+
+
+@app.post("/transcribe")
+async def transcribe(request: Request):
+    wav = await request.body()
+    if not wav:
+        raise HTTPException(422, "send the WAV file as the request body")
+    return {"text": SPEECH.transcribe(wav), "engine_version": STT_VERSION}
