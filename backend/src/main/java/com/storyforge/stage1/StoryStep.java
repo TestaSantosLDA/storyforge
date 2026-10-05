@@ -36,9 +36,10 @@ public class StoryStep {
     private final Cast cast;
     private final AiCalls ai;
     private final Flags flags;
+    private final ReferenceSheets sheets;
 
     StoryStep(StoryRepository stories, StoryStatusService status, StoryCounters counters, Drafts drafts, Cast cast,
-            AiCalls ai, Flags flags) {
+            AiCalls ai, Flags flags, ReferenceSheets sheets) {
         this.stories = stories;
         this.status = status;
         this.counters = counters;
@@ -46,11 +47,20 @@ public class StoryStep {
         this.cast = cast;
         this.ai = ai;
         this.flags = flags;
+        this.sheets = sheets;
     }
 
     public void run(long storyId) {
         String feedback = reviewerNotes(storyId);
         try {
+            // Resumed after the sidecar was down: the text already passed, only the sheets are missing.
+            var pending = drafts.latest(storyId, Drafts.Kind.STORY).filter(d -> "pending".equals(d.reviewState()));
+            if (pending.isPresent() && stories.findById(storyId).orElseThrow().getStatus() == StoryStatus.STORY_IN_PROGRESS) {
+                if (sheetsDone(storyId, pending.get())) {
+                    toGate(storyId, pending.get());
+                }
+                return;
+            }
             while (true) {
                 Story story = stories.findWithTopic(storyId).orElseThrow();
                 if (story.getStatus() != StoryStatus.STORY_IN_PROGRESS) {
@@ -86,9 +96,10 @@ public class StoryStep {
                 }
 
                 if (QaCheck.allPass(checks)) {
-                    drafts.add(storyId, Drafts.Kind.STORY, gen.json(), Json.write(checks), "story-v1");
-                    status.transition(storyId, StoryStatus.STORY_IN_PROGRESS, StoryStatus.AWAITING_STORY_APPROVAL,
-                            TRIGGER, "story QA passed: " + content.title());
+                    Drafts.Draft draft = drafts.add(storyId, Drafts.Kind.STORY, gen.json(), Json.write(checks), "story-v1");
+                    if (sheetsDone(storyId, draft)) {
+                        toGate(storyId, draft);
+                    }
                     return;
                 }
                 StoryCounters.Count count = counters.increment(storyId, StoryCounter.STORY_QA_RETRIES);
@@ -102,9 +113,49 @@ public class StoryStep {
             }
         } catch (LlmUnavailableException e) {
             flags.unavailable(storyId, StoryStatus.STORY_IN_PROGRESS, e, TRIGGER);
+        } catch (com.storyforge.image.ImageEngineUnavailableException e) {
+            flags.imagesUnavailable(storyId, StoryStatus.STORY_IN_PROGRESS, e, TRIGGER);
         } catch (StatusConflictException e) {
             log.info("story {} changed while step 1A ran: {}", storyId, e.getMessage());
         }
+    }
+
+    private void toGate(long storyId, Drafts.Draft draft) {
+        StoryContent content = Json.read(draft.content(), StoryContent.class);
+        status.transition(storyId, StoryStatus.STORY_IN_PROGRESS, StoryStatus.AWAITING_STORY_APPROVAL, TRIGGER,
+                "story QA passed: " + content.title());
+    }
+
+    /**
+     * Draws a reference sheet for every new character until one passes QA or the character's draws are used up
+     * ({@code storyforge.images.sheet-attempts}). Then the best draw goes to Gate A, with any failed checks shown,
+     * and the reviewer decides. Sheet draws don't use the story's QA budget: in the first real runs, three new
+     * characters used up all five retries and archived a good story. Returns false only if the story moved on.
+     */
+    private boolean sheetsDone(long storyId, Drafts.Draft draft) {
+        if (!sheets.enabled()) {
+            return true;
+        }
+        StoryContent content = Json.read(draft.content(), StoryContent.class);
+        Map<String, ReferenceSheets.Sheet> done = draft.sheets() == null ? new LinkedHashMap<>()
+                : new LinkedHashMap<>(Json.MAPPER.readValue(draft.sheets(),
+                        Json.MAPPER.getTypeFactory().constructMapType(LinkedHashMap.class, String.class,
+                                ReferenceSheets.Sheet.class)));
+        String roster = Cast.describe(cast.roster());
+        for (StoryContent.NewCharacter c : content.newCharacters()) {
+            ReferenceSheets.Sheet best = done.get(c.id());
+            while (best == null || (!best.passed() && best.attempts() < sheets.maxAttempts())) {
+                if (stories.findById(storyId).orElseThrow().getStatus() != StoryStatus.STORY_IN_PROGRESS) {
+                    return false;
+                }
+                int attempt = best == null ? 1 : best.attempts() + 1;
+                ReferenceSheets.Sheet sheet = sheets.generate(storyId, draft.version(), c, roster, attempt);
+                best = best == null || sheet.failures() < best.failures() ? sheet : best.withAttempts(attempt);
+                done.put(c.id(), best);
+                drafts.setSheets(draft.id(), Json.write(done));
+            }
+        }
+        return true;
     }
 
     private String reviewerNotes(long storyId) {

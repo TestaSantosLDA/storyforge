@@ -53,6 +53,12 @@ public class LocalAssetStorage implements AssetStorage {
     }
 
     @Override
+    public Optional<Path> localPath(String key) {
+        Path p = resolve(key);
+        return Files.isRegularFile(p) ? Optional.of(p) : Optional.empty();
+    }
+
+    @Override
     public boolean delete(String key) throws IOException {
         return Files.deleteIfExists(resolve(key));
     }

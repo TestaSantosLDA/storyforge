@@ -30,15 +30,17 @@ public class Gates {
     private final CharacterStore characters;
     private final StoryRepository stories;
     private final StoryforgeProperties.Voices voices;
+    private final ReferenceSheets sheets;
 
     Gates(StoryStatusService status, StoryCounters counters, Drafts drafts, CharacterStore characters,
-            StoryRepository stories, StoryforgeProperties props) {
+            StoryRepository stories, StoryforgeProperties props, ReferenceSheets sheets) {
         this.status = status;
         this.counters = counters;
         this.drafts = drafts;
         this.characters = characters;
         this.stories = stories;
         this.voices = props.voices();
+        this.sheets = sheets;
     }
 
     /**
@@ -54,11 +56,22 @@ public class Gates {
         status.transition(storyId, StoryStatus.STORY_APPROVED, StoryStatus.SCRIPT_IN_PROGRESS,
                 "system:stage1", "cast locked; writing the script");
         StoryContent content = Json.read(draft.content(), StoryContent.class);
+        Map<String, ReferenceSheets.Sheet> sheetsById = draft.sheets() == null ? Map.of()
+                : Json.MAPPER.readValue(draft.sheets(), Json.MAPPER.getTypeFactory()
+                        .constructMapType(java.util.LinkedHashMap.class, String.class, ReferenceSheets.Sheet.class));
         List<CharacterFile> files = content.newCharacters().stream()
-                .map(n -> new CharacterFile(n.id(), n.name(), story.getTopic().getId(),
-                        "one_off".equals(n.kind()) ? CharacterFile.Kind.ONE_OFF : CharacterFile.Kind.RECURRING,
-                        n.personality(), n.visualDescription(), List.of(),
-                        Map.of("engine", voices.engine(), "id", n.proposedVoice()), storyId))
+                .map(n -> {
+                    ReferenceSheets.Sheet sheet = sheetsById.get(n.id());
+                    // A sheet that failed QA after all draws can still be approved: the reviewer has seen it.
+                    if (sheets.enabled() && sheet == null) {
+                        throw InvalidInputException.of("cast", n.name() + " has no reference sheet yet.");
+                    }
+                    List<String> refs = sheet == null ? List.of() : sheets.keepForever(n.id(), sheet.views());
+                    return new CharacterFile(n.id(), n.name(), story.getTopic().getId(),
+                            "one_off".equals(n.kind()) ? CharacterFile.Kind.ONE_OFF : CharacterFile.Kind.RECURRING,
+                            n.personality(), n.visualDescription(), refs,
+                            Map.of("engine", voices.engine(), "id", n.proposedVoice()), storyId);
+                })
                 .toList();
         for (CharacterFile f : files) {
             try {

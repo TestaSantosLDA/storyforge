@@ -134,3 +134,6 @@ h3 { font-size: 1rem; margin: 1rem 0 .5rem; display: flex; gap: .5rem; align-ite
 .scene { border-top: 1px solid var(--line); padding-top: .5rem; margin-top: .75rem; }
 .line { margin: .35rem 0; }
 .line strong { display: inline-block; min-width: 6.5rem; color: var(--blue); }
+
+.sheet { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
+.sheet img { height: 160px; width: auto; border-radius: 6px; border: 1px solid var(--line); background: #fff; }

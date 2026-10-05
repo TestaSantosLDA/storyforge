@@ -11,4 +11,10 @@ public class FakeLlmConfig {
     FakeLlmEngine fakeLlmEngine() {
         return new FakeLlmEngine();
     }
+
+    /** Only used when a test sets storyforge.images.engine to something other than "none". */
+    @Bean
+    com.storyforge.image.FakeImageEngine fakeImageEngine() {
+        return new com.storyforge.image.FakeImageEngine();
+    }
 }

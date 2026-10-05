@@ -46,9 +46,15 @@ public class ClaudeCodeEngine implements LlmEngine {
                 "--output-format", "json",
                 "--no-session-persistence",
                 "--strict-mcp-config",
-                "--tools", "",
+                "--tools", req.images().isEmpty() ? "" : "Read",
                 "--system-prompt", req.systemPrompt(),
                 "--json-schema", json.writeValueAsString(json.readTree(req.jsonSchema()))));
+        if (!req.images().isEmpty()) {
+            // Vision QA: only the Read tool, only on the folders holding the images.
+            cmd.addAll(List.of("--allowedTools", "Read"));
+            req.images().stream().map(p -> p.toAbsolutePath().getParent().toString()).distinct()
+                    .forEach(dir -> cmd.addAll(List.of("--add-dir", dir)));
+        }
         if (config.model() != null && !config.model().isBlank()) {
             cmd.addAll(List.of("--model", config.model()));
         }

@@ -44,7 +44,24 @@
                     <span><em>Looks:</em> <span th:text="${n.visualDescription()}"></span></span>
                     <span><em>Personality:</em> <span th:text="${n.personality()}"></span></span>
                     <span class="muted" th:text="'Voice: ' + ${n.proposedVoice()}"></span>
-                    <span class="muted small">Reference sheet: generated once the image sidecar is set up.</span>
+                    <span class="muted small" th:unless="${sheetsEnabled}">Reference sheet: generated once the image sidecar is set up.</span>
+                    <th:block th:if="${sheetsEnabled}" th:with="sh=${sheets[n.id()]}">
+                        <span class="muted small" th:unless="${sh}">Reference sheet: not generated yet.</span>
+                        <p class="flash error small" th:if="${sh != null and !sh.passed()}"
+                           th:text="'This sheet still failed QA after ' + ${sh.attempts()} + ' draws (best one shown). Look closely before approving, or regenerate with notes.'"></p>
+                        <div class="sheet" th:if="${sh}">
+                            <a th:each="v : ${sh.ordered()}" th:href="@{/assets(key=${v.value})}" target="_blank">
+                                <img th:src="@{/assets(key=${v.value})}" th:alt="${n.name()} + ' ' + ${v.key}" loading="lazy">
+                            </a>
+                        </div>
+                        <ul class="checks" th:if="${sh}">
+                            <li th:each="c : ${sh.checks()}" th:classappend="${c.pass()} ? 'ok' : 'bad'">
+                                <span th:text="${c.pass()} ? '✓' : '✗'"></span>
+                                <span th:text="${#strings.replace(c.name(), '_', ' ')}"></span>
+                                <span class="muted small" th:unless="${c.pass()}" th:text="${c.feedback()}"></span>
+                            </li>
+                        </ul>
+                    </th:block>
                 </li>
             </ul>
         </section>
