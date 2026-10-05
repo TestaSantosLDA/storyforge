@@ -18,6 +18,28 @@ class SubtitlesTest {
     }
 
     @Test
+    void no_row_is_ever_too_long_whatever_the_word_lengths() {
+        java.util.Random random = new java.util.Random(42);
+        for (int n = 0; n < 2000; n++) {
+            StringBuilder text = new StringBuilder();
+            int words = 3 + random.nextInt(60);
+            for (int w = 0; w < words; w++) {
+                text.append(w == 0 ? "" : " ").append("x".repeat(1 + random.nextInt(12)));
+                if (random.nextInt(8) == 0) {
+                    text.append('.');
+                }
+            }
+            var cues = Subtitles.cues(List.of(new Subtitles.Spoken(text.toString(), 0, 10)));
+            assertThat(cues).allSatisfy(c -> {
+                assertThat(c.rows()).hasSizeBetween(1, 2);
+                assertThat(c.rows()).allMatch(r -> r.length() <= Subtitles.MAX_CHARS);
+            });
+            assertThat(String.join(" ", cues.stream().flatMap(c -> c.rows().stream()).toList()))
+                    .isEqualTo(text.toString());
+        }
+    }
+
+    @Test
     void long_lines_wrap_to_two_rows_and_very_long_ones_split_into_timed_cues() {
         String text = "It was the longest night of winter in Whisperwood, and the mist lay thick as porridge. "
                 + "By old custom every creature set one small light in their doorway.";

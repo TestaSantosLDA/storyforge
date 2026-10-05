@@ -6,7 +6,7 @@ import java.util.Locale;
 
 /**
  * The {@code .srt} file from the exact script text and the timing manifest (no speech recognition). Lines over
- * {@link #MAX_CHARS} characters are wrapped onto two rows; text too long for one two-row cue is split into
+ * {@link #MAX_CHARS} characters fill two rows word by word; text too long for one two-row cue is split into
  * consecutive cues, timed in proportion to their length.
  */
 public final class Subtitles {
@@ -26,64 +26,58 @@ public final class Subtitles {
     public static List<Cue> cues(List<Spoken> lines) {
         List<Cue> out = new ArrayList<>();
         for (Spoken l : lines) {
-            List<String> chunks = chunks(l.text().strip());
-            int total = chunks.stream().mapToInt(String::length).sum();
+            List<List<String>> chunks = chunks(l.text().strip());
+            int total = chunks.stream().mapToInt(Subtitles::length).sum();
             double t = l.start();
             for (int i = 0; i < chunks.size(); i++) {
-                String c = chunks.get(i);
-                double end = i == chunks.size() - 1 ? l.end() : t + (l.end() - l.start()) * c.length() / total;
-                out.add(new Cue(t, end, wrap(c)));
+                List<String> c = chunks.get(i);
+                double end = i == chunks.size() - 1 ? l.end() : t + (l.end() - l.start()) * length(c) / total;
+                out.add(new Cue(t, end, c));
                 t = end;
             }
         }
         return out;
     }
 
-    /** Pieces that each fit on two rows, broken at sentence ends where possible, else at word boundaries. */
-    static List<String> chunks(String text) {
-        List<String> out = new ArrayList<>();
-        StringBuilder cur = new StringBuilder();
-        for (String sentence : text.split("(?<=[.!?…])\\s+")) {
-            for (String word : sentence.split("\\s+")) {
-                if (cur.length() > 0 && cur.length() + 1 + word.length() > 2 * MAX_CHARS) {
-                    out.add(cur.toString());
-                    cur.setLength(0);
-                }
-                cur.append(cur.length() == 0 ? "" : " ").append(word);
-            }
-            if (cur.length() > MAX_CHARS) {
-                out.add(cur.toString());
-                cur.setLength(0);
-            }
-        }
-        if (cur.length() > 0) {
-            out.add(cur.toString());
-        }
-        return out;
+    private static int length(List<String> rows) {
+        return String.join(" ", rows).length();
     }
 
-    /** One or two rows of at most MAX_CHARS, split near the middle at a space. */
-    static List<String> wrap(String chunk) {
-        if (chunk.length() <= MAX_CHARS) {
-            return List.of(chunk);
-        }
-        int mid = chunk.length() / 2;
-        int split = -1;
-        for (int d = 0; d < chunk.length(); d++) {
-            if (mid - d > 0 && chunk.charAt(mid - d) == ' ' && mid - d <= MAX_CHARS && chunk.length() - (mid - d) - 1 <= MAX_CHARS) {
-                split = mid - d;
-                break;
+    /**
+     * Cues of one or two rows, each row filled word by word up to MAX_CHARS (so no row can ever be too long). A
+     * sentence that ends on a full cue closes it, so cues break at sentence ends where they can. A single word longer
+     * than a row gets a row of its own.
+     */
+    static List<List<String>> chunks(String text) {
+        List<List<String>> out = new ArrayList<>();
+        List<String> rows = new ArrayList<>();
+        StringBuilder row = new StringBuilder();
+        for (String sentence : text.split("(?<=[.!?…])\s+")) {
+            for (String word : sentence.split("\s+")) {
+                if (row.length() > 0 && row.length() + 1 + word.length() > MAX_CHARS) {
+                    rows.add(row.toString());
+                    row.setLength(0);
+                    if (rows.size() == 2) {
+                        out.add(List.copyOf(rows));
+                        rows.clear();
+                    }
+                }
+                row.append(row.length() == 0 ? "" : " ").append(word);
             }
-            if (mid + d < chunk.length() && chunk.charAt(mid + d) == ' ' && mid + d <= MAX_CHARS
-                    && chunk.length() - (mid + d) - 1 <= MAX_CHARS) {
-                split = mid + d;
-                break;
+            if (!rows.isEmpty() && row.length() > 0) { // the sentence filled a second row: close the cue here
+                rows.add(row.toString());
+                row.setLength(0);
+                out.add(List.copyOf(rows));
+                rows.clear();
             }
         }
-        if (split < 0) {
-            split = chunk.lastIndexOf(' ', MAX_CHARS);
+        if (row.length() > 0) {
+            rows.add(row.toString());
         }
-        return split < 0 ? List.of(chunk) : List.of(chunk.substring(0, split), chunk.substring(split + 1));
+        if (!rows.isEmpty()) {
+            out.add(List.copyOf(rows));
+        }
+        return out;
     }
 
     public static String srt(List<Cue> cues) {
