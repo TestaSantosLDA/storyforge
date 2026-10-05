@@ -20,6 +20,8 @@
             <td>
                 <a class="button" th:if="${s.status.name() == 'AWAITING_STORY_APPROVAL'}" th:href="@{/stories/{id}/gate-a(id=${s.id})}">Review</a>
                 <a class="button" th:if="${s.status.name() == 'AWAITING_SCRIPT_APPROVAL'}" th:href="@{/stories/{id}/gate-b(id=${s.id})}">Review</a>
+                <a class="button" th:if="${s.status.name() == 'AWAITING_FINAL_REVIEW'}" th:href="@{/stories/{id}/review(id=${s.id})}">Review</a>
+                <a class="button" th:if="${s.status.name() == 'READY_TO_UPLOAD'}" th:href="@{/stories/{id}/publish(id=${s.id})}">Publish</a>
                 <form th:if="${s.status.name() == 'NEEDS_ATTENTION'}" th:action="@{/stories/{id}/resume(id=${s.id})}" method="post">
                     <button type="submit">Resume</button>
                 </form>

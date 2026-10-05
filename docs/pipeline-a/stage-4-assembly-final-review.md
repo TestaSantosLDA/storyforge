@@ -34,6 +34,13 @@ Stage 4 stitches narration, animated shots, music, intro and end card into the f
 4. **Subtitles** — an `.srt` file built from the exact script text and manifest timings (no speech recognition needed). Long lines are split for readability. Not burned into the picture.
 5. **Render** — MP4, 1920×1080, H.264 video, AAC audio.
 
+## How it runs (MVP)
+
+- One FFmpeg render: intro, shot clips in order, end card; narration delayed by the intro; one music track per run of same-mood scenes with 1.5 s fades; the music bed is compressed by the narration (sidechain ducking) at −18 dB by default; the whole mix is normalised to −14 LUFS (YouTube's reference level).
+- No intro or end card configured (`storyforge.brand.intro` / `end-card`): the video is assembled without them. No licensed track for a mood: that stretch has no music. Both show on the review screen.
+- The correction plan's `shot` instructions are phrased as what should be visible (never the flaw); they are stored per shot and added to that shot's image prompt. `audio_line` targets can carry a pronunciation entry. `mix` lowers the music 6 dB ("quieter") or raises it 4 dB ("louder"); `music` excludes the current track for the named scenes. Subtitles are rebuilt on every assembly.
+- Routing goes to the earliest stage any target needs (story → script → audio → visuals → assembly); everything not named is reused.
+
 ## Automated QA
 
 | Check | Pass condition |

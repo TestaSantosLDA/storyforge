@@ -57,6 +57,10 @@ public class FakeSpeech implements VoiceEngine, Transcriber {
         b.putInt(0x46464952).putInt(36 + n * 2).putInt(0x45564157).putInt(0x20746d66).putInt(16)
                 .putShort((short) 1).putShort((short) 1).putInt(rate).putInt(rate * 2).putShort((short) 2)
                 .putShort((short) 16).putInt(0x61746164).putInt(n * 2);
+        for (int i = 0; i < n; i++) {
+            // A quiet tone instead of silence, so real loudness measurements have something to measure.
+            b.putShort((short) (6000 * Math.sin(2 * Math.PI * 220 * i / rate)));
+        }
         return b.array();
     }
 }

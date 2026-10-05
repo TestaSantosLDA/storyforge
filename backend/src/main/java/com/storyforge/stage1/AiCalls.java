@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 
 /** Runs one AI call and logs it as an attempt, whatever happens (CLAUDE.md rule 8). */
 @Component
-class AiCalls {
+public class AiCalls {
 
     static final String SYSTEM_PROMPT = "system-v1";
 
@@ -33,18 +33,18 @@ class AiCalls {
     }
 
     /** Result of a call: the structured JSON, or null with {@code badOutput} set. */
-    record Outcome(String json, String badOutput) {
-        boolean ok() {
+    public record Outcome(String json, String badOutput) {
+        public boolean ok() {
             return json != null;
         }
     }
 
-    Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
+    public Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
             Map<String, String> vars) {
         return call(storyId, stage, step, promptVersion, schemaVersion, vars, List.of());
     }
 
-    Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
+    public Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
             Map<String, String> vars, List<java.nio.file.Path> images) {
         PromptLibrary.Prompt prompt = prompts.render(promptVersion, vars);
         String system = prompts.text(SYSTEM_PROMPT);
@@ -73,11 +73,11 @@ class AiCalls {
     }
 
     /** Claude-judged QA: returns the checks it reports. */
-    List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars) {
+    public List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars) {
         return judge(storyId, stage, step, promptVersion, vars, List.of());
     }
 
-    List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars,
+    public List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars,
             List<java.nio.file.Path> images) {
         Outcome o = call(storyId, stage, step, promptVersion, "qa-v1", vars, images);
         if (!o.ok()) {

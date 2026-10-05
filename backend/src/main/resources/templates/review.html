@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Final review · ' + ${story.concept})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('awaiting')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <p class="muted"><a th:href="@{/stories/{id}(id=${story.id})}">← Story</a> · Final review</p>
+
+    <p class="empty" th:unless="${assembly}">No assembled video yet.</p>
+
+    <th:block th:if="${assembly}">
+        <section class="card">
+            <h1 th:text="${story.concept}">Story</h1>
+            <p class="muted small" th:text="'Cut ' + ${assembly.version()} + ' · ' + ${#numbers.formatDecimal(assembly.durationSec() / 60, 1, 1)} + ' min'"></p>
+            <video controls preload="metadata" class="player" th:src="@{/media(key=${assembly.videoKey()})}">
+                <track kind="subtitles" srclang="en" label="English" th:src="@{/media(key=${assembly.srtKey()})}" default>
+            </video>
+            <p class="muted small">Subtitles can be turned on or off in the player. The .srt file is uploaded separately to YouTube.</p>
+        </section>
+
+        <section class="card" th:if="${rejection != null and rejection.outcome() != null}">
+            <h2>Last rejection</h2>
+            <p th:text="${rejection.reason()}"></p>
+            <p class="muted small" th:text="'What was redone: ' + ${rejection.outcome()}"></p>
+        </section>
+
+        <section class="card" th:if="${waiting}">
+            <h2>Decide</h2>
+            <div class="row">
+                <form th:action="@{/stories/{id}/review/approve(id=${story.id})}" method="post">
+                    <button class="primary" type="submit">Approve video</button>
+                </form>
+                <form th:action="@{/stories/{id}/review/kill(id=${story.id})}" method="post"
+                      onsubmit="return confirm('Kill this story? It goes to the archive.')">
+                    <button class="danger" type="submit">Kill</button>
+                </form>
+            </div>
+            <form th:action="@{/stories/{id}/review/reject(id=${story.id})}" method="post" class="grid" style="margin-top:1rem">
+                <label>Reject with a reason
+                    <textarea id="reject-reason" name="reason" rows="3" required
+                              placeholder="What's wrong, with times if you can, e.g. the owl looks different at 1:42 and the music is too loud in the chase"></textarea>
+                </label>
+                <p class="muted small" th:text="'Final rejections so far: ' + ${story.finalRejections} + ' (the 3rd stops for you to decide)'"></p>
+                <div><button id="reject-button" type="submit" disabled>Reject</button></div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Shots</h2>
+            <div class="shots">
+                <figure th:each="s : ${shotRows}">
+                    <img th:if="${s.thumbnail()}" th:src="@{/assets(key=${s.thumbnail()})}" th:alt="${s.id()}" loading="lazy">
+                    <figcaption><span th:text="${s.id()}"></span> <span class="muted small" th:text="${s.time()}"></span></figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="card">
+            <h2>Music</h2>
+            <p class="empty" th:if="${musicRows.isEmpty()}">No music: the library has no licensed track for these moods yet. <a th:href="@{/music}">Add tracks</a>.</p>
+            <table class="history" th:unless="${musicRows.isEmpty()}">
+                <thead><tr><th>Track</th><th>License</th><th>Scenes</th><th>Time</th></tr></thead>
+                <tbody>
+                <tr th:each="m : ${musicRows}">
+                    <td th:text="${m.title()}"></td><td th:text="${m.license()}"></td>
+                    <td th:text="${m.scenes()}"></td><td th:text="${m.time()}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section class="card">
+            <h2>Checks</h2>
+            <ul class="checks">
+                <li th:each="c : ${checks}" th:classappend="${c['pass']} ? 'ok' : 'bad'">
+                    <span th:text="${c['pass']} ? '✓' : '✗'"></span>
+                    <span th:text="${c['name']}"></span>
+                    <span class="muted small" th:text="${c['detail']}"></span>
+                </li>
+            </ul>
+        </section>
+
+        <section class="card" th:if="${script}">
+            <h2>Script</h2>
+            <p th:each="l : ${script.lines()}" class="line">
+                <strong th:text="${l.speaker()}"></strong> <span th:text="${l.text()}"></span>
+            </p>
+        </section>
+    </th:block>
+</main>
+<script>
+    (() => {
+        const reason = document.getElementById('reject-reason');
+        const button = document.getElementById('reject-button');
+        if (reason && button) {
+            reason.addEventListener('input', () => button.disabled = reason.value.trim() === '');
+        }
+    })();
+</script>
+</body>
+</html>

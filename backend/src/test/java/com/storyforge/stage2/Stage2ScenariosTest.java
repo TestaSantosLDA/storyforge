@@ -88,7 +88,7 @@ class Stage2ScenariosTest extends DbTest {
     void s1_happy_path_every_line_voiced_checked_stitched_and_mapped() {
         audioStep.run(id);
 
-        assertThat(story().getStatus()).isEqualTo(AUDIO_DONE);
+        assertThat(story().getStatus()).isEqualTo(VISUALS_IN_PROGRESS);
         assertThat(speech.calls).hasSize(40);
         assertThat(speech.calls).filteredOn(c -> c.voice().equals("am_puck")).hasSize(8); // every 5th line is Pip
         assertThat(speech.calls).filteredOn(c -> c.voice().equals("bm_george")).hasSize(32); // narrator
@@ -113,7 +113,7 @@ class Stage2ScenariosTest extends DbTest {
 
         audioStep.run(id);
 
-        assertThat(story().getStatus()).isEqualTo(AUDIO_DONE);
+        assertThat(story().getStatus()).isEqualTo(VISUALS_IN_PROGRESS);
         assertThat(speech.calls).hasSize(41);
         assertThat(speech.calls.get(1).speed()).isEqualTo(0.95);
         assertThat(audio.forStory(id)).filteredOn(l -> !l.passed()).singleElement()
@@ -137,7 +137,7 @@ class Stage2ScenariosTest extends DbTest {
         status.resume(id, BY, "pronunciation added");
         audioStep.run(id);
 
-        assertThat(story().getStatus()).isEqualTo(AUDIO_DONE);
+        assertThat(story().getStatus()).isEqualTo(VISUALS_IN_PROGRESS);
         List<FakeSpeech.Call> after = speech.calls.subList(callsBefore, speech.calls.size());
         assertThat(after).as("only the failing line is redone").singleElement()
                 .satisfies(c -> assertThat(c.text()).startsWith("double-u five"));
@@ -158,7 +158,7 @@ class Stage2ScenariosTest extends DbTest {
         status.resume(id, BY, "accept");
         audioStep.run(id);
 
-        assertThat(story().getStatus()).isEqualTo(AUDIO_DONE);
+        assertThat(story().getStatus()).isEqualTo(VISUALS_IN_PROGRESS);
         assertThat(speech.calls).as("passing clips reused, nothing regenerated").hasSize(40);
     }
 
@@ -209,7 +209,7 @@ class Stage2ScenariosTest extends DbTest {
         audioStep.run(id);
 
         assertThat(speech.calls).hasSize(calls);
-        assertThat(story().getStatus()).isEqualTo(AUDIO_DONE);
+        assertThat(story().getStatus()).isEqualTo(VISUALS_IN_PROGRESS);
     }
 
     @Test

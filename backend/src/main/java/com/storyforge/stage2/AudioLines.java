@@ -40,7 +40,7 @@ public class AudioLines {
 
     /** A passing clip made from exactly these inputs, by any story (never redo what passed). */
     public Optional<Line> passingByHash(String inputHash) {
-        return jdbc.sql("select * from audio_line where input_hash = :h and passed order by id desc limit 1")
+        return jdbc.sql("select * from audio_line where input_hash = :h and passed and not superseded order by id desc limit 1")
                 .param("h", inputHash).query(this::map).optional();
     }
 
@@ -52,6 +52,14 @@ public class AudioLines {
     public int attempts(long storyId, String lineId) {
         return jdbc.sql("select count(*) from audio_line where story_id = :s and line_id = :l")
                 .param("s", storyId).param("l", lineId).query(Integer.class).single();
+    }
+
+    /** A final-review correction: these lines are generated again instead of reusing their clips. */
+    public void supersede(long storyId, java.util.Collection<String> lineIds) {
+        for (String id : lineIds) {
+            jdbc.sql("update audio_line set superseded = true where story_id = :s and line_id = :l")
+                    .param("s", storyId).param("l", id).update();
+        }
     }
 
     public void saveTrack(long storyId, String assetKey, String manifestJson, double durationSec) {

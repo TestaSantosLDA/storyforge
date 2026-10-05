@@ -1,0 +1,16 @@
+---
+id: "oswin-the-owl"
+name: "Oswin"
+topic_id: 1
+kind: "recurring"
+personality: "A patient, unhurried old owl with a dry, gentle wit. He prefers to let\
+  \ a lesson arrive on its own rather than deliver it, and he is quietly fond of Tamsin\
+  \ even when her plans are plainly doomed."
+visual_description: "A large, round, barrel-shaped owl with soft grey-and-white feathers,\
+  \ big tufted eyebrows and a broad pale face. He wears a short, deep-green knitted\
+  \ waistcoat and big round brass-rimmed spectacles."
+reference_images: []
+voice:
+  id: "bm_fable"
+  engine: "kokoro"
+introduced_in_story: 3

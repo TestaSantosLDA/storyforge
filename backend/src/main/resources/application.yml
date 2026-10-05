@@ -3,6 +3,9 @@ server:
 
 spring:
   application.name: storyforge
+  servlet.multipart:
+    max-file-size: 50MB
+    max-request-size: 60MB
   datasource:
     url: ${STORYFORGE_DB_URL:jdbc:postgresql://localhost:5432/storyforge}
     username: ${STORYFORGE_DB_USER:storyforge}

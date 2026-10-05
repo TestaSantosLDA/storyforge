@@ -67,7 +67,7 @@ public class Pronunciation {
                             .reduce("", (a, l) -> a + l + "\n")
                     : "";
             Files.createDirectories(file.toAbsolutePath().getParent());
-            Files.writeString(file, header + yaml.writeValueAsString(all).replaceFirst("^---\s*\n", ""));
+            Files.writeString(file, header + yaml.writeValueAsString(all).replaceFirst("^---\\s*\\n", ""));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

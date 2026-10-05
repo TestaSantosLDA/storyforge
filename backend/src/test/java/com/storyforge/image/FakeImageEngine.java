@@ -26,7 +26,11 @@ public class FakeImageEngine implements ImageEngine {
         }
         requests.add(request);
         try {
-            BufferedImage img = new BufferedImage(8, 8, BufferedImage.TYPE_INT_RGB);
+            BufferedImage img = new BufferedImage(64, 36, BufferedImage.TYPE_INT_RGB);
+            var g = img.createGraphics();
+            g.setColor(new java.awt.Color(200, 190, 160)); // not black, so real FFmpeg black-frame checks pass
+            g.fillRect(0, 0, 64, 36);
+            g.dispose();
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ImageIO.write(img, "png", out);
             return new ImageResult(out.toByteArray(), "fake-image-1", 0.1, 1.0);

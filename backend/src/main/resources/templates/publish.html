@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Publish · ' + ${story.concept})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('awaiting')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <p class="muted"><a th:href="@{/stories/{id}(id=${story.id})}">← Story</a> · Publish</p>
+
+    <section class="card" th:if="${url}">
+        <h1>Published</h1>
+        <p><a th:href="${url}" target="_blank" rel="noopener" th:text="${url}"></a></p>
+    </section>
+
+    <p class="empty" th:unless="${pkg}">The publish package is being prepared.</p>
+
+    <th:block th:if="${pkg}">
+        <section class="card">
+            <h1 th:text="${pkg.metadata().title()}">Title</h1>
+            <p class="muted small" th:text="'Package ' + ${pkg.version()} + (${pkg.passed()} ? ' · checks passed' : ' · checks failed')"></p>
+            <form th:action="@{/stories/{id}/publish/edit(id=${story.id})}" method="post" class="grid">
+                <label>Title
+                    <span class="row"><input id="pub-title" name="title" th:value="${pkg.metadata().title()}" maxlength="100">
+                    <button type="button" class="copy" data-copy="pub-title">Copy</button></span>
+                </label>
+                <label>Description
+                    <textarea id="pub-description" name="description" rows="14" th:text="${pkg.metadata().description()}"></textarea>
+                    <button type="button" class="copy" data-copy="pub-description">Copy</button>
+                </label>
+                <label>Tags (comma separated)
+                    <span class="row"><input id="pub-tags" name="tags" th:value="${#strings.listJoin(pkg.metadata().tags(), ', ')}">
+                    <button type="button" class="copy" data-copy="pub-tags">Copy</button></span>
+                </label>
+                <div th:if="${ready}"><button type="submit">Save edits</button></div>
+            </form>
+        </section>
+
+        <section class="card">
+            <h2>Files</h2>
+            <ul class="list">
+                <li th:if="${assembly}"><a th:href="@{/media(key=${assembly['video']})}" download>Video (MP4)</a></li>
+                <li th:if="${assembly}"><a th:href="@{/assets(key=${assembly['srt']})}" download>Subtitles (.srt)</a></li>
+            </ul>
+            <div class="shots" style="margin-top:.75rem">
+                <figure th:each="t : ${pkg.thumbnails()}">
+                    <a th:href="@{/assets(key=${t.assetKey()})}" download><img th:src="@{/assets(key=${t.assetKey()})}" th:alt="${t.text()}"></a>
+                    <figcaption class="small" th:text="${t.text()} + ' · ' + ${t.shotId()}"></figcaption>
+                </figure>
+            </div>
+            <p class="muted small">Three thumbnails, for YouTube's thumbnail test.</p>
+        </section>
+
+        <section class="card" th:if="${ready}">
+            <h2>Upload checklist</h2>
+            <ol class="checklist">
+                <li><label><input type="checkbox" id="step-1"> Upload the video in YouTube Studio as <strong>private</strong>.</label></li>
+                <li><label><input type="checkbox" id="step-2"> Paste the title, description and tags; set the audience to <strong>not made for kids</strong>.</label></li>
+                <li><label><input type="checkbox" id="step-3"> Upload the subtitle file and the thumbnail (or set up the 3-thumbnail test).</label></li>
+                <li><label><input type="checkbox" id="step-4"> Add it to the series playlist; add end screen elements over the end card.</label></li>
+                <li><label><input type="checkbox" id="step-5"> Wait for YouTube's copyright check to finish with no claims.</label></li>
+                <li><label><input type="checkbox" id="step-6"> Publish, then paste the video link below.</label></li>
+            </ol>
+            <form th:action="@{/stories/{id}/publish/published(id=${story.id})}" method="post" class="row" style="margin-top:.75rem">
+                <input id="pub-url" name="url" type="url" required placeholder="https://www.youtube.com/watch?v=..." style="flex:1;min-width:16rem">
+                <button class="primary" type="submit">Mark as published</button>
+            </form>
+        </section>
+
+        <section class="card" th:if="${ready}">
+            <h2>Change something</h2>
+            <form th:action="@{/stories/{id}/publish/regenerate(id=${story.id})}" method="post" class="grid">
+                <label>Rewrite the title, description and thumbnails with notes
+                    <textarea id="pub-notes" name="notes" rows="2" required placeholder="e.g. a warmer title, show the owl on a thumbnail"></textarea>
+                </label>
+                <div><button type="submit">Regenerate</button></div>
+            </form>
+            <h3>Copyright check flagged something?</h3>
+            <form th:each="t : ${tracks}" th:action="@{/stories/{id}/publish/music-claim(id=${story.id})}" method="post" class="row">
+                <input type="hidden" name="trackId" th:value="${t.id()}">
+                <span th:text="'Music: ' + ${t.title()}"></span>
+                <a class="small" th:href="@{/assets(key=${t.licenseKey()})}" download>license file</a>
+                <button type="submit" name="action" value="dispute">Dispute with license</button>
+                <button type="submit" name="action" value="replace">Replace this track</button>
+            </form>
+            <form th:action="@{/stories/{id}/publish/visual-claim(id=${story.id})}" method="post" class="grid" style="margin-top:.75rem">
+                <label>Visual claim (paste what it says)
+                    <textarea id="pub-claim" name="claim" rows="2"></textarea>
+                </label>
+                <div><button type="submit">Fix the flagged part</button></div>
+            </form>
+            <form th:action="@{/stories/{id}/publish/kill(id=${story.id})}" method="post" style="margin-top:1rem"
+                  onsubmit="return confirm('Archive this story without publishing?')">
+                <button class="danger" type="submit">Don't publish</button>
+            </form>
+        </section>
+    </th:block>
+</main>
+<script>
+    document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+        const field = document.getElementById(b.dataset.copy);
+        try { await navigator.clipboard.writeText(field.value); b.textContent = 'Copied'; }
+        catch (e) { field.select(); b.textContent = 'Press Ctrl+C'; }
+        setTimeout(() => b.textContent = 'Copy', 1500);
+    }));
+</script>
+</body>
+</html>

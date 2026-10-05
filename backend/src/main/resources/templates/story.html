@@ -27,6 +27,8 @@
         <div class="row">
             <a class="button primary" th:if="${story.status.name() == 'AWAITING_STORY_APPROVAL'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Review story and cast</a>
             <a class="button primary" th:if="${story.status.name() == 'AWAITING_SCRIPT_APPROVAL'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Review script</a>
+            <a class="button primary" th:if="${story.status.name() == 'AWAITING_FINAL_REVIEW'}" th:href="@{/stories/{id}/review(id=${story.id})}">Review video</a>
+            <a class="button primary" th:if="${story.status.name() == 'READY_TO_UPLOAD' or story.status.name() == 'PUBLISHED'}" th:href="@{/stories/{id}/publish(id=${story.id})}">Publish screen</a>
             <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-a(id=${story.id})}">Story drafts</a>
             <a class="button" th:if="${story.status.name() != 'QUEUED'}" th:href="@{/stories/{id}/gate-b(id=${story.id})}">Script drafts</a>
             <a class="button" th:if="${queued}" th:href="@{/stories/{id}/edit(id=${story.id})}">Edit</a>
@@ -86,6 +88,30 @@
             </tr>
             </tbody>
         </table>
+    </section>
+
+    <section class="card" th:if="${visualsFlagged and #strings.contains(story.attentionReason, 'failed QA')}">
+        <h2>Fix the shots</h2>
+        <p class="muted small">Resume draws the failing shots again. Or accept the best draw of each and carry on.</p>
+        <form th:action="@{/stories/{id}/visuals/accept-best(id=${story.id})}" method="post">
+            <button type="submit">Accept the best images</button>
+        </form>
+    </section>
+
+    <section class="card" th:unless="${shotImages.isEmpty()}">
+        <h2>Shots</h2>
+        <div class="shots">
+            <figure th:each="i : ${shotImages}" th:classappend="${i.passed() or i.accepted()} ? '' : 'failed'">
+                <a th:href="${shotClips[i.shotId()] != null} ? @{/assets(key=${shotClips[i.shotId()]})} : @{/assets(key=${i.assetKey()})}" target="_blank">
+                    <img th:src="@{/assets(key=${i.assetKey()})}" th:alt="${i.shotId()}" loading="lazy">
+                </a>
+                <figcaption>
+                    <span th:text="${i.shotId()}"></span>
+                    <span class="muted small" th:text="${i.passed()} ? 'passed' : (${i.accepted()} ? 'accepted' : ${i.failures()} + ' failed checks')"></span>
+                    <span class="muted small" th:if="${shotClips[i.shotId()] != null}">· clip</span>
+                </figcaption>
+            </figure>
+        </div>
     </section>
 
     <section class="card">

@@ -34,7 +34,7 @@ public final class StoryTransitions {
                 SCRIPT_IN_PROGRESS, STORY_IN_PROGRESS, NEEDS_ATTENTION);
         allow(FINAL_APPROVED, PREPARING_PUBLISH);
         allow(PREPARING_PUBLISH, READY_TO_UPLOAD, NEEDS_ATTENTION);
-        allow(READY_TO_UPLOAD, PUBLISHED, ASSEMBLING, ANALYZING_REJECTION, ARCHIVED);
+        allow(READY_TO_UPLOAD, PUBLISHED, ASSEMBLING, ANALYZING_REJECTION, PREPARING_PUBLISH, ARCHIVED);
         allow(PUBLISHED);
         // Resume, retry, accept or "send back to Gate B" all land on a working status; Kill archives.
         Set<StoryStatus> fromAttention = EnumSet.copyOf(StoryStatus.ofKind(StoryStatus.Kind.WORKING));

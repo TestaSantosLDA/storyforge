@@ -1,0 +1,16 @@
+---
+id: "tamsin-the-fox"
+name: "Tamsin"
+topic_id: 1
+kind: "recurring"
+personality: "A curious, quick-thinking young fox with big ideas and very little patience.\
+  \ She is warm-hearted and earnest, prone to grand schemes, and good at admitting\
+  \ when she was wrong once she has seen it for herself."
+visual_description: "A small, slim young fox with bright russet-orange fur, a cream\
+  \ chest and a big fluffy tail with a cream tip. She wears a long, chunky mustard-yellow\
+  \ scarf that trails behind her, and carries a jam-jar lantern with a wire handle."
+reference_images: []
+voice:
+  id: "af_sky"
+  engine: "kokoro"
+introduced_in_story: 3

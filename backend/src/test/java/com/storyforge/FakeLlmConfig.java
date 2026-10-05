@@ -13,6 +13,13 @@ public class FakeLlmConfig {
     }
 
     @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "storyforge.animation.engine",
+            havingValue = "fake")
+    com.storyforge.animation.FakeAnimator fakeAnimator() {
+        return new com.storyforge.animation.FakeAnimator();
+    }
+
+    @Bean
     com.storyforge.voice.FakeSpeech fakeSpeech() {
         return new com.storyforge.voice.FakeSpeech();
     }

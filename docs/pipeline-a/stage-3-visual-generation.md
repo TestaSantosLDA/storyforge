@@ -31,6 +31,7 @@ Stage 3 turns the approved scenes and the narration timing into animated shots i
 - For each shot: characters present, what they are doing, framing (wide, medium, close-up), and camera move (slow zoom in or out, pan left or right, hold).
 - Shot durations come from the timing manifest, so visuals follow the narration exactly.
 - QA: shots cover the whole timeline with no gaps or overlaps; every shot uses only the story's approved cast; durations within the configured range.
+- How it runs: Claude sees each line's on-screen seconds (including the pause after it), and code then splits any shot over the maximum at line boundaries and merges short shots into a same-scene neighbour when the result fits. The 5 s minimum is a target only: code merges short shots where it can, and a shorter shot never fails the plan (in the first real runs a hard minimum made plans unsolvable). Only the 10 s maximum is enforced, except for a single line longer than that.
 
 ## Step 3B — Image generation
 
@@ -131,3 +132,4 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 - Channel style: classic storybook animation, muted palette including soft reds; studios are never named in prompts.
 - Character references are approved at Gate A; Stage 3 has no human gate.
 - 3 automatic retries per shot, then `needs_attention`. Shots are 5–10 seconds, at most 4 characters each.
+- Clip lengths are cut on the frame grid from each shot's start and end (not its rounded length), so whole-frame rounding never accumulates into picture/voice drift across a long story.

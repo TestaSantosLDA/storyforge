@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class Drafts {
 
-    public enum Kind { STORY, SCRIPT }
+    public enum Kind { STORY, SCRIPT, SHOTS }
 
     public record Draft(long id, long storyId, Kind kind, int version, String content, String qaResults,
             String promptVersion, String reviewState, String reviewerNotes, Instant createdAt, String sheets,

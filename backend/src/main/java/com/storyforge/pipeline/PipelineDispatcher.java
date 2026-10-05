@@ -3,6 +3,10 @@ package com.storyforge.pipeline;
 import com.storyforge.stage1.ScriptStep;
 import com.storyforge.stage1.StoryStep;
 import com.storyforge.stage2.AudioStep;
+import com.storyforge.stage3.VisualsStep;
+import com.storyforge.stage4.AssemblyStep;
+import com.storyforge.stage4.FinalReview;
+import com.storyforge.stage5.PublishStep;
 
 import com.storyforge.story.StageDispatcher;
 import com.storyforge.story.StoryEnteredStatus;
@@ -32,6 +36,10 @@ public class PipelineDispatcher implements StageDispatcher {
     private final StoryStep storyStep;
     private final ScriptStep scriptStep;
     private final AudioStep audioStep;
+    private final VisualsStep visualsStep;
+    private final AssemblyStep assemblyStep;
+    private final FinalReview finalReview;
+    private final PublishStep publishStep;
     private final StoryStatusService status;
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pipeline-worker");
@@ -40,10 +48,16 @@ public class PipelineDispatcher implements StageDispatcher {
     });
     private final Set<Long> running = ConcurrentHashMap.newKeySet();
 
-    PipelineDispatcher(StoryStep storyStep, ScriptStep scriptStep, AudioStep audioStep, StoryStatusService status) {
+    PipelineDispatcher(StoryStep storyStep, ScriptStep scriptStep, AudioStep audioStep, VisualsStep visualsStep,
+            AssemblyStep assemblyStep, FinalReview finalReview, PublishStep publishStep,
+            StoryStatusService status) {
         this.storyStep = storyStep;
         this.scriptStep = scriptStep;
         this.audioStep = audioStep;
+        this.visualsStep = visualsStep;
+        this.assemblyStep = assemblyStep;
+        this.finalReview = finalReview;
+        this.publishStep = publishStep;
         this.status = status;
     }
 
@@ -60,6 +74,10 @@ public class PipelineDispatcher implements StageDispatcher {
             case STORY_IN_PROGRESS -> () -> storyStep.run(storyId);
             case SCRIPT_IN_PROGRESS -> () -> scriptStep.run(storyId);
             case AUDIO_IN_PROGRESS -> () -> audioStep.run(storyId);
+            case VISUALS_IN_PROGRESS -> () -> visualsStep.run(storyId);
+            case ASSEMBLING -> () -> assemblyStep.run(storyId);
+            case ANALYZING_REJECTION -> () -> finalReview.analyze(storyId);
+            case PREPARING_PUBLISH -> () -> publishStep.run(storyId);
             default -> null;
         };
         if (step == null) {

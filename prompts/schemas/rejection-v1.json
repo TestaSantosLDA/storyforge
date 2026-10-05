@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["confident", "summary", "targets"],
+  "properties": {
+    "confident": {"type": "boolean"},
+    "summary": {"type": "string"},
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "ids", "instruction", "word", "say_as"],
+        "properties": {
+          "type": {"type": "string", "enum": ["shot", "audio_line", "music", "mix", "subtitles", "script", "story"]},
+          "ids": {"type": "array", "items": {"type": "string"}},
+          "instruction": {"type": "string"},
+          "word": {"type": "string"},
+          "say_as": {"type": "string"}
+        }
+      }
+    }
+  }
+}

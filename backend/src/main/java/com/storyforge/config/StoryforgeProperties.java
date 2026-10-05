@@ -24,6 +24,9 @@ public record StoryforgeProperties(
         @DefaultValue Script script,
         @DefaultValue Images images,
         @DefaultValue Style style,
+        @DefaultValue Media media,
+        @DefaultValue Brand brand,
+        @DefaultValue Channel channel,
         @DefaultValue("false") boolean madeForKids) {
 
     /**
@@ -84,7 +87,18 @@ public record StoryforgeProperties(
             @DefaultValue("4") int maxCharactersPerShot,
             @DefaultValue("3") int imageRetries,
             @DefaultValue("4") int maxReferenceImages,
-            @DefaultValue("512") int referenceMaxPx) {
+            @DefaultValue("512") int referenceMaxPx,
+            /** Claude's shot plan: tries before flagging (each retry gets the failed checks). */
+            @DefaultValue("3") int shotPlanRetries,
+            /** The model's 16:9 render size, then upscaled to the output size when animating. */
+            @DefaultValue("1360") int imageWidth,
+            @DefaultValue("768") int imageHeight,
+            @DefaultValue("1920") int outputWidth,
+            @DefaultValue("1080") int outputHeight,
+            @DefaultValue("25") int fps,
+            /** How far a zoom goes over a shot (0.12 = 12 %) and how far a pan travels across the image. */
+            @DefaultValue("0.12") double zoomAmount,
+            @DefaultValue("0.15") double panAmount) {
     }
 
     public record Clips(
@@ -145,6 +159,24 @@ public record StoryforgeProperties(
     public record Style(
             @DefaultValue("Classic storybook animation still, vintage hand-drawn look. Hand-drawn characters with clean, slightly soft ink outlines and simple cel shading with one shadow tone, no gradients. Painted watercolour and gouache background, softer and less detailed than the characters. Muted palette of warm creams, sage greens, dusty blues, soft ochres and muted brick and rust reds, no saturated colours. Rounded, expressive characters with big readable faces, mid-century feature-animation tradition. Light paper grain over everything.")
             String block) {
+    }
+
+    /**
+     * Channel brand assets (human setup task): intro (3-5 s) and end card (10-20 s) video files. Empty: the video is
+     * assembled without them and the final review screen says so. Music bed level is relative to the narration.
+     */
+    public record Brand(String intro, String endCard, @DefaultValue("-18") double musicVolumeDb) {
+    }
+
+    /** Links for video descriptions: channel links, and each topic's series playlist (topic name to URL). */
+    public record Channel(@DefaultValue({}) java.util.List<String> links,
+            @DefaultValue({}) java.util.Map<String, String> playlists) {
+    }
+
+    /** FFmpeg, installed per machine (CLAUDE.md "Stack"). */
+    public record Media(
+            @DefaultValue("ffmpeg") String ffmpeg,
+            @DefaultValue("ffprobe") String ffprobe) {
     }
 
     /** Script length check: roughly 400–650 words for 3–5 minutes (Stage 1 script QA). */
