@@ -44,6 +44,50 @@
         <p class="muted" th:unless="${queued}">This story has started, so it can't be edited or deleted.</p>
     </section>
 
+    <section class="card" th:if="${audioFlagged}">
+        <h2>Fix the audio</h2>
+        <form th:if="${#strings.contains(story.attentionReason, 'Narration is')}"
+              th:action="@{/stories/{id}/audio/accept-duration(id=${story.id})}" method="post">
+            <button class="primary" type="submit">Accept this length</button>
+        </form>
+        <form th:action="@{/stories/{id}/audio/pronunciation(id=${story.id})}" method="post" class="grid" style="margin-top:1rem">
+            <p class="muted small">A word keeps being misread? Say how to pronounce it; the script itself doesn't change.</p>
+            <div class="row">
+                <label>Word <input name="word" required placeholder="Tamsin"></label>
+                <label>Read it as <input name="sayAs" required placeholder="Tamzin"></label>
+            </div>
+            <div><button type="submit">Add and retry</button></div>
+        </form>
+        <form th:action="@{/stories/{id}/audio/send-back(id=${story.id})}" method="post" class="grid" style="margin-top:1rem">
+            <label>Or send the script back to Gate B
+                <textarea name="notes" rows="2" required placeholder="What to change, e.g. shorten the middle scene"></textarea>
+            </label>
+            <p class="muted small" th:text="'Script rejections so far: ' + ${story.scriptRejections} + ' (the 3rd archives the story)'"></p>
+            <div><button type="submit">Send back</button></div>
+        </form>
+    </section>
+
+    <section class="card" th:if="${audioTrack != null or !audioLines.isEmpty()}">
+        <h2>Narration</h2>
+        <th:block th:if="${audioTrack}">
+            <p class="muted small" th:text="${#numbers.formatDecimal(audioTrack.durationSec() / 60, 1, 1)} + ' min' + (${audioTrack.durationAccepted()} ? ' · length accepted' : '')"></p>
+            <audio controls preload="none" th:src="@{/assets(key=${audioTrack.assetKey()})}" style="width:100%"></audio>
+        </th:block>
+        <table class="history" style="margin-top:1rem">
+            <thead><tr><th>Line</th><th>Voice</th><th>Heard</th><th>Match</th><th></th></tr></thead>
+            <tbody>
+            <tr th:each="l : ${audioLines}">
+                <td th:text="${l.lineId()}"></td>
+                <td th:text="${l.voice()}"></td>
+                <td class="small" th:text="${l.transcript()}"></td>
+                <td th:text="${l.matchScore() == null} ? '' : ${#numbers.formatDecimal(l.matchScore() * 100, 1, 0)} + '%'"
+                    th:classappend="${l.passed()} ? '' : 'err'"></td>
+                <td><audio controls preload="none" th:src="@{/assets(key=${l.assetKey()})}"></audio></td>
+            </tr>
+            </tbody>
+        </table>
+    </section>
+
     <section class="card">
         <h2>History</h2>
         <table class="history">

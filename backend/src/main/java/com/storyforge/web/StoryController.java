@@ -24,13 +24,15 @@ class StoryController {
     private final StoryRepository stories;
     private final StatusChangeRepository changes;
     private final TopicService topics;
+    private final com.storyforge.stage2.AudioLines audio;
 
     StoryController(StoryQueueService queue, StoryRepository stories, StatusChangeRepository changes,
-            TopicService topics) {
+            TopicService topics, com.storyforge.stage2.AudioLines audio) {
         this.queue = queue;
         this.stories = stories;
         this.changes = changes;
         this.topics = topics;
+        this.audio = audio;
     }
 
     @GetMapping("/stories/new")
@@ -63,6 +65,12 @@ class StoryController {
         model.addAttribute("story", story);
         model.addAttribute("history", changes.findByStoryIdOrderByIdAsc(id));
         model.addAttribute("queued", story.getStatus() == StoryStatus.QUEUED);
+        var latest = new java.util.LinkedHashMap<String, com.storyforge.stage2.AudioLines.Line>();
+        audio.forStory(id).forEach(l -> latest.put(l.lineId(), l));
+        model.addAttribute("audioLines", latest.values());
+        model.addAttribute("audioTrack", audio.track(id).orElse(null));
+        model.addAttribute("audioFlagged", story.getStatus() == StoryStatus.NEEDS_ATTENTION
+                && story.getResumeStatus() == StoryStatus.AUDIO_IN_PROGRESS);
         return "story";
     }
 

@@ -88,6 +88,9 @@ public class Gates {
         Drafts.Draft draft = pending(storyId, Drafts.Kind.SCRIPT);
         status.transition(storyId, StoryStatus.AWAITING_SCRIPT_APPROVAL, StoryStatus.SCRIPT_APPROVED, by, "approved");
         drafts.review(draft.id(), "approved", null);
+        // Stages 2-4 run automatically after Gate B.
+        status.transition(storyId, StoryStatus.SCRIPT_APPROVED, StoryStatus.AUDIO_IN_PROGRESS, "system:stage1",
+                "script approved; recording narration");
     }
 
     /** Regenerate with notes: counts a rejection; the limit archives the story. */
@@ -110,6 +113,26 @@ public class Gates {
         }
         status.transition(storyId, waiting, story ? StoryStatus.STORY_IN_PROGRESS : StoryStatus.SCRIPT_IN_PROGRESS,
                 by, "regenerate: " + notes.strip());
+        return Outcome.REGENERATING;
+    }
+
+    /**
+     * From a flagged later stage (e.g. a line that can't be read, or narration too long): regenerate the script
+     * with notes. Counts as a script rejection (Stage 2 scenario 6); the limit archives the story.
+     */
+    @Transactional
+    public Outcome sendBackToScript(long storyId, String notes, String by) {
+        if (notes == null || notes.isBlank()) {
+            throw InvalidInputException.of("notes", "Say what to change in the script.");
+        }
+        drafts.approved(storyId, Drafts.Kind.SCRIPT).ifPresent(d -> drafts.review(d.id(), "rejected", notes.strip()));
+        StoryCounters.Count count = counters.increment(storyId, StoryCounter.SCRIPT_REJECTIONS);
+        if (count.reachedLimit()) {
+            status.archive(storyId, StoryStatus.NEEDS_ATTENTION, ArchiveReason.SCRIPT_REJECTIONS_EXHAUSTED, by,
+                    notes.strip());
+            return Outcome.ARCHIVED;
+        }
+        status.resumeTo(storyId, StoryStatus.SCRIPT_IN_PROGRESS, by, "sent back to Gate B: " + notes.strip());
         return Outcome.REGENERATING;
     }
 

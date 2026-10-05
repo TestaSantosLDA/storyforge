@@ -134,7 +134,7 @@ class Stage1ScenariosTest extends DbTest {
         assertThat(claude.requests("script").getFirst().userPrompt()).contains("pip-the-hedgehog", "The Quiet Clearing");
 
         gates.approveScript(id, BY);
-        assertThat(status()).isEqualTo(SCRIPT_APPROVED);
+        assertThat(status()).as("Stage 2 starts automatically").isEqualTo(AUDIO_IN_PROGRESS);
         assertThat(drafts.approved(id, Drafts.Kind.SCRIPT)).isPresent();
         assertThat(jdbc.sql("select count(*) from attempt where story_id = :id").param("id", id)
                 .query(Long.class).single()).as("generate + QA for story and script").isEqualTo(4);

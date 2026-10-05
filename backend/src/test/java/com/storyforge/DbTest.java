@@ -13,6 +13,8 @@ import org.springframework.jdbc.core.simple.JdbcClient;
         "storyforge.paths.prompts=../prompts",
         "storyforge.llm.engine=fake",
         "storyforge.images.engine=none",
+        "storyforge.voices.engine=fake",
+        "storyforge.paths.pronunciation=target/test-pronunciation.yaml",
         "storyforge.llm.first-backoff=1ms",
         "storyforge.pipeline.auto-dispatch=false",
         "storyforge.pipeline.auto-resume-check=1h"})

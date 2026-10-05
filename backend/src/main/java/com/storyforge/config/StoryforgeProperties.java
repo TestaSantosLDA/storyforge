@@ -30,7 +30,7 @@ public record StoryforgeProperties(
      * Bound as strings: Spring's String-to-Path conversion treats a relative value like {@code ../characters} as a
      * classpath resource and rejects it.
      */
-    public record Paths(String assets, String characters, String prompts) {
+    public record Paths(String assets, String characters, String prompts, String pronunciation) {
 
         public Path assetsDir() {
             return Path.of(assets);
@@ -42,6 +42,10 @@ public record StoryforgeProperties(
 
         public Path promptsDir() {
             return Path.of(prompts);
+        }
+
+        public Path pronunciationFile() {
+            return Path.of(pronunciation == null ? "../channel/pronunciation.yaml" : pronunciation);
         }
     }
 
@@ -66,7 +70,12 @@ public record StoryforgeProperties(
             @DefaultValue("6.0") double maxDurationMin,
             @DefaultValue("300ms") Duration pauseSameSpeaker,
             @DefaultValue("600ms") Duration pauseSpeakerChange,
-            @DefaultValue("1200ms") Duration pauseScene) {
+            @DefaultValue("1200ms") Duration pauseScene,
+            /** Speed per attempt: Kokoro is deterministic, so a retry needs a slightly different reading. */
+            @DefaultValue({"1.0", "0.95", "1.05"}) java.util.List<Double> attemptSpeeds,
+            @DefaultValue("1.2") double minWordsPerSecond,
+            @DefaultValue("4.5") double maxWordsPerSecond,
+            @DefaultValue("1500ms") Duration maxInnerSilence) {
     }
 
     public record Visuals(

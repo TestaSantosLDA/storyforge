@@ -1,0 +1,5 @@
+# Channel pronunciation dictionary (Stage 2). Maps a word as written in the script to how the voice engine
+# should read it. Applied to the text sent to the voice engine only; the approved script never changes.
+# Whole words, case-insensitive. Example:
+#   Tamsin: Tamzin
+{}

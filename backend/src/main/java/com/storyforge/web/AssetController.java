@@ -22,13 +22,15 @@ class AssetController {
 
     @GetMapping("/assets")
     ResponseEntity<InputStreamResource> asset(@RequestParam String key) throws IOException {
-        if (!key.endsWith(".png")) {
+        MediaType type = key.endsWith(".png") ? MediaType.IMAGE_PNG
+                : key.endsWith(".wav") ? MediaType.valueOf("audio/wav") : null;
+        if (type == null) {
             return ResponseEntity.notFound().build();
         }
         try {
             InputStream in = assets.open(key).orElse(null);
             return in == null ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(new InputStreamResource(in));
+                    : ResponseEntity.ok().contentType(type).body(new InputStreamResource(in));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.notFound().build();
         }

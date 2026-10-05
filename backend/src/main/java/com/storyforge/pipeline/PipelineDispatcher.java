@@ -1,4 +1,8 @@
-package com.storyforge.stage1;
+package com.storyforge.pipeline;
+
+import com.storyforge.stage1.ScriptStep;
+import com.storyforge.stage1.StoryStep;
+import com.storyforge.stage2.AudioStep;
 
 import com.storyforge.story.StageDispatcher;
 import com.storyforge.story.StoryEnteredStatus;
@@ -27,6 +31,7 @@ public class PipelineDispatcher implements StageDispatcher {
 
     private final StoryStep storyStep;
     private final ScriptStep scriptStep;
+    private final AudioStep audioStep;
     private final StoryStatusService status;
     private final ExecutorService worker = Executors.newSingleThreadExecutor(r -> {
         Thread t = new Thread(r, "pipeline-worker");
@@ -35,9 +40,10 @@ public class PipelineDispatcher implements StageDispatcher {
     });
     private final Set<Long> running = ConcurrentHashMap.newKeySet();
 
-    PipelineDispatcher(StoryStep storyStep, ScriptStep scriptStep, StoryStatusService status) {
+    PipelineDispatcher(StoryStep storyStep, ScriptStep scriptStep, AudioStep audioStep, StoryStatusService status) {
         this.storyStep = storyStep;
         this.scriptStep = scriptStep;
+        this.audioStep = audioStep;
         this.status = status;
     }
 
@@ -53,6 +59,7 @@ public class PipelineDispatcher implements StageDispatcher {
         Runnable step = switch (s) {
             case STORY_IN_PROGRESS -> () -> storyStep.run(storyId);
             case SCRIPT_IN_PROGRESS -> () -> scriptStep.run(storyId);
+            case AUDIO_IN_PROGRESS -> () -> audioStep.run(storyId);
             default -> null;
         };
         if (step == null) {

@@ -18,6 +18,8 @@ storyforge:
     # Character files and prompt templates are versioned in the repo (paths relative to backend/).
     characters: ${STORYFORGE_CHARACTERS_DIR:../characters}
     prompts: ${STORYFORGE_PROMPTS_DIR:../prompts}
+    # Channel pronunciation dictionary (what the voice engine reads, never the script).
+    pronunciation: ${STORYFORGE_PRONUNCIATION_FILE:../channel/pronunciation.yaml}
   pipeline:
     max-concurrent-stories: 1
     story-cost-budget-usd: 10.00
