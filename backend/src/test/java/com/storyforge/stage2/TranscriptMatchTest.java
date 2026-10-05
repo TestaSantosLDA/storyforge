@@ -25,6 +25,19 @@ class TranscriptMatchTest {
     }
 
     @Test
+    void words_that_sound_alike_and_a_swallowed_past_tense_still_match() {
+        // Both from the 2026-10-05 harbour run, where correct readings failed three times.
+        assertThat(TranscriptMatch.score("I checked the facts. You are right.", "I check the facts, you are right.",
+                names)).isEqualTo(1.0);
+        assertThat(TranscriptMatch.score("And off they went along the shining quay, because a small thing, shared,"
+                + " turns out to be plenty.", "And off they went along the shining key, because a small thing shared"
+                + " turns out to be plenty.", names)).isEqualTo(1.0);
+        assertThat(TranscriptMatch.score("the tale of the hare", "the tail of the hair", names)).isEqualTo(1.0);
+        // A different word is still a miss.
+        assertThat(TranscriptMatch.score("she checked the boat", "she chased the boat", names)).isLessThan(1.0);
+    }
+
+    @Test
     void numbers_are_normalised() {
         assertThat(TranscriptMatch.score("She counted 3 chips.", "She counted three chips.", names)).isEqualTo(1.0);
     }

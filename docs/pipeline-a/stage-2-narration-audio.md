@@ -121,3 +121,4 @@ Stage 2 turns the approved, speaker-tagged script into narration audio: the fixe
 - Narrator voice is picked by listening to the Kokoro voice samples before the first run (setup task).
 - Duration tolerance: 2.5 to 6 minutes for a 3–5 minute target.
 - Pauses: 0.3 s same speaker, 0.6 s speaker change, 1.2 s scene boundary; tunable by ear.
+- Transcript match treats words that sound exactly alike ("quay" / "key", from a small fixed list) and a past-tense ending swallowed by the next word ("checked the" / "check the") as matches. Both failed correct readings three times in the 2026-10-05 harbour run.
