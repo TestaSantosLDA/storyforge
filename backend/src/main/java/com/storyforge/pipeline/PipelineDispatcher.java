@@ -25,7 +25,9 @@ import org.springframework.transaction.event.TransactionalEventListener;
 /**
  * Starts the stage that owns a working status, once the status change has committed. Plain Spring code decides the
  * flow (CLAUDE.md rule 2). One worker thread: stories run one step at a time. The "running" set only stops the same
- * story being started twice in this process; the status column stays the source of truth.
+ * step of the same story being queued twice in this process; it is keyed by story and status, so a step that moves
+ * its story straight on (visuals → assembling) queues the next step behind itself. The status column stays the
+ * source of truth.
  */
 @Component
 @ConditionalOnProperty(name = "storyforge.pipeline.auto-dispatch", havingValue = "true", matchIfMissing = true)
@@ -46,7 +48,7 @@ public class PipelineDispatcher implements StageDispatcher {
         t.setDaemon(true);
         return t;
     });
-    private final Set<Long> running = ConcurrentHashMap.newKeySet();
+    private final Set<String> running = ConcurrentHashMap.newKeySet();
 
     PipelineDispatcher(StoryStep storyStep, ScriptStep scriptStep, AudioStep audioStep, VisualsStep visualsStep,
             AssemblyStep assemblyStep, FinalReview finalReview, PublishStep publishStep,
@@ -84,7 +86,8 @@ public class PipelineDispatcher implements StageDispatcher {
             log.info("story {} is {}; no stage is implemented for it yet", storyId, s.dbValue());
             return;
         }
-        if (!running.add(storyId)) {
+        String key = storyId + ":" + s.name();
+        if (!running.add(key)) {
             return;
         }
         worker.submit(() -> {
@@ -98,7 +101,7 @@ public class PipelineDispatcher implements StageDispatcher {
                     // already moved on
                 }
             } finally {
-                running.remove(storyId);
+                running.remove(key);
             }
         });
     }
