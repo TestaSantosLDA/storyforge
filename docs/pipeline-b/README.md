@@ -40,6 +40,10 @@ Turn each published long-form story into 2–3 vertical (9:16) clips for YouTube
 
 - Review and publish screen per clip; approve, reject with reason (routed to B1, B2 or B3), skip a platform, or kill. 3 rejections kill a clip. Shorts uploaded private first. Detail: Pipeline B · Stage 4.
 
+## Clips from any video
+
+- A page where a person uploads a video or pastes a YouTube link. An intake step downloads and transcribes it, then B1, a reframe variant of B2 (crop, not re-generate), B3 and B4 make the clips. Detail: Pipeline B · Clips From Any Video.
+
 ## Key principles
 
 - Reuses Pipeline A's assets; only the vertical images are new.
