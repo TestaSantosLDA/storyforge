@@ -60,6 +60,8 @@ A failing shot is regenerated up to 3 times; then `needs_attention`. Vertical im
 
 ## Decisions
 
+- For Pipeline C (`story_card`) stories, steps 1–2 are replaced by the text-card renderer (hook-title card, background clip, word captions in the safe zone) and the image QA rows don't apply; see the Pipeline C document.
+
 - Shots re-generated in 9:16 with the same references; never cropped from 16:9.
 - Original narration reused; no narrator intro; one fixed closing line on every clip.
 - Burned-in captions and an optional on-screen hook title.
