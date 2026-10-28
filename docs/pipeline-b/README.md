@@ -40,10 +40,6 @@ Turn each published long-form story into 2–3 vertical (9:16) clips for YouTube
 
 - Review and publish screen per clip; approve, reject with reason (routed to B1, B2 or B3), skip a platform, or kill. 3 rejections kill a clip. Shorts uploaded private first. Detail: Pipeline B · Stage 4.
 
-## Pipeline C stories
-
-- Text-card stories from Pipeline C use the same B0–B4 flow. B2 renders the text card, background and word captions instead of re-generating images, and those jobs need no GPU lock. Detail: Pipeline C document.
-
 ## Key principles
 
 - Reuses Pipeline A's assets; only the vertical images are new.
