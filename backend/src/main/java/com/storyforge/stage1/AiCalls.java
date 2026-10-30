@@ -46,12 +46,23 @@ public class AiCalls {
 
     public Outcome call(long storyId, String stage, String step, String promptVersion, String schemaVersion,
             Map<String, String> vars, List<java.nio.file.Path> images) {
+        int attemptNo = (int) attempts.countByStoryIdAndStep(storyId, step) + 1;
+        return call(new Attempt(storyId, stage, step, attemptNo), promptVersion, schemaVersion, vars, images);
+    }
+
+    /** The same call for a clip job with no story behind it. */
+    public Outcome callForClipJob(long jobId, String stage, String step, String promptVersion, String schemaVersion,
+            Map<String, String> vars, List<java.nio.file.Path> images) {
+        int attemptNo = (int) attempts.countByClipJobIdAndStep(jobId, step) + 1;
+        return call(Attempt.forClipJob(jobId, stage, step, attemptNo), promptVersion, schemaVersion, vars, images);
+    }
+
+    private Outcome call(Attempt attempt, String promptVersion, String schemaVersion, Map<String, String> vars,
+            List<java.nio.file.Path> images) {
         PromptLibrary.Prompt prompt = prompts.render(promptVersion, vars);
         String system = prompts.text(SYSTEM_PROMPT);
         String schema = prompts.schema(schemaVersion);
-        int attemptNo = (int) attempts.countByStoryIdAndStep(storyId, step) + 1;
-        Attempt attempt = new Attempt(storyId, stage, step, attemptNo)
-                .versions(promptVersion + "+" + SYSTEM_PROMPT + "+" + schemaVersion, null, llm.engineName())
+        attempt.versions(promptVersion + "+" + SYSTEM_PROMPT + "+" + schemaVersion, null, llm.engineName())
                 .inputs(InputHash.of(system, prompt.text(), schema), Json.write(vars));
         try {
             LlmResult r = llm.call(new LlmRequest(prompt.version(), system, prompt.text(), schema, images));
@@ -79,7 +90,15 @@ public class AiCalls {
 
     public List<QaCheck> judge(long storyId, String stage, String step, String promptVersion, Map<String, String> vars,
             List<java.nio.file.Path> images) {
-        Outcome o = call(storyId, stage, step, promptVersion, "qa-v1", vars, images);
+        return checks(call(storyId, stage, step, promptVersion, "qa-v1", vars, images));
+    }
+
+    public List<QaCheck> judgeForClipJob(long jobId, String stage, String step, String promptVersion,
+            Map<String, String> vars, List<java.nio.file.Path> images) {
+        return checks(callForClipJob(jobId, stage, step, promptVersion, "qa-v1", vars, images));
+    }
+
+    private static List<QaCheck> checks(Outcome o) {
         if (!o.ok()) {
             // The judge itself failed to answer in shape: not the story's fault.
             throw new LlmUnavailableException("QA answer did not match its schema: " + o.badOutput());

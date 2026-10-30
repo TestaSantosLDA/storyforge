@@ -24,6 +24,11 @@ public class FakeLlmConfig {
         return new com.storyforge.voice.FakeSpeech();
     }
 
+    @Bean
+    com.storyforge.clips.FakeVideoFetcher fakeVideoFetcher() {
+        return new com.storyforge.clips.FakeVideoFetcher();
+    }
+
     /** Only used when a test sets storyforge.images.engine to something other than "none". */
     @Bean
     com.storyforge.image.FakeImageEngine fakeImageEngine() {

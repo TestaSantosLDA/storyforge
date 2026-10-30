@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class Publishing {
 
     /** youtube.com/watch?v=ID, youtu.be/ID or youtube.com/shorts/ID with an 11-character id. */
-    static final Pattern YOUTUBE = Pattern.compile(
+    public static final Pattern YOUTUBE = Pattern.compile(
             "^https?://(www\\.|m\\.)?(youtube\\.com/(watch\\?v=|shorts/|live/)|youtu\\.be/)([A-Za-z0-9_-]{11})([&?#].*)?$");
 
     public record Package(int version, PublishStep.Metadata metadata, List<PublishStep.Thumbnail> thumbnails,

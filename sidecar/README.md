@@ -8,7 +8,11 @@ Local Python service for the models that only exist in Python. Runs natively, ne
 | `GET /health` | Device in use and which models are loaded |
 | `POST /image` | Flux 2 Klein 4B (Apache 2.0) image, optionally conditioned on reference images |
 
-Text-to-speech (Kokoro) and transcription (Whisper) come with Stage 2.
+| `POST /tts` | Kokoro text-to-speech |
+| `POST /transcribe` | Whisper transcript of a WAV, for the Stage 2 check |
+| `POST /transcribe/words` | Whisper word timings and language of a local media file, for clips from any video |
+
+`requirements.txt` also installs yt-dlp, which the Java app runs to fetch YouTube links.
 
 ## Setup
 

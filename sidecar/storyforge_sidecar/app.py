@@ -93,6 +93,18 @@ def tts(req: TtsRequest):
     return Response(wav, media_type="audio/wav", headers=headers)
 
 
+class WordsRequest(BaseModel):
+    # The sidecar runs on the same machine, so a long video is read from disk instead of being posted.
+    path: str = Field(min_length=1)
+
+
+@app.post("/transcribe/words")
+def transcribe_words(req: WordsRequest):
+    if not os.path.isfile(req.path):
+        raise HTTPException(422, f"no such file: {req.path}")
+    return SPEECH.transcribe_words(req.path)
+
+
 @app.post("/transcribe")
 async def transcribe(request: Request):
     wav = await request.body()

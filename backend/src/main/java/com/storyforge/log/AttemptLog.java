@@ -35,6 +35,9 @@ public class AttemptLog {
     @Transactional
     public boolean record(Attempt attempt) {
         attempts.save(attempt);
+        if (attempt.getStoryId() == null) {
+            return true; // clip jobs from any video have no story budget; their cost stays on the attempts
+        }
         Story story = costs.add(attempt.getStoryId(), attempt.getCostUsd());
         if (story.getCostUsd().compareTo(props.pipeline().storyCostBudgetUsd()) <= 0) {
             return true;

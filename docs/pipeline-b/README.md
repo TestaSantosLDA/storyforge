@@ -42,6 +42,7 @@ Turn each published long-form story into 2–3 vertical (9:16) clips for YouTube
 
 ## Clips from any video
 
+- Built (the Clips page). Story clips (B0, and B1-B4 from a story) are not built yet.
 - A page where a person uploads a video or pastes a YouTube link. An intake step downloads and transcribes it, then B1, a reframe variant of B2 (crop, not re-generate), B3 and B4 make the clips. Detail: Pipeline B · Clips From Any Video.
 
 ## Key principles

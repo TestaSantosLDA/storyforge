@@ -1,11 +1,13 @@
 server:
   servlet.session.tracking-modes: cookie
+  tomcat.max-swallow-size: -1
 
 spring:
   application.name: storyforge
   servlet.multipart:
-    max-file-size: 50MB
-    max-request-size: 60MB
+    # Clips from a video: uploads are full-length videos, written to disk as they arrive.
+    max-file-size: 20GB
+    max-request-size: 20GB
   datasource:
     url: ${STORYFORGE_DB_URL:jdbc:postgresql://localhost:5432/storyforge}
     username: ${STORYFORGE_DB_USER:storyforge}

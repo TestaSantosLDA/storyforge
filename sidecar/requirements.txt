@@ -18,5 +18,7 @@ faster-whisper==1.2.1
 ctranslate2==4.8.2
 soundfile==0.14.0
 numpy==2.4.6
+# Clips from a YouTube link (Unlicense). The Java app checks this against storyforge.clips.yt-dlp-version.
+yt-dlp==2026.10.26
 pytest==8.4.2
 httpx==0.28.1

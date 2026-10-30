@@ -21,6 +21,7 @@ public class Attempt {
     private Long id;
 
     private Long storyId;
+    private Long clipJobId;
     private String stage;
     private String step;
     private int attemptNo;
@@ -55,6 +56,13 @@ public class Attempt {
         this.step = step;
         this.attemptNo = attemptNo;
         this.startedAt = Instant.now();
+    }
+
+    /** An attempt of a clip job that has no story (clips from any video). */
+    public static Attempt forClipJob(long clipJobId, String stage, String step, int attemptNo) {
+        Attempt a = new Attempt(null, stage, step, attemptNo);
+        a.clipJobId = clipJobId;
+        return a;
     }
 
     public Attempt versions(String promptVersion, String model, String engineVersion) {

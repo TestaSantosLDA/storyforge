@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Clips from a video')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('clips')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1>Clips from a video</h1>
+    <p class="muted">Upload a video or paste a YouTube link. It's transcribed, the best moments are picked and turned into vertical clips, and you review each one here before posting.</p>
+
+    <section class="card">
+        <h2>New clips</h2>
+        <form th:action="@{/clips}" method="post" enctype="multipart/form-data" class="grid">
+            <label>Video file (mp4, mov, mkv or webm)
+                <input id="clip-file" name="file" type="file" accept=".mp4,.mov,.mkv,.webm">
+            </label>
+            <label>Or a YouTube link
+                <input id="clip-url" name="url" type="url" placeholder="https://www.youtube.com/watch?v=...">
+            </label>
+            <label>Source and permission
+                <input id="clip-source" name="sourceText" required placeholder="e.g. my own video, or streamer X, clipping program, terms link">
+            </label>
+            <label class="row"><input id="clip-own" name="ownVideo" type="checkbox" value="true" style="width:auto"> This is my own video</label>
+            <label>Channel
+                <select id="clip-channel" name="channel">
+                    <option th:each="c : ${channels}" th:value="${c.name()}" th:text="${c.name()}"></option>
+                </select>
+            </label>
+            <label>Number of clips
+                <input id="clip-count" name="clipCount" type="number" min="1" max="5" value="3">
+            </label>
+            <label>Framing
+                <select id="clip-framing" name="reframeMode">
+                    <option value="blurred_fill">Blurred fill: the whole picture, nothing cut off</option>
+                    <option value="centre_crop">Centre crop: fills the screen, may cut people off</option>
+                </select>
+            </label>
+            <label>Notes for the clip picker
+                <textarea id="clip-notes" name="notes" rows="2" placeholder="e.g. focus on the funny moments, skip the intro"></textarea>
+            </label>
+            <label class="row"><input id="clip-spoilers" name="spoilersAllowed" type="checkbox" value="true" style="width:auto"> Spoilers allowed</label>
+            <div><button class="primary" type="submit">Make clips</button></div>
+        </form>
+    </section>
+
+    <p class="empty" th:if="${rows.isEmpty()}">No clip jobs yet.</p>
+    <table class="history" th:unless="${rows.isEmpty()}">
+        <thead><tr><th>Video</th><th>Status</th><th>Clips</th></tr></thead>
+        <tbody>
+        <tr th:each="r : ${rows}">
+            <td><a th:href="@{/clips/{id}(id=${r.job().id()})}" th:text="${r.title()}"></a></td>
+            <td><span class="status" th:classappend="${r.job().status().working()} ? 'k-working' : 'k-human'"
+                      th:text="${#strings.replace(r.job().status().dbValue(), '_', ' ')}"></span></td>
+            <td th:text="${r.clips()}"></td>
+        </tr>
+        </tbody>
+    </table>
+</main>
+</body>
+</html>
