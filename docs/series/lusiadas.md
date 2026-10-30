@@ -1,6 +1,6 @@
 # Series — Os Lusíadas: Remixed
 
-> **Status: draft, awaiting the owner's answers.** Every place this series conflicts with a documented decision is listed under [Open conflicts](#open-conflicts) as **C1–C12**, each with a proposed default. Nothing in the other docs changes until the owner answers; once they do, the affected docs are updated in the same change and this banner goes.
+> **Status: approved spec (owner, 2026-10-30).** Every place this series conflicted with a documented decision is listed under [Resolved conflicts](#resolved-conflicts) as **C1–C12**. The owner accepted all twelve proposed defaults, and the affected docs (CLAUDE.md, the overview, Stage 1, Stage 4, Pipeline B and Pipeline D) were updated to match.
 
 ## Purpose
 
@@ -42,6 +42,7 @@ A fourth starter profile, `channel/video-profiles/epic.yaml`, built as the first
 | `motion` | `snappy` |
 | `on_screen_text` | heavy |
 | `illustrations` | `none` (new field: the kit draws everything, no Flux cut-outs) |
+| `opening` | `title_sting` (new field, C7) |
 | `tone` | Witty, confident, a little irreverent, never mocking the source. Teens should find it cool, and teachers should still be able to use it. |
 | `structure` | The episode beat sheet below |
 | `visual_style` | Flat geometric motion graphics. Ink navy `#0a0f24` base, azulejo blue `#1f5fbf`, gold `#ffc83d` (heroes, key words), coral `#ff4d3d` (danger, impacts), cyan `#3de1ff` (labels, translations), cream `#f6efe2` (text). Heavy uppercase sans headlines, italic serif for poetry, monospace for tags and dates. Azulejo tile patterns and Manueline / armillary-sphere motifs as the Portuguese signature. Subtle grain and vignette. White flash plus a sound hit on big reveals. |
@@ -119,13 +120,13 @@ On top of Pipeline D's rules for `facts: checked`:
 - **Grounding.** The script must be grounded in the episode's source excerpt: D1 receives the stanzas verbatim, and every chapter maps to stanzas in the excerpt or to claims in the claims list (C5). Events outside the excerpt are allowed only as claims with sources.
 - **Sources in the description.** The sources from the claims list go in the YouTube description, grouped as documented / tradition / legend, with the poem edition and translation credits.
 - **Respect.** Witty about the story, never mocking the source, the poet, Portugal or the peoples the voyage met. Colonial violence is acknowledged where the episode touches it, not glorified.
-- **Real people** (C3), **invented quotes** (C4) and **public-domain characters** (C9) are open conflicts below.
+- **Real people** (C3), **the host's lines** (C4) and **public-domain characters** (C9) follow the resolved conflicts below.
 
 ## Shorts from each episode
 
-2–3 vertical Shorts per episode, cut from the finished episode. How they are made is open (**C8**). Whatever the answer, they reuse the episode's narration (no new speech), end on the series channel's closing line ("Watch the full episode on our channel!", recorded once in the series narrator's voice), carry word captions, and publish to the series channel's Shorts, TikTok and Reels (C2).
+2–3 vertical Shorts per episode, cut from the finished episode. They are made as decided in **C8**: B1 picks the slices and B2 re-renders their scenes at 9:16 from the same scene code. They reuse the episode's narration (no new speech), end on the series channel's closing line ("Watch the full episode on our channel!", recorded once in the series narrator's voice), carry word captions, and publish to the series channel's Shorts, TikTok and Reels (C2).
 
-## Data changes (proposed, pending the conflicts)
+## Data changes
 
 - `channel` table and `topic.channel_id` (C2).
 - Profile fields `frame` and `illustrations`; `target_seconds` becomes a target plus an allowed range (C1).
@@ -168,29 +169,29 @@ No new status values. Pipeline D's flow and transitions apply as written; the se
 - The season route map is driven by a versioned series file, not by Claude.
 - Ep.00 is the reference and is not re-made by the pipeline.
 
-## Open conflicts
+## Resolved conflicts
 
-Each needs the owner's answer before the affected docs change. The proposed default is what this spec assumes until then.
+The owner accepted every proposed default on 2026-10-30 ("let's use your recommendations on all"). Each entry names the decision it changed; the affected docs now say the same thing.
 
 ### C1 — Landscape long-form on Pipeline D
 **Conflicts with:** Pipeline D purpose, comparison table and D2/D4 rules (9:16, 30–60 s, 110–150 words, narration over 58 s flags, word captions, no chapters).
-**Proposed default:** keep one `motion_picture` format and add a profile field `frame: vertical | landscape`, with `target_seconds` as a target plus an allowed range. A landscape profile switches the long-form rules on: 1920×1080 stage and safe zones, word count from the range, Stage 2's long-form pauses, Stage 4 subtitles and its 2.5–6 min tolerance instead of the 58 s cap, Stage 5 chapters and thumbnails. A separate format is not worth it: the steps are identical, only parameters differ, and a separate format would duplicate the dispatcher routes and the kit.
+**Decision:** keep one `motion_picture` format and add a profile field `frame: vertical | landscape`, with `target_seconds` as a target plus an allowed range. A landscape profile switches the long-form rules on: 1920×1080 stage and safe zones, word count from the range, Stage 2's long-form pauses, Stage 4 subtitles and its 2.5–6 min tolerance instead of the 58 s cap, Stage 5 chapters and thumbnails. A separate format is not worth it: the steps are identical, only parameters differ, and a separate format would duplicate the dispatcher routes and the kit.
 
 ### C2 — A per-topic channel
 **Conflicts with:** the overview ("One YouTube channel for both long videos and Shorts — do not split", "One fixed narrator voice across the whole channel", "One style for the whole channel", the kids-fable concept) and Pipeline D's decision "same YouTube channel as the fables; no per-topic channel setting".
-**Proposed default:** a `channel` table, created on the management page: name, YouTube handle, TikTok and Instagram accounts, default narrator voice, watermark, title-sting / intro assets, closing line (text + approved audio), audience setting, default music moods. `topic.channel_id` is required and defaults to the fables channel, so existing topics are unchanged. The story snapshots the channel at Run. Stage 5 and B4 show which channel to upload to. Pipeline C and "clips from any video" already expect this field, so it is built once for all three. The overview's one-channel, one-narrator and one-style lines become "per channel" rules, with the fables channel keeping its current ones.
+**Decision:** a `channel` table, created on the management page: name, YouTube handle, TikTok and Instagram accounts, default narrator voice, watermark, title-sting / intro assets, closing line (text + approved audio), audience setting, default music moods. `topic.channel_id` is required and defaults to the fables channel, so existing topics are unchanged. The story snapshots the channel at Run. Stage 5 and B4 show which channel to upload to. Pipeline C and "clips from any video" already expect this field, so it is built once for all three. The overview's one-channel, one-narrator and one-style lines become "per channel" rules, with the fables channel keeping its current ones.
 
 ### C3 — Drawing long-dead historical figures
 **Conflicts with:** Pipeline D "Real people are named in narration only, never drawn recognisably" and image QA scenario 9.
-**Proposed default:** a narrow exception. A real person may be drawn recognisably only if all of these hold: they died before 1900; they are on the series' approved list (their character file has `historical: true` and `died`); they are drawn **only by kit code** as a stylised flat geometric character approved at Gate A; and they are shown with respect, never in a demeaning or sexualised way. AI-generated likenesses of any real person stay banned, living people stay banned, and photo-real or portrait-copy depictions stay banned. Vision QA checks that any human figure on screen is an approved kit character.
+**Decision:** a narrow exception. A real person may be drawn recognisably only if all of these hold: they died before 1900; they are on the series' approved list (their character file has `historical: true` and `died`); they are drawn **only by kit code** as a stylised flat geometric character approved at Gate A; and they are shown with respect, never in a demeaning or sexualised way. AI-generated likenesses of any real person stay banned, living people stay banned, and photo-real or portrait-copy depictions stay banned. Vision QA checks that any human figure on screen is an approved kit character.
 
 ### C4 — The host's lines vs "no invented quotes"
 **Conflicts with:** Pipeline D "Invented quotes from real people are never allowed".
-**Proposed default:** Camões the cartoon host may speak (speech bubbles, pop-in lines) as the show's commentary, written in an obviously modern voice, and never presented as something the historical Camões said or wrote. Real quotes appear only in quotation marks or a Verse Moment, verbatim, with Canto and stanza (or the letter's source). The same applies to other historical figures: no invented lines in quotation marks. The narrator stays an unnamed voice, and Camões talks through on-screen bubbles. **Question for the owner:** in Ep.00, is the narrator Camões himself (first person)? If yes, the default becomes "the narrator is the host", with the same commentary-not-quotes rule.
+**Decision:** Camões the cartoon host may speak (speech bubbles, pop-in lines) as the show's commentary, written in an obviously modern voice, and never presented as something the historical Camões said or wrote. Real quotes appear only in quotation marks or a Verse Moment, verbatim, with Canto and stanza (or the letter's source). The same applies to other historical figures: no invented lines in quotation marks. The narrator stays an unnamed voice, and Camões talks through on-screen bubbles. If Ep.00's source shows the narrator speaking as Camões in the first person, the series switches to "the narrator is the host", with the same commentary-not-quotes rule; that is a profile change, not a new decision.
 
 ### C5 — Series structure
 **Conflicts with:** the overview and Stage 0 (topics and stories have no order beyond the queue, no continuity between stories, no source text).
-**Proposed default:**
+**Decision:**
 - `topic.is_series`; `story.season` and `story.episode_number`, unique per topic and season, shown on the queue and the story page.
 - The queue stays the single order for Run. Running an episode whose previous episode is not yet `final_approved` asks for a confirmation (no hard block).
 - **Recap** (optional, `story.recap_enabled`): D1 gets the previous episode's approved script summary and writes a ≤ 15 s "previously on".
@@ -199,33 +200,33 @@ Each needs the owner's answer before the affected docs change. The proposed defa
 
 ### C6 — One gate for a 5-minute script
 **Conflicts with:** Pipeline D's reason for a single gate ("because the script is one minute long"); Pipeline A uses two gates for 5-minute videos.
-**Proposed default:** keep D's single gate (script + cast + claims), plus the beat sheet mapping, the source excerpt and the translations. Regenerating a 5-minute script with `claude -p` is still cheap, and the beat sheet constrains the story enough that a separate outline gate would mostly repeat it. Update D's reason to "because the profile's structure fixes the story's shape".
+**Decision:** keep D's single gate (script + cast + claims), plus the beat sheet mapping, the source excerpt and the translations. Regenerating a 5-minute script with `claude -p` is still cheap, and the beat sheet constrains the story enough that a separate outline gate would mostly repeat it. Update D's reason to "because the profile's structure fixes the story's shape".
 
 ### C7 — Intro and end card
 **Conflicts with:** Pipeline D "No intro and no end card; watermark only" and Pipeline A "Channel intro and end card on every video".
-**Proposed default:** no channel intro: the cold open comes first and the per-episode title sting (~3 s, rendered by the kit) acts as the intro. No separate end card: the 10 s teaser is the end, and its layout leaves room for YouTube's end-screen elements (subscribe + next video), which need at least 5 s. Pipeline A keeps its intro and end card; this becomes a per-profile (or per-channel) setting.
+**Decision:** no channel intro: the cold open comes first and the per-episode title sting (~3 s, rendered by the kit) acts as the intro. No separate end card: the 10 s teaser is the end, and its layout leaves room for YouTube's end-screen elements (subscribe + next video), which need at least 5 s. Pipeline A keeps its intro and end card. Pipeline D records this as the profile field `opening: none | title_sting`, with vertical profiles defaulting to `none`.
 
 ### C8 — Vertical Shorts from a code-rendered episode
 **Conflicts with:** Pipeline D5 ("B3 builds the TikTok and Reels variants directly; no B1 selection") and B2 (re-generates vertical illustrations with Flux, storybook animation, fables closing line).
-**Proposed default:** B1 selects 2–3 slices from the episode as for fables. For a `motion_picture` episode, B2 **re-renders the slice's scenes from the same scene code at 1080×1920**: the kit is frame-aware, and scene code lays out against the stage size, so one scene file renders in both frames. Vertical scene QA (safe zones, layout) runs on the re-render, and a scene that fails is rewritten as a vertical variant only. Word captions and the channel's closing line are added, then B3 and B4 as written. Alternative: Claude writes separate vertical scene code per slice (simpler kit, double the scene writing).
+**Decision:** B1 selects 2–3 slices from the episode as for fables. For a `motion_picture` episode, B2 **re-renders the slice's scenes from the same scene code at 1080×1920**: the kit is frame-aware, and scene code lays out against the stage size, so one scene file renders in both frames. Vertical scene QA (safe zones, layout) runs on the re-render, and a scene that fails is rewritten as a vertical variant only. Word captions and the channel's closing line are added, then B3 and B4 as written. (Rejected alternative: Claude writes separate vertical scene code per slice, which means a simpler kit but double the scene writing.)
 
 ### C9 — Naming characters from a public-domain source
 **Conflicts with:** CLAUDE.md "Prompts never name a studio, franchise or existing character" and D1/look-notes QA ("no existing character named"; notes naming one are refused).
-**Proposed default:** the rule's aim (no copyrighted IP) stays, but characters and works in the **public domain** that are the topic's declared source (here: *Os Lusíadas*, the Greco-Roman gods, Adamastor, the Old Man of Restelo, the historical figures) are allowed by name in prompts, scripts and look notes. The topic stores its source and an allowlist of names; QA and the look-notes check read it. Studios, franchises and copyrighted characters (including modern adaptations of the same story) stay banned.
+**Decision:** the rule's aim (no copyrighted IP) stays, but characters and works in the **public domain** that are the topic's declared source (here: *Os Lusíadas*, the Greco-Roman gods, Adamastor, the Old Man of Restelo, the historical figures) are allowed by name in prompts, scripts and look notes. The topic stores its source and an allowlist of names; QA and the look-notes check read it. Studios, franchises and copyrighted characters (including modern adaptations of the same story) stay banned.
 
 ### C10 — Code-drawn characters without reference images
 **Conflicts with:** the overview and Stage 1 (every character file has reference images drawn by Flux; Gate A shows a reference sheet with Redraw).
-**Proposed default:** character files gain `drawn_by: flux | code` (default `flux`). A `code` character names its `kit_component` and pose list instead of reference images; Gate A shows a pose sheet rendered from the kit, and Redraw becomes "rewrite the component" with the reviewer's note. A new code character in a script needs its component written and approved at Gate A like a new Flux character. The roster distinctness check still runs on the visual description.
+**Decision:** character files gain `drawn_by: flux | code` (default `flux`). A `code` character names its `kit_component` and pose list instead of reference images; Gate A shows a pose sheet rendered from the kit, and Redraw becomes "rewrite the component" with the reviewer's note. A new code character in a script needs its component written and approved at Gate A like a new Flux character. The roster distinctness check still runs on the visual description.
 
 ### C11 — Synthesised music and sound hits
 **Conflicts with:** CLAUDE.md "Music only from the curated local library, each track stored with its license file" (Ep.00 and the motion test use original music synthesised by a script), and there is no sound-effects library in any doc. Also the mix level: Pipeline D's −27 LUFS was set for Shorts; Stage 4 uses −14 LUFS for long-form.
-**Proposed default:** synthesised tracks and sound effects are imported into the library like any other track, with an "own work, generated by `music.py` vN" licence record and mood tags; assembly never generates audio on the fly. Add a small sound-effects library (flash hit, whoosh, stamp, ping, boom) under the same import and licence rules. Mix level: keep D's −27 LUFS default for this series too, since it matches the owner's listening; revisit if retention suffers.
+**Decision:** synthesised tracks and sound effects are imported into the library like any other track, with an "own work, generated by `music.py` vN" licence record and mood tags; assembly never generates audio on the fly. Add a small sound-effects library (flash hit, whoosh, stamp, ping, boom) under the same import and licence rules. Mix level: keep D's −27 LUFS default for this series too, since it matches the owner's listening; revisit if retention suffers.
 
 ### C12 — Third rejection archives an episode
 **Conflicts with:** Stage 1 and Pipeline D ("3 rejections archive").
-**Proposed default:** for a series topic, reaching a rejection limit sets `needs_attention` instead of `archived`, so a season never silently loses an episode. Kill still archives.
+**Decision:** for a series topic, reaching a rejection limit sets `needs_attention` instead of `archived`, so a season never silently loses an episode. Kill still archives.
 
-## Build order (after the owner approves this spec and answers C1–C12)
+## Build order
 
 1. Put Ep.00's source in `reference/lusiadas-ep00/` (it is not in the repo yet).
 2. The `epic` profile (YAML, plus the new `frame` and `illustrations` fields).

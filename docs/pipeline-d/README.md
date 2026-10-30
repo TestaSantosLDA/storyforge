@@ -2,16 +2,16 @@
 
 ## Purpose
 
-Short, illustrated, moving stories made natively for YouTube Shorts (and, through B3, TikTok and Reels). A human creates a topic and gives it a **video profile** (explanatory, entertaining, historic, and so on); stories are concepts under that topic, exactly as in Pipeline A. Claude writes a 30–60 s script in the voice the profile asks for, the app narrates it, and then Claude writes each scene as animation code (the Claude Motion approach: moving text, maps, charts, icons and cut-out illustrated characters), which the app renders and assembles into a captioned 9:16 video.
+Short, illustrated, moving stories made natively for YouTube Shorts (and, through B3, TikTok and Reels), and, with a landscape profile, ~5 minute long-form episodes for YouTube (added 2026-10-30 for the Os Lusíadas series, `docs/series/lusiadas.md`). A human creates a topic and gives it a **video profile** (explanatory, entertaining, historic, and so on); stories are concepts under that topic, exactly as in Pipeline A. Claude writes a 30–60 s script in the voice the profile asks for, the app narrates it, and then Claude writes each scene as animation code (the Claude Motion approach: moving text, maps, charts, icons and cut-out illustrated characters), which the app renders and assembles into a captioned 9:16 video.
 
-Pipeline A stays as it is. Pipeline D reuses its stages and swaps three things: the length (one minute, not five), the frame (9:16, not 16:9) and the look and voice (set per topic by its profile, not one channel-wide style).
+Pipeline A stays as it is. Pipeline D reuses its stages and swaps three things: the length and frame (by default one minute in 9:16; a profile can choose landscape long-form, see [Frames and lengths](#frames-and-lengths)), the pictures (code, not image-plus-camera-move) and the look and voice (set per topic by its profile, not one channel-wide style).
 
 ## How it differs from Pipelines A, B and C
 
 | | A — Fables | B — Clips | C — Story Shorts | **D — Motion Pictures** |
 | --- | --- | --- | --- | --- |
 | Source | Topic + concept | A finished A video, or any video | Topic + concept | Topic + concept |
-| Length / frame | 3–5 min, 16:9 | 20–60 s, 9:16 | Under 60 s, 9:16 | **30–60 s, 9:16** |
+| Length / frame | 3–5 min, 16:9 | 20–60 s, 9:16 | Under 60 s, 9:16 | **30–60 s, 9:16 by default; 4–6 min, 16:9 with a landscape profile** |
 | Visuals | Flux images + camera motion | Re-uses A's shots | Text card + licensed footage, **no image model** | **Code-driven motion graphics, with Flux cut-outs where needed** |
 | Look and voice | One channel style | Inherited | One card design | **Per topic, from its video profile** |
 | Human gates | Story, script, final | Clip review | Story, final | **Script + cast, final** |
@@ -24,7 +24,7 @@ C and D are both "short vertical story from a topic" and share most of their new
 - The vertical assembly profile: 1080×1920, platform safe zones, the Shorts loudness target, under-60 s QA.
 - Word-by-word captions built from Whisper word timestamps (also used by "clips from any video", `docs/pipeline-b/clips-from-any-video.md`).
 - Shorts-only metadata in Stage 5, and B3 per-platform variants applied directly.
-- Later, a topic `channel` field for multiple accounts (C needs it; D does not yet, see Decisions).
+- The `channel` table and the required `topic.channel_id` (see [Channels](#channels)), built once for C, D and "clips from any video".
 
 The difference is only in the picture: C puts narration over a text card and stock footage; D animates every scene in code. A profile could later choose C's look as one of its visual styles, but this spec keeps them as separate formats so neither blocks the other.
 
@@ -38,7 +38,7 @@ Next to the profile, the topic form has a **Look notes** text box for anything t
 
 - Both are snapshotted at Run with the profile, so later edits never change a story in progress.
 - They are passed to Claude in scene planning (3A), illustration prompts (3B) and scene code (3C), after the profile, and the vision QA checks the frames against them.
-- They are wishes, not overrides of the rules: licensing, family safety, safe zones, the no-text-in-images rule and the real-people rule always win. Notes that name a studio, franchise, existing character or living artist are refused when the topic or story is saved, with the reason shown.
+- They are wishes, not overrides of the rules: licensing, family safety, safe zones, the no-text-in-images rule and the real-people rule always win. Notes that name a studio, franchise, existing character or living artist are refused when the topic or story is saved, with the reason shown (names on the topic's public-domain allowlist are allowed).
 - Final-review rejection notes about the look are offered as a one-click "add to the topic's look notes", so a fix carries over to the next stories.
 
 | Field | Meaning | Example values |
@@ -50,7 +50,10 @@ Next to the profile, the topic form has a **Look notes** text box for anything t
 | `visual_style` | Palette, fonts and illustration style block for images (never names a studio, artist or franchise) | flat explainer, storybook (channel default), ink-and-wash, bold cartoon |
 | `voices` | Narrator only, or narrator + character lines | `narrator_only`, `cast` |
 | `narrator_voice` | Kokoro voice and speed | default: the channel narrator |
-| `target_seconds` | Target length | 45 (allowed 30–58) |
+| `frame` | Picture shape and the rules that come with it (see below) | `vertical` (default), `landscape` |
+| `target_seconds` | Target length and allowed range | 45 (allowed 30–58) for vertical; 300 (allowed 240–360) for landscape |
+| `illustrations` | Whether scenes may use Flux cut-outs | `flux` (default), `none` (the kit draws everything) |
+| `opening` | What comes before the content | `none` (default), `title_sting` (a ~3 s per-episode sting drawn by the kit, after the cold open) |
 | `beat_seconds` | How often something new happens on screen | 2–4 s (Shorts cut faster than A's 5–10 s shots) |
 | `motion` | Motion language from the scene kit | `calm` (eases, slow reveals), `snappy` (overshoot, whip pans, word pops), `documentary` (map routes, slow push-ins) |
 | `on_screen_text` | How much the scenes lean on text, maps and charts | heavy for explanatory, dates and places for historic, light for entertaining |
@@ -59,7 +62,7 @@ Next to the profile, the topic form has a **Look notes** text box for anything t
 | `audience` | YouTube audience setting | not made for kids (family audience) |
 | `look_notes` | Free text about how the videos should look (see below) | empty |
 
-Starter profiles shipped with the spec:
+Starter profiles shipped with the spec (plus `epic`, the landscape historic profile of the Os Lusíadas series, defined in `docs/series/lusiadas.md`):
 
 | Profile | Genre | Facts | Voices | Look | Text cards |
 | --- | --- | --- | --- | --- | --- |
@@ -67,10 +70,29 @@ Starter profiles shipped with the spec:
 | `tale` | entertaining | fiction | cast | storybook | no |
 | `chronicle` | historic | checked | narrator only | ink-and-wash | dates and places |
 
+### Frames and lengths
+
+`frame` switches a set of rules together, so the steps stay the same and only parameters change (decided 2026-10-30; a separate long-form format was rejected because it would duplicate the dispatcher routes and the kit):
+
+| | `vertical` (default) | `landscape` |
+| --- | --- | --- |
+| Stage | 1080×1920 with platform safe zones | 1920×1080 with YouTube title-safe margins |
+| Script length | from `target_seconds`, 110–150 words at 45 s | from `target_seconds`, about 650–800 words at 300 s |
+| Pauses (D2) | short-form: 0.15 / 0.3 / 0.5 s | Stage 2: 0.3 / 0.6 / 1.2 s |
+| Length check | narration over 58 s flags | outside the allowed range (Stage 4's 2.5–6 min hard limit) flags |
+| Captions (D4) | burned-in word captions | Stage 4 subtitle file (toggleable), no burned-in captions |
+| Publish (D5) | Shorts metadata, cover frame, no chapters, B3 variants directly | Stage 5 long-form metadata with chapters and code-drawn thumbnails, then 2–3 Shorts through B1–B4 |
+
+### Channels
+
+Each topic belongs to a **channel** (decided 2026-10-30): a row created on the management page with its name, YouTube handle, TikTok and Instagram accounts, default narrator voice, watermark, opening assets, closing line (text + approved audio), audience setting and default music moods. `topic.channel_id` is required and defaults to the fables channel, so existing topics are unchanged. The story snapshots the channel at Run, and Stage 5 and B4 show which channel to upload to. Pipeline C and "clips from any video" use the same table.
+
 ### Rules that come with genres
 
-- **Facts.** With `facts: checked`, Claude returns every factual claim in the script as a numbered list with a short source note and a confidence. QA fails a script with a low-confidence claim; Gate A shows the list so the human can check it before anything is drawn. Invented quotes from real people are never allowed.
+- **Facts.** With `facts: checked`, Claude returns every factual claim in the script as a numbered list with a short source note and a confidence. QA fails a script with a low-confidence claim; Gate A shows the list so the human can check it before anything is drawn. Invented quotes from real people are never allowed. A code-drawn historical **host** (see below) may speak as the show's commentary, in an obviously modern voice, never presented as something the real person said or wrote; real quotes appear only verbatim, in quotation marks or a verse card, with their source.
 - **Real people (historic).** The narration may name real historical figures. Images never try to show a recognisable likeness of a real person: they are drawn as generic figures, from behind, in silhouette or at a distance, and image QA checks this. No living people.
+- **Exception: long-dead figures drawn in code** (owner, 2026-10-30). A real person may be drawn recognisably only if all of these hold: they died before 1900; they are on the topic's approved list (their character file has `historical: true` and `died`); they are drawn **only by kit code** as a stylised character approved at Gate A; and they are shown with respect, never demeaning or sexualised. AI-generated likenesses of any real person, living people, and photo-real or portrait-copy depictions stay banned. Vision QA checks that any human figure on screen is an approved kit character.
+- **Public-domain sources.** A topic may declare a public-domain source (e.g. a poem published before 1929) and an allowlist of its characters and people; those names are allowed in prompts, scripts and look notes. Studios, franchises, copyrighted characters and modern adaptations stay banned.
 - **Text inside images.** The image model cannot write reliably, so no illustration asks for words, labels or numbers. All text, dates, labels and numbers are drawn by the scene code.
 
 ## Status flow
@@ -90,7 +112,7 @@ At one minute, a separate story outline and script gate cost more review time th
 - Output: a hook title, the speaker-tagged script (110–150 words at the narrator's pace, from `target_seconds`), the beats it follows, the cast (as in Stage 1A, reusing the topic's characters; new ones need a reason) and, with `facts: checked`, the claims list.
 - **The first line is the hook** and must stand alone within about 3 s.
 - Automated QA (LLM, 5 retries as in Stage 1): word count fits `target_seconds`; the first line works as a hook; it follows the profile's structure and tone; it has a payoff; claims are listed and high-confidence where required; no invented quotes; no living people; family-safe; no studio, franchise or existing character named; new characters distinct from the roster.
-- **Gate A** shows the script, cast (with reference sheets, Stage 1 rules), claims list and profile. Approve, reject with notes (3 rejections archive), or archive.
+- **Gate A** shows the script, cast (with reference sheets, Stage 1 rules; a code-drawn character shows a pose sheet rendered from the kit), claims list and profile. Approve, reject with notes (3 rejections archive; for a series topic, `needs_attention` instead, Stage 1), or archive.
 - New prompt files: `motion-script-v1.md`, `motion-script-qa-v1.md`; the profile is injected as a block, not a separate prompt per genre.
 
 ## D2 — Narration
@@ -98,7 +120,7 @@ At one minute, a separate story outline and script gate cost more review time th
 - Stage 2 as written: Kokoro, the profile's narrator voice and speed, characters' voices when `voices: cast`, Whisper transcript QA, pronunciation dictionary, caching.
 - Pauses scaled down for short-form pacing (config: 0.15 / 0.3 / 0.5 s).
 - Whisper word timestamps are kept with the timing manifest for captions (shared with C).
-- Narration over 58 s flags the story: accept anyway, or send back to D1 to shorten.
+- Narration over 58 s flags the story (vertical; for landscape, outside the profile's allowed range): accept anyway, or send back to D1 to shorten.
 
 ## D3 — Motion scenes (vertical)
 
@@ -174,7 +196,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 - Word captions (shared with C), unless the scene already shows the words as kinetic text; the scenes carry all other on-screen text.
 - **Background music is on by default** (owner, 2026-10-30): a track from the curated library picked by `music_mood`, never the same track twice in a row, looped or trimmed to length, faded in and out, and ducked under the voice (sidechain compression; about 17 dB under the voice between lines and lower while speaking; set from the owner's listening in the first motion test, where 9 and 11 dB were too loud). The mix is normalised to a config target, default −27 LUFS, the level the owner preferred in the first motion test (−14, −17.5 and −23 were too loud for them). Most Shorts play at about −14 LUFS and platforms never turn quieter videos up, so this is quieter than the feed; revisit it if retention suffers. A profile or story can turn music off.
 - If no licensed track matches the mood, the story is flagged before assembly (`needs_attention`), as in Pipeline C; it never ships silent by accident. The first motion test used a short ambient bed synthesised from scratch by a script, which is a possible later source for the library.
-- No intro and no end card (they waste the first seconds of a Short); the channel's watermark sits in a safe corner.
+- No channel intro and no end card (they waste the first seconds of a Short); the channel's watermark sits in a safe corner. A profile with `opening: title_sting` adds a ~3 s per-episode sting drawn by the kit after the cold open, and a landscape episode's last seconds leave room for YouTube's end-screen elements (at least 5 s) instead of an end card.
 - QA: Stage 4's sync, loudness, license and integrity rows, plus length under 60 s, captions and text inside safe zones, every caption word in the transcript.
 - **Final review**: Stage 4's screen with the video, contact sheet, script, claims list and licenses. Rejection reasons route through rejection analysis to D1 (script), D2 (a line), D3 (named scenes, rewritten with the note; other scenes and illustrations reused) or D4 (captions, music); 3 final rejections flag the story.
 
@@ -182,7 +204,8 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 
 - Stage 5 with Shorts metadata: title (≤ 100 characters, hook-led), description with hashtags, no chapters. For `facts: checked`, the description lists sources from the claims list.
 - No thumbnail variants (Shorts use a frame); the human picks the cover frame in the checklist.
-- B3 builds the TikTok and Reels variants directly; no B1 selection.
+- Vertical: B3 builds the TikTok and Reels variants directly; no B1 selection.
+- Landscape: Stage 5 long-form metadata (chapters, thumbnails drawn in code); after publish, B1 picks 2–3 slices and B2 re-renders their scenes at 1080×1920 from the same scene code (the kit is frame-aware), then B3 and B4 as written.
 - Publishing stays manual: the pipeline ends at `ready_to_upload`, then the pasted URL marks it `published`.
 
 ## Scenarios
@@ -213,6 +236,9 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 | 17b | No library track matches the profile's music mood | Flagged before assembly, with the mood named | `needs_attention` |
 | 18 | `fable`, `story_short` and `motion_picture` stories in one queue | Each runs its own steps by `format`; one at a time | unchanged |
 | 19 | Sidecar down | Backoff, not a strike; then flag | `needs_attention` |
+| 18b | Landscape profile (`epic`), 5 min episode | 1920×1080 scenes, Stage 4 subtitles, chapters and code-drawn thumbnails; 2–3 Shorts re-rendered at 9:16 after publish | `ready_to_upload` |
+| 18c | Historic scene draws Vasco da Gama as an approved kit character | Allowed (died before 1900, on the topic list, drawn in code) | `visuals_in_progress` |
+| 18d | A Flux illustration shows a recognisable historical person | Image QA fails; the exception covers code-drawn characters only | `visuals_in_progress` |
 | 20 | App restarts mid-D3 | Cached illustrations, scene code and rendered scenes kept; only missing ones made | `visuals_in_progress` |
 
 ## Status transitions
@@ -230,6 +256,9 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Data changes
 
 - `story.format`: adds `motion_picture` (shared column with C).
+- `channel` table; `topic.channel_id` (required, defaults to the fables channel); `story.channel_snapshot`.
+- Profile fields `frame`, `illustrations`, `opening`; `target_seconds` as a target plus range.
+- `topic.source` and `topic.name_allowlist` (public-domain sources); series fields as in `docs/series/lusiadas.md`.
 - `topic.profile_id`, `topic.profile_overrides` (JSON), `topic.look_notes` (text).
 - `story.look_notes` (text, optional).
 - `story.profile_snapshot` (JSON, set at Run, with the profile file's version).
@@ -238,15 +267,16 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Decisions (defaults, open to change)
 
 - Same repo, app, database and queue as Pipelines A and C; told apart by `story.format`.
-- **One human gate before production** (script + cast + claims), not two, because the script is one minute long.
+- **One human gate before production** (script + cast + claims), not two, because the profile's structure fixes the story's shape; this holds for 5-minute landscape episodes too (owner, 2026-10-30).
 - **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle` (confirmed by the owner, 2026-10-30), plus free-text look notes on the topic and the story.
 - **Motion = code-driven motion graphics, the Claude Motion approach:** Claude writes each scene against a versioned scene kit, rendered deterministically in headless Chromium and FFmpeg. Claude Motion itself is not used (no API, Team/Enterprise only, no audio).
 - Flux illustrations only where a scene needs them, as cut-out layers; the GPU is not on the critical path.
 - AI video (depth parallax, Wan 2.2) is out of the MVP and stays a later option behind `AnimationEngine`. Only Apache 2.0 / MIT weights, fonts and icons with commercial-use licenses.
 - Own scene kit rather than Remotion, because Remotion needs a paid company license above three people; Remotion stays an option if the kit proves too slow to build.
-- Real people are named in narration only, never drawn recognisably; no living people; no invented quotes.
-- No intro or end card; watermark only.
-- Motion Pictures publish to the **same YouTube channel as the fables**, as Shorts (owner, 2026-10-30). Multiple channels and accounts are handled later; until then there is no per-topic channel setting.
+- Real people are named in narration only, never drawn recognisably, except long-dead figures (died before 1900) drawn as approved kit characters; no living people; no invented quotes (a host's commentary is not a quote).
+- No channel intro or end card; watermark only. A profile may add a per-episode title sting (`opening`).
+- Each topic picks its **channel** (owner, 2026-10-30, replacing the earlier "same channel as the fables"). Motion Pictures topics default to the fables channel; the Os Lusíadas series has its own.
+- A profile's `frame` picks vertical Shorts or landscape long-form; one format, not two (owner, 2026-10-30).
 
 ## Build order
 

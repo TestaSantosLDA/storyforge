@@ -24,6 +24,8 @@ Stage 4 stitches narration, animated shots, music, intro and end card into the f
 - Curated once by a human: 15–30 tracks from libraries whose license allows commercial use on YouTube, TikTok and Instagram without attribution (e.g. Pixabay Music, Mixkit).
 - Each track is stored with: source URL, license type, the downloaded license file, mood tags, and attribution text if any.
 - Import rejects any track with a non-commercial license (e.g. CC BY-NC). The pipeline never downloads music itself.
+- Tracks we synthesise ourselves (e.g. the motion tests' `music.py`) are imported like any other, with an own-work license record naming the generator script and version. Assembly never generates audio on the fly.
+- A small **sound-effects library** (flash hit, whoosh, stamp, ping, boom) follows the same import and license rules; Pipeline D scenes reference effects from it by id.
 - Licenses are kept so any automated copyright claim can be disputed with proof.
 
 ## Assembly steps
