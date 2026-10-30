@@ -63,6 +63,38 @@ class PagesTest extends DbTest {
     }
 
     @Test
+    void topic_page_sets_a_video_profile_and_refuses_studio_names_in_look_notes() throws Exception {
+        Topic t = topic();
+        mvc.perform(post("/topics/" + t.getId() + "/profile").param("profileId", "epic")
+                        .param("overrides", "music: false").param("lookNotes", "every chapter opens on a tile wipe"))
+                .andExpect(redirectedUrl("/topics/" + t.getId()))
+                .andExpect(flash().attribute("notice", containsString("Saved.")));
+        mvc.perform(get("/topics/" + t.getId())).andExpect(status().isOk())
+                .andExpect(content().string(containsString("historic, landscape, 540 s (480–660)")))
+                .andExpect(content().string(containsString("music off")))
+                .andExpect(content().string(containsString("every chapter opens on a tile wipe")));
+
+        mvc.perform(post("/topics/" + t.getId() + "/profile").param("profileId", "epic")
+                        .param("lookNotes", "make it look like Disney"))
+                .andExpect(redirectedUrl("/topics/" + t.getId()));
+        mvc.perform(get("/topics/" + t.getId()))
+                .andExpect(content().string(containsString("every chapter opens on a tile wipe")));
+    }
+
+    @Test
+    void story_form_keeps_look_notes() throws Exception {
+        Topic t = topic();
+        mvc.perform(post("/stories").param("topicId", t.getId().toString()).param("concept", "c")
+                        .param("moral", "m").param("targetLengthMin", "4").param("lookNotes", "open on a big number"))
+                .andExpect(status().is3xxRedirection());
+        Story s = queue.queue().getFirst();
+        mvc.perform(get("/stories/" + s.getId())).andExpect(status().isOk())
+                .andExpect(content().string(containsString("open on a big number")));
+        mvc.perform(get("/stories/" + s.getId() + "/edit"))
+                .andExpect(content().string(containsString("open on a big number")));
+    }
+
+    @Test
     void add_story_form_shows_field_errors_and_saves_nothing() throws Exception {
         Topic t = topic();
         mvc.perform(post("/stories").param("topicId", t.getId().toString()).param("concept", "")

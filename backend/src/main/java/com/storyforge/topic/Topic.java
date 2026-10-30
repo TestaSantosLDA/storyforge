@@ -8,6 +8,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import java.time.Instant;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /** A universe (docs/pipeline-a/stage-0 "Topic"). */
 @Entity
@@ -22,6 +24,15 @@ public class Topic {
 
     @Column(nullable = false)
     private String description;
+
+    /** Pipeline D video profile file id; null for a fable topic. */
+    private String profileId;
+
+    /** Overrides of profile fields as JSON, snake_case keys as in the profile file. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String profileOverrides;
+
+    private String lookNotes;
 
     private Instant createdAt;
     private Instant updatedAt;
@@ -58,5 +69,23 @@ public class Topic {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getProfileId() {
+        return profileId;
+    }
+
+    public String getProfileOverrides() {
+        return profileOverrides;
+    }
+
+    public String getLookNotes() {
+        return lookNotes;
+    }
+
+    public void setProfile(String profileId, String profileOverrides, String lookNotes) {
+        this.profileId = profileId;
+        this.profileOverrides = profileOverrides;
+        this.lookNotes = lookNotes;
     }
 }

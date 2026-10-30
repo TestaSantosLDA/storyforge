@@ -1,0 +1,22 @@
+# Video profile (docs/pipeline-d/README.md "Video profiles"). Versioned in the repo: bump `version` on every
+# change so each story's snapshot names the profile version that made it.
+id: chronicle
+version: 1
+genre: historic
+tone: grave and documentary, vivid but never sensational
+facts: checked
+structure: hook moment, then context, turning point and consequence, ending on why it still matters
+visual_style: ink-and-wash illustration, loose brush lines, sepia and slate washes, maps and dates drawn in code
+voices: narrator_only
+narrator_voice:
+frame: vertical
+target_seconds: {target: 45, min: 30, max: 58}
+beat_seconds: {min: 2, max: 4}
+motion: documentary
+on_screen_text: dates and places
+illustrations: flux
+opening: none
+music: true
+music_mood: [tense, reflective]
+audience: not_made_for_kids
+look_notes: ""

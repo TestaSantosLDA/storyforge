@@ -30,7 +30,7 @@ The difference is only in the picture: C puts narration over a text card and sto
 
 ## Video profiles
 
-A profile is a versioned YAML file in the repo (`channel/video-profiles/<id>.yaml`), so every video can be traced to the profile version that made it, like prompt templates. A topic picks one profile and may override any field. The profile and its overrides are snapshotted onto the story at Run, like the topic description.
+A profile is a versioned YAML file in the repo (`channel/video-profiles/<id>.yaml`), so every video can be traced to the profile version that made it, like prompt templates. A topic picks one profile and may override any field. The profile and its overrides are snapshotted onto the story at Run, like the topic description. A topic with a profile makes `motion_picture` stories; a topic without one makes fables. A `motion_picture` story whose topic has no readable profile at Run is refused and stays queued, with the reason shown.
 
 ### Look notes (free text)
 

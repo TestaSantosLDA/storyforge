@@ -1,5 +1,6 @@
 package com.storyforge.web;
 
+import com.storyforge.profile.ProfileException;
 import com.storyforge.story.StatusConflictException;
 import com.storyforge.topic.TopicInUseException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -18,7 +19,7 @@ import org.springframework.web.servlet.support.RequestContextUtils;
 @ControllerAdvice
 class WebErrors {
 
-    @ExceptionHandler({StatusConflictException.class, TopicInUseException.class})
+    @ExceptionHandler({StatusConflictException.class, TopicInUseException.class, ProfileException.class})
     Object refused(RuntimeException e, HttpServletRequest req) {
         if (req.getRequestURI().startsWith("/queue/reorder")) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));

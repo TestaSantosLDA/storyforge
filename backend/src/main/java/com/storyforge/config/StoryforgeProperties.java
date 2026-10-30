@@ -27,6 +27,7 @@ public record StoryforgeProperties(
         @DefaultValue Media media,
         @DefaultValue Brand brand,
         @DefaultValue Channel channel,
+        @DefaultValue Profiles profiles,
         @DefaultValue Vertical vertical,
         @DefaultValue("false") boolean madeForKids) {
 
@@ -34,7 +35,7 @@ public record StoryforgeProperties(
      * Bound as strings: Spring's String-to-Path conversion treats a relative value like {@code ../characters} as a
      * classpath resource and rejects it.
      */
-    public record Paths(String assets, String characters, String prompts, String pronunciation) {
+    public record Paths(String assets, String characters, String prompts, String pronunciation, String profiles) {
 
         public Path assetsDir() {
             return Path.of(assets);
@@ -50,6 +51,11 @@ public record StoryforgeProperties(
 
         public Path pronunciationFile() {
             return Path.of(pronunciation == null ? "../channel/pronunciation.yaml" : pronunciation);
+        }
+
+        /** Video profile files, versioned in the repo (Pipeline D "Video profiles"). */
+        public Path profilesDir() {
+            return Path.of(profiles == null ? "../channel/video-profiles" : profiles);
         }
     }
 
@@ -208,6 +214,16 @@ public record StoryforgeProperties(
     /** Links for video descriptions: channel links, and each topic's series playlist (topic name to URL). */
     public record Channel(@DefaultValue({}) java.util.List<String> links,
             @DefaultValue({}) java.util.Map<String, String> playlists) {
+    }
+
+    /**
+     * Video profiles (Pipeline D "Frames and lengths"): a vertical Short stays at or under 58 s; a landscape episode
+     * is at least 8 minutes so mid-roll ads stay available. Names refused in look notes and profile text.
+     */
+    public record Profiles(
+            @DefaultValue("58") int verticalMaxSeconds,
+            @DefaultValue("480") int landscapeMinSeconds,
+            @DefaultValue({}) java.util.List<String> bannedNames) {
     }
 
     /** FFmpeg, installed per machine (CLAUDE.md "Stack"). */

@@ -18,6 +18,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * A story row (docs/pipeline-a/stage-0 "Story"). The status is changed only through {@link StoryStatusService},
@@ -57,6 +59,12 @@ public class Story {
     private ArchiveReason archiveReason;
 
     private String topicSnapshot;
+
+    private String lookNotes;
+
+    /** Profile, overrides and look notes captured at Run (Pipeline D); null for a fable. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String profileSnapshot;
 
     private Instant autoResumeAt;
 
@@ -133,6 +141,14 @@ public class Story {
         this.topicSnapshot = topicSnapshot;
     }
 
+    void setProfileSnapshot(String profileSnapshot) {
+        this.profileSnapshot = profileSnapshot;
+    }
+
+    void setLookNotes(String lookNotes) {
+        this.lookNotes = lookNotes;
+    }
+
     void updateDetails(String concept, String moral, int targetLengthMin, String notes) {
         this.concept = concept;
         this.moral = moral;
@@ -148,6 +164,7 @@ public class Story {
         m.put("moral", moral);
         m.put("target_length_min", targetLengthMin);
         m.put("notes", notes);
+        m.put("look_notes", lookNotes);
         m.put("queue_position", queuePosition);
         m.put("format", format.dbValue());
         m.put("status", status.dbValue());
@@ -222,6 +239,14 @@ public class Story {
 
     public String getTopicSnapshot() {
         return topicSnapshot;
+    }
+
+    public String getLookNotes() {
+        return lookNotes;
+    }
+
+    public String getProfileSnapshot() {
+        return profileSnapshot;
     }
 
     public int getStoryQaRetries() {

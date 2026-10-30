@@ -2,6 +2,7 @@ package com.storyforge.story;
 
 import com.storyforge.log.ChangeLog;
 import com.storyforge.log.StatusChangeRepository;
+import com.storyforge.profile.LookNotesCheck;
 import com.storyforge.topic.Topic;
 import com.storyforge.topic.TopicRepository;
 import com.storyforge.validation.InvalidInputException;
@@ -24,9 +25,11 @@ public class StoryQueueService {
     private final StatusChangeRepository statusChanges;
     private final QueueLock queueLock;
     private final ChangeLog changeLog;
+    private final LookNotesCheck names;
 
     StoryQueueService(StoryRepository stories, TopicRepository topics, StoryStatusService status,
-            StatusChangeRepository statusChanges, QueueLock queueLock, ChangeLog changeLog) {
+            StatusChangeRepository statusChanges, QueueLock queueLock, ChangeLog changeLog, LookNotesCheck names) {
+        this.names = names;
         this.stories = stories;
         this.topics = topics;
         this.status = status;
@@ -42,25 +45,37 @@ public class StoryQueueService {
 
     @Transactional
     public Story add(StoryForm input, String by) {
-        StoryForm f = input.validated();
+        StoryForm f = checkLookNotes(input.validated());
         Topic topic = topics.findById(f.topicId())
                 .orElseThrow(() -> InvalidInputException.of("topicId", "That topic no longer exists."));
-        Story story = status.enqueue(topic, f.concept(), f.moral(), f.targetLengthMin(), f.notes(), by);
+        // A topic with a video profile makes Motion Pictures (Pipeline D); without one, fables.
+        StoryFormat format = topic.getProfileId() == null ? StoryFormat.FABLE : StoryFormat.MOTION_PICTURE;
+        Story story = status.enqueue(topic, format, f.concept(), f.moral(), f.targetLengthMin(), f.notes(), by);
+        story.setLookNotes(f.lookNotes());
         changeLog.record("story", story.getId(), "create", null, story.details(), by);
         return story;
     }
 
     @Transactional
     public Story edit(long storyId, StoryForm input, String by) {
-        StoryForm f = input.validated();
+        StoryForm f = checkLookNotes(input.validated());
         Story story = lockQueued(storyId, "edit");
         if (!story.getTopic().getId().equals(f.topicId())) {
             throw InvalidInputException.of("topicId", "A story can't move to another topic.");
         }
         Map<String, Object> before = story.details();
         story.updateDetails(f.concept(), f.moral(), f.targetLengthMin(), f.notes());
+        story.setLookNotes(f.lookNotes());
         changeLog.record("story", storyId, "edit", before, story.details(), by);
         return story;
+    }
+
+    /** Look notes that name a studio, franchise or existing character are refused on save (Pipeline D). */
+    private StoryForm checkLookNotes(StoryForm f) {
+        names.findBanned(f.lookNotes()).ifPresent(n -> {
+            throw InvalidInputException.of("lookNotes", LookNotesCheck.refusal(n));
+        });
+        return f;
     }
 
     @Transactional

@@ -1,0 +1,22 @@
+# Video profile (docs/pipeline-d/README.md "Video profiles"). Versioned in the repo: bump `version` on every
+# change so each story's snapshot names the profile version that made it.
+id: tale
+version: 1
+genre: entertaining
+tone: playful and warm, punchy jokes, a twist near the end
+facts: fiction
+structure: hook, setup, rising trouble, twist, payoff
+visual_style: storybook illustration, soft ink outlines, simple cel shading, muted warm palette, light paper grain
+voices: cast
+narrator_voice:
+frame: vertical
+target_seconds: {target: 45, min: 30, max: 58}
+beat_seconds: {min: 2, max: 4}
+motion: snappy
+on_screen_text: light
+illustrations: flux
+opening: none
+music: true
+music_mood: [playful, warm]
+audience: not_made_for_kids
+look_notes: ""

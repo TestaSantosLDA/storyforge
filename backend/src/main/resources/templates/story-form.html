@@ -31,6 +31,12 @@
             <small class="err" th:if="${errors?.get('targetLengthMin')}" th:text="${errors.get('targetLengthMin')}"></small>
         </label>
         <label>Notes <textarea name="notes" rows="3" th:text="${form.notes()}"></textarea></label>
+        <label>Look notes
+            <textarea name="lookNotes" rows="2" th:text="${form.lookNotes()}"
+                      placeholder="open on a big number"></textarea>
+            <small class="muted">Only for topics with a video profile: added to the topic's look notes for this story.</small>
+            <small class="err" th:if="${errors?.get('lookNotes')}" th:text="${errors.get('lookNotes')}"></small>
+        </label>
         <div class="row">
             <button class="primary" type="submit" th:text="${storyId == null} ? 'Add to queue' : 'Save'">Save</button>
             <a th:href="${storyId == null} ? @{/queue} : @{/stories/{id}(id=${storyId})}">Cancel</a>

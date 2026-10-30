@@ -18,6 +18,42 @@
     </section>
 
     <section class="card">
+        <h2>Video profile</h2>
+        <p class="muted small">Pick a profile for Motion Pictures topics (Pipeline D); leave it empty for a fable topic.</p>
+        <p class="flash error" th:if="${profileErrors}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+        <p class="flash error" th:if="${profileProblem}" th:text="${profileProblem}" role="alert"></p>
+        <form th:action="@{/topics/{id}/profile(id=${topic.id})}" method="post" class="grid">
+            <label>Profile
+                <select name="profileId">
+                    <option value="">None (fable)</option>
+                    <option th:each="p : ${profiles}" th:value="${p.id()}" th:selected="${p.id() == profileId}"
+                            th:text="|${p.id()} · ${p.genre()} · ${p.frame()} · v${p.version()}|"></option>
+                </select>
+                <small class="err" th:if="${profileErrors?.get('profileId')}" th:text="${profileErrors.get('profileId')}"></small>
+            </label>
+            <label>Overrides
+                <textarea name="overrides" rows="3" th:text="${overrides}"
+                          placeholder="narrator_voice: am_adam&#10;music: false"></textarea>
+                <small class="muted">One "field: value" per line, using the profile file's field names.</small>
+                <small class="err" th:if="${profileErrors?.get('overrides')}" th:text="${profileErrors.get('overrides')}"></small>
+            </label>
+            <label>Look notes
+                <textarea name="lookNotes" rows="3" th:text="${lookNotes}"
+                          placeholder="chalkboard look, white chalk lines on dark green"></textarea>
+                <small class="muted">Anything the profile doesn't cover, in plain words. Never name a studio, franchise or existing character.</small>
+                <small class="err" th:if="${profileErrors?.get('lookNotes')}" th:text="${profileErrors.get('lookNotes')}"></small>
+            </label>
+            <div><button type="submit">Save profile</button></div>
+        </form>
+        <dl class="small" th:if="${effective}">
+            <dt>Runs as</dt>
+            <dd th:text="|${effective.genre()}, ${effective.frame()}, ${#numbers.formatDecimal(effective.targetSeconds().target(), 1, 0)} s (${#numbers.formatDecimal(effective.targetSeconds().min(), 1, 0)}–${#numbers.formatDecimal(effective.targetSeconds().max(), 1, 0)}), ${effective.voices()}, motion ${effective.motion()}, music ${effective.music() ? 'on' : 'off'}|"></dd>
+            <dt>Tone</dt><dd th:text="${effective.tone()}"></dd>
+        </dl>
+        <p class="muted small">Edits apply to stories started afterwards. Stories already running keep the profile they started with.</p>
+    </section>
+
+    <section class="card">
         <div class="row between">
             <h2>Stories</h2>
             <a class="button" th:href="@{/stories/new(topicId=${topic.id})}">Add story</a>
