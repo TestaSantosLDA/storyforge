@@ -6,7 +6,7 @@
 
 An animated motion-graphics retelling of *Os Lusíadas* (Luís de Camões, 1572) and the Portuguese history inside it, in English, for an international teen audience (13–19). It should feel like a modern YouTube explainer, not a school lesson: teens find it cool, and a teacher can still put it on in class.
 
-One season of twelve episodes (Ep.00 already exists), about 5 minutes each in 16:9, plus 2–3 vertical Shorts cut from each episode. The series runs on Pipeline D (Motion Pictures): Claude writes every scene as code against the scene kit, the app renders it deterministically and assembles it. No image model and no video model are needed: every character, map and prop is drawn by the kit.
+One season of twelve episodes (Ep.00 already exists), 8–11 minutes each in 16:9 (at least 8 minutes so YouTube allows mid-roll ads; owner, 2026-10-30), plus 2–3 vertical Shorts cut from each episode. The series runs on Pipeline D (Motion Pictures): Claude writes every scene as code against the scene kit, the app renders it deterministically and assembles it. No image model and no video model are needed: every character, map and prop is drawn by the kit.
 
 ## Inputs this spec is built on
 
@@ -20,7 +20,7 @@ One season of twelve episodes (Ep.00 already exists), about 5 minutes each in 16
 | --- | --- |
 | Topic | One topic, "Os Lusíadas — Remixed", with profile `epic`, marked as a **series** (C5), on its **own channel** (C2) |
 | Stories | One story per episode, with an episode number, a source excerpt (Canto + stanza range) and an optional recap (C5) |
-| D1 — Script + cast | ~5 min script following the beat sheet below, grounded in the episode's source excerpt; claims list tags each claim as documented history, tradition or legend; recap and next-episode teaser written from the neighbouring episodes (C5); one gate (C6) |
+| D1 — Script + cast | ~9 min script following the beat sheet below, grounded in the episode's source excerpt; claims list tags each claim as documented history, tradition or legend; recap and next-episode teaser written from the neighbouring episodes (C5); one gate (C6) |
 | D2 — Narration | Stage 2 as written, with the long-form pauses (0.3 / 0.6 / 1.2 s), not D's short-form ones; Portuguese names added to the pronunciation dictionary |
 | D3 — Motion scenes | Landscape 1920×1080 (C1); all characters drawn by the kit, no Flux (`illustrations: none`); Camões and other long-dead historical figures as stylised code characters (C3, C10); series kit components below |
 | D4 — Assembly | Landscape timeline, title sting instead of a channel intro, teaser as the last 10 s (C7); Stage 4 subtitles instead of word captions; music and sound hits from the library (C11) |
@@ -37,7 +37,7 @@ A fourth starter profile, `channel/video-profiles/epic.yaml`, built as the first
 | `voices` | `narrator_only` (later: `cast`, for the gods' dialogue) |
 | `narrator_voice` | the series channel's narrator (picked from the Kokoro samples at setup, C2) |
 | `frame` | `landscape` (new field, C1) |
-| `target_seconds` | 300, allowed 240–360 (Stage 4's 2.5–6 min tolerance stays the hard limit) (C1) |
+| `target_seconds` | 540, allowed 480–660 (8–11 min). The 8-minute floor is a hard limit: below it YouTube offers no mid-roll ads (owner, 2026-10-30). Ep.00 runs 8:30 |
 | `beat_seconds` | 3–5 |
 | `motion` | `snappy` |
 | `on_screen_text` | heavy |
@@ -58,7 +58,7 @@ The fonts used in the motion test (Inter, Playfair Display, JetBrains Mono, all 
 | 1 | **Cold open** | The episode's most dramatic moment, ≤ 15 s, no intro, no channel branding before it |
 | 2 | **Title sting** | Series logo + episode number and title, about 3 s, code-rendered per episode (C7) |
 | 3 | **Recap** *(optional)* | "Previously on…", ≤ 15 s, only when the story's recap is on (C5) |
-| 4 | **Chapters** | 3–4 chapters, each opened by a chapter tag pill; each chapter becomes a YouTube chapter |
+| 4 | **Chapters** | 4–6 chapters, each opened by a chapter tag pill; each chapter becomes a YouTube chapter |
 | 5 | **Verse Moment** | Exactly one: original Portuguese typed on screen, our English translation under it, with Canto and stanza shown |
 | 6 | **Fact or Legend?** | Exactly one: a claim from the episode put to the viewer, then answered with the LEGEND stamp or a "DOCUMENTED" stamp, and the source named |
 | 7 | **Next episode teaser** | The last 10 s, built from the next episode (C5); the last episode of the season teases the season as a whole |
@@ -198,9 +198,9 @@ The owner accepted every proposed default on 2026-10-30 ("let's use your recomme
 - **Teaser:** D1 gets the next episode **by episode number** (not by queue position, which can change) — its title, concept and source excerpt — and writes the last 10 s. No next episode yet: a season teaser, noted at Gate A. If the next episode's concept changes after this episode is approved, nothing is regenerated automatically; the reviewer can send it back.
 - **Source excerpt:** `story.source_excerpt` (Canto + stanza ranges) is required for a series topic that has a `source`. D1 receives those stanzas verbatim from `sources/`, and QA checks every chapter maps to stanzas or claims.
 
-### C6 — One gate for a 5-minute script
-**Conflicts with:** Pipeline D's reason for a single gate ("because the script is one minute long"); Pipeline A uses two gates for 5-minute videos.
-**Decision:** keep D's single gate (script + cast + claims), plus the beat sheet mapping, the source excerpt and the translations. Regenerating a 5-minute script with `claude -p` is still cheap, and the beat sheet constrains the story enough that a separate outline gate would mostly repeat it. Update D's reason to "because the profile's structure fixes the story's shape".
+### C6 — One gate for a long-form script
+**Conflicts with:** Pipeline D's reason for a single gate ("because the script is one minute long"); Pipeline A uses two gates for 3–5 minute videos.
+**Decision:** keep D's single gate (script + cast + claims), plus the beat sheet mapping, the source excerpt and the translations. Regenerating a 9-minute script with `claude -p` is still cheap, and the beat sheet constrains the story enough that a separate outline gate would mostly repeat it. Update D's reason to "because the profile's structure fixes the story's shape".
 
 ### C7 — Intro and end card
 **Conflicts with:** Pipeline D "No intro and no end card; watermark only" and Pipeline A "Channel intro and end card on every video".
