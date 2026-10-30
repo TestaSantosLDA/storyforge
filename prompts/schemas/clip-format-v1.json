@@ -1,0 +1,22 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["youtube", "tiktok", "instagram", "cover_second"],
+  "properties": {
+    "youtube": {"$ref": "#/$defs/post"},
+    "tiktok": {"$ref": "#/$defs/post"},
+    "instagram": {"$ref": "#/$defs/post"},
+    "cover_second": {"type": "number"}
+  },
+  "$defs": {
+    "post": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["caption", "hashtags"],
+      "properties": {
+        "caption": {"type": "string"},
+        "hashtags": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

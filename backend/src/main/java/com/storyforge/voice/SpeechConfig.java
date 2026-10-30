@@ -16,7 +16,10 @@ class SpeechConfig {
     SidecarSpeech sidecarSpeech(StoryforgeProperties props) {
         var factory = new JdkClientHttpRequestFactory(HttpClient.newHttpClient());
         factory.setReadTimeout(props.images().timeout());
-        return new SidecarSpeech(RestClient.builder().baseUrl(props.images().sidecarUrl()).requestFactory(factory)
-                .build());
+        var longFactory = new JdkClientHttpRequestFactory(HttpClient.newHttpClient());
+        longFactory.setReadTimeout(props.clips().transcribeTimeout());
+        return new SidecarSpeech(
+                RestClient.builder().baseUrl(props.images().sidecarUrl()).requestFactory(factory).build(),
+                RestClient.builder().baseUrl(props.images().sidecarUrl()).requestFactory(longFactory).build());
     }
 }

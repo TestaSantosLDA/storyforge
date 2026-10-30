@@ -115,3 +115,22 @@ def test_silence_analysis_finds_inner_gaps():
     stats = analyse(audio)
     assert 1.9 <= stats["max_silence"] <= 2.1
     assert stats["duration"] == 4.0
+
+
+def test_transcribe_words_refuses_a_missing_file(client):
+    c, _ = client
+    assert c.post("/transcribe/words", json={"path": "/no/such/video.mp4"}).status_code == 422
+
+
+def test_transcribe_words_returns_language_and_words(client, monkeypatch, tmp_path):
+    c, _ = client
+    video = tmp_path / "video.mp4"
+    video.write_bytes(b"x")
+
+    class Stub:
+        def transcribe_words(self, path):
+            return {"language": "pt", "words": [{"text": "Ola", "start": 0.0, "end": 0.4}], "engine_version": "stub"}
+
+    monkeypatch.setattr(app_module, "SPEECH", Stub())
+    body = c.post("/transcribe/words", json={"path": str(video)}).json()
+    assert body["language"] == "pt" and body["words"][0]["text"] == "Ola"

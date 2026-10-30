@@ -8,4 +8,6 @@ public interface AttemptRepository extends JpaRepository<Attempt, Long> {
     List<Attempt> findByStoryIdOrderByIdAsc(Long storyId);
 
     long countByStoryIdAndStep(Long storyId, String step);
+
+    long countByClipJobIdAndStep(Long clipJobId, String step);
 }

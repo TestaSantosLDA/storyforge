@@ -9,6 +9,9 @@ SAMPLE_RATE = 24000
 TTS_VERSION = "kokoro-82m/0.9.4"
 STT_MODEL = "small.en"
 STT_VERSION = f"faster-whisper-1.2.1/{STT_MODEL}"
+# Clips from any video: multilingual model, language auto-detected.
+WORDS_MODEL = "small"
+WORDS_VERSION = f"faster-whisper-1.2.1/{WORDS_MODEL}"
 
 # Kokoro English voices. a* = American English pipeline, b* = British English pipeline.
 VOICES = [
@@ -26,6 +29,7 @@ class Speech:
         self.device = device
         self._pipelines = {}
         self._whisper = None
+        self._words_whisper = None
         self._lock = threading.Lock()
 
     @property
@@ -34,7 +38,7 @@ class Speech:
 
     @property
     def stt_loaded(self) -> bool:
-        return self._whisper is not None
+        return self._whisper is not None or self._words_whisper is not None
 
     def synthesize(self, text: str, voice: str, speed: float = 1.0) -> tuple[bytes, dict]:
         if voice not in VOICES:
@@ -63,6 +67,20 @@ class Speech:
                                              compute_type="float16" if cuda else "int8")
             segments, _ = self._whisper.transcribe(io.BytesIO(wav), language="en", beam_size=5)
             return " ".join(s.text.strip() for s in segments).strip()
+
+    def transcribe_words(self, path: str) -> dict:
+        """Word-level timestamps for a whole media file; Whisper decodes the audio itself."""
+        with self._lock:
+            if self._words_whisper is None:
+                from faster_whisper import WhisperModel
+
+                cuda = self.device == "cuda"
+                self._words_whisper = WhisperModel(WORDS_MODEL, device="cuda" if cuda else "cpu",
+                                                   compute_type="float16" if cuda else "int8")
+            segments, info = self._words_whisper.transcribe(path, beam_size=5, word_timestamps=True, vad_filter=True)
+            words = [{"text": w.word.strip(), "start": round(w.start, 3), "end": round(w.end, 3)}
+                     for s in segments for w in (s.words or []) if w.word.strip()]
+        return {"language": info.language, "words": words, "engine_version": WORDS_VERSION}
 
     def _pipeline(self, lang: str):
         if lang not in self._pipelines:

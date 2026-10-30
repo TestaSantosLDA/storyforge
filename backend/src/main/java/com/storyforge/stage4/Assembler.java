@@ -158,9 +158,15 @@ public class Assembler {
         return m.find() ? Double.parseDouble(m.group(1)) : 0;
     }
 
-    private static String run(List<String> cmd, int timeoutSeconds) {
+    public static String run(List<String> cmd, int timeoutSeconds) {
+        return run(cmd, timeoutSeconds, null);
+    }
+
+    /** Runs a tool from {@code dir} (null: here), for filters that can't take a Windows path. */
+    public static String run(List<String> cmd, int timeoutSeconds, Path dir) {
         try {
-            Process p = new ProcessBuilder(cmd).redirectErrorStream(true).start();
+            Process p = new ProcessBuilder(cmd).redirectErrorStream(true)
+                    .directory(dir == null ? null : dir.toFile()).start();
             byte[] out = p.getInputStream().readAllBytes();
             if (!p.waitFor(timeoutSeconds, TimeUnit.SECONDS)) {
                 p.destroyForcibly();

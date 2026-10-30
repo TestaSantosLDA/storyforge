@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
         "storyforge.llm.engine=fake",
         "storyforge.images.engine=none",
         "storyforge.voices.engine=fake",
+        "storyforge.clips.fetcher=fake",
         "storyforge.animation.engine=fake",
         "storyforge.paths.pronunciation=target/test-pronunciation.yaml",
         "storyforge.llm.first-backoff=1ms",
@@ -27,7 +28,7 @@ public abstract class DbTest {
 
     @BeforeEach
     void cleanDatabase() {
-        jdbc.sql("truncate entity_change, attempt, status_change, story, topic, music_track restart identity cascade")
+        jdbc.sql("truncate entity_change, attempt, status_change, story, topic, music_track, clip_job, source_video restart identity cascade")
                 .update();
         jdbc.sql("update gpu_lease set holder = null, acquired_at = null, expires_at = null").update();
     }

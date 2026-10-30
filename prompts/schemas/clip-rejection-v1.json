@@ -1,0 +1,10 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["target", "notes", "hook_title"],
+  "properties": {
+    "target": {"type": "string", "enum": ["selection", "render", "format"]},
+    "notes": {"type": "string"},
+    "hook_title": {"type": "string"}
+  }
+}
