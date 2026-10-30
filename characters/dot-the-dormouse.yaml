@@ -1,0 +1,15 @@
+---
+id: "dot-the-dormouse"
+name: "Dot"
+topic_id: 1
+kind: "recurring"
+personality: "A tiny, practical, matter-of-fact dormouse who states plain truths without\
+  \ realising they are wise. She is cheerful, unflappable and very serious about snacks."
+visual_description: "A very small, plump, round dormouse with golden-brown fur, large\
+  \ round ears and a long furry tail. She wears an oversized bright-red woolly bobble\
+  \ hat that keeps slipping down, and hugs a chestnut nearly as big as she is."
+reference_images: []
+voice:
+  id: "bf_lily"
+  engine: "kokoro"
+introduced_in_story: 3

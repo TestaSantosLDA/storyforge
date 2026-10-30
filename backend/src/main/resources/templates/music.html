@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Music library')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('music')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1>Music library</h1>
+    <p class="muted">Tracks for background music, each kept with its license as proof for copyright disputes. Only licenses that allow commercial use on YouTube, TikTok and Instagram are accepted; the pipeline never downloads music itself.</p>
+
+    <p class="empty" th:if="${tracks.isEmpty()}">No tracks yet. Videos are assembled without music until you add some.</p>
+    <table class="history" th:unless="${tracks.isEmpty()}">
+        <thead><tr><th>Track</th><th>Moods</th><th>Length</th><th>License</th><th></th></tr></thead>
+        <tbody>
+        <tr th:each="t : ${tracks}">
+            <td><a th:href="${t.sourceUrl()}" target="_blank" rel="noopener" th:text="${t.title()}"></a></td>
+            <td th:text="${#strings.listJoin(t.moods(), ', ')}"></td>
+            <td th:text="${#numbers.formatDecimal(t.durationSec(), 1, 0)} + ' s'"></td>
+            <td th:text="${licenses[t.licenseType()]}"></td>
+            <td><audio controls preload="none" th:src="@{/assets(key=${t.assetKey()})}"></audio></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <section class="card">
+        <h2>Add a track</h2>
+        <form th:action="@{/music}" method="post" enctype="multipart/form-data" class="grid">
+            <label>Title <input id="music-title" name="title" required></label>
+            <label>Music file <input id="music-audio" name="audio" type="file" accept="audio/*" required></label>
+            <label>Where it came from (page URL) <input id="music-source" name="sourceUrl" type="url" required placeholder="https://pixabay.com/music/..."></label>
+            <label>License
+                <select id="music-license" name="license" required>
+                    <option th:each="l : ${licenses}" th:value="${l.key}" th:text="${l.value}"></option>
+                </select>
+            </label>
+            <label>License file (text or PDF) <input id="music-license-file" name="licenseFile" type="file" required></label>
+            <label>Attribution text (only for CC BY) <input id="music-attribution" name="attribution"></label>
+            <fieldset class="row">
+                <legend class="small">Moods</legend>
+                <label class="row small" th:each="m : ${moods}">
+                    <input type="checkbox" name="moods" th:value="${m}" th:attr="id='mood-' + ${m}">
+                    <span th:text="${#strings.replace(m, '_', ' ')}"></span>
+                </label>
+            </fieldset>
+            <div><button class="primary" type="submit">Add track</button></div>
+        </form>
+    </section>
+</main>
+</body>
+</html>

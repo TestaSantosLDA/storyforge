@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "hook", "summary", "moral_line", "chapter_titles", "tags", "hashtags", "thumbnails"],
+  "properties": {
+    "title": {"type": "string"},
+    "hook": {"type": "string"},
+    "summary": {"type": "string"},
+    "moral_line": {"type": "string"},
+    "chapter_titles": {"type": "array", "items": {"type": "string"}},
+    "tags": {"type": "array", "items": {"type": "string"}},
+    "hashtags": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
+    "thumbnails": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["shot_id", "text"],
+        "properties": {"shot_id": {"type": "string"}, "text": {"type": "string"}}
+      }
+    }
+  }
+}

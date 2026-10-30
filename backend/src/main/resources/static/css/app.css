@@ -134,3 +134,21 @@ h3 { font-size: 1rem; margin: 1rem 0 .5rem; display: flex; gap: .5rem; align-ite
 .scene { border-top: 1px solid var(--line); padding-top: .5rem; margin-top: .75rem; }
 .line { margin: .35rem 0; }
 .line strong { display: inline-block; min-width: 6.5rem; color: var(--blue); }
+
+.sheet { display: flex; gap: .5rem; flex-wrap: wrap; margin: .5rem 0; }
+.sheet img { height: 160px; width: auto; border-radius: 6px; border: 1px solid var(--line); background: #fff; }
+
+.redraw { display: grid; gap: .4rem; margin-top: .5rem; padding-top: .5rem; border-top: 1px dashed var(--line); }
+
+.shots { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); }
+.shots figure { margin: 0; display: grid; gap: .2rem; }
+.shots img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; border: 1px solid var(--line); }
+.shots figure.failed img { border-color: var(--brick); }
+.shots figcaption { display: flex; gap: .4rem; align-items: baseline; flex-wrap: wrap; }
+
+.player { width: 100%; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; }
+fieldset { border: 1px solid var(--line); border-radius: 6px; padding: .5rem .75rem; }
+
+.checklist { display: grid; gap: .4rem; padding-left: 1.2rem; }
+.checklist label { display: inline; font-weight: 400; }
+.copy { font-size: .8rem; padding: .3rem .6rem; justify-self: start; }

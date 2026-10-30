@@ -46,12 +46,15 @@ class GateController {
     private final Drafts drafts;
     private final Gates gates;
     private final CharacterStore characters;
+    private final com.storyforge.stage1.ReferenceSheets referenceSheets;
 
-    GateController(StoryRepository stories, Drafts drafts, Gates gates, CharacterStore characters) {
+    GateController(StoryRepository stories, Drafts drafts, Gates gates, CharacterStore characters,
+            com.storyforge.stage1.ReferenceSheets referenceSheets) {
         this.stories = stories;
         this.drafts = drafts;
         this.gates = gates;
         this.characters = characters;
+        this.referenceSheets = referenceSheets;
     }
 
     @GetMapping("/stories/{id}/gate-a")
@@ -69,7 +72,11 @@ class GateController {
             model.addAttribute("content", content);
             model.addAttribute("topicCast", topicCast);
             model.addAttribute("checks", checks(latest.qaResults()));
+            model.addAttribute("sheets", latest.sheets() == null ? Map.of()
+                    : JSON.readValue(latest.sheets(), JSON.getTypeFactory().constructMapType(
+                            java.util.LinkedHashMap.class, String.class, com.storyforge.stage1.ReferenceSheets.Sheet.class)));
         }
+        model.addAttribute("sheetsEnabled", referenceSheets.enabled());
         return "gate-a";
     }
 
@@ -129,6 +136,18 @@ class GateController {
         } catch (InvalidInputException e) {
             flash.addFlashAttribute("error", e.fieldErrors().get("notes"));
             return "redirect:/stories/" + id + "/gate-" + gate;
+        }
+        return "redirect:/stories/" + id;
+    }
+
+    @PostMapping("/stories/{id}/gate-a/characters/{characterId}/redraw")
+    String redraw(@PathVariable long id, @PathVariable String characterId,
+            @RequestParam(required = false) String instructions, RedirectAttributes flash) {
+        try {
+            gates.redrawCharacter(id, characterId, instructions, Actor.LOCAL);
+            flash.addFlashAttribute("notice", "Redrawing this character. The page updates when the new sheet is ready.");
+        } catch (InvalidInputException e) {
+            flash.addFlashAttribute("error", String.join(" ", e.fieldErrors().values()));
         }
         return "redirect:/stories/" + id;
     }

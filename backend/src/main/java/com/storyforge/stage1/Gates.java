@@ -30,15 +30,17 @@ public class Gates {
     private final CharacterStore characters;
     private final StoryRepository stories;
     private final StoryforgeProperties.Voices voices;
+    private final ReferenceSheets sheets;
 
     Gates(StoryStatusService status, StoryCounters counters, Drafts drafts, CharacterStore characters,
-            StoryRepository stories, StoryforgeProperties props) {
+            StoryRepository stories, StoryforgeProperties props, ReferenceSheets sheets) {
         this.status = status;
         this.counters = counters;
         this.drafts = drafts;
         this.characters = characters;
         this.stories = stories;
         this.voices = props.voices();
+        this.sheets = sheets;
     }
 
     /**
@@ -54,11 +56,22 @@ public class Gates {
         status.transition(storyId, StoryStatus.STORY_APPROVED, StoryStatus.SCRIPT_IN_PROGRESS,
                 "system:stage1", "cast locked; writing the script");
         StoryContent content = Json.read(draft.content(), StoryContent.class);
+        Map<String, ReferenceSheets.Sheet> sheetsById = draft.sheets() == null ? Map.of()
+                : Json.MAPPER.readValue(draft.sheets(), Json.MAPPER.getTypeFactory()
+                        .constructMapType(java.util.LinkedHashMap.class, String.class, ReferenceSheets.Sheet.class));
         List<CharacterFile> files = content.newCharacters().stream()
-                .map(n -> new CharacterFile(n.id(), n.name(), story.getTopic().getId(),
-                        "one_off".equals(n.kind()) ? CharacterFile.Kind.ONE_OFF : CharacterFile.Kind.RECURRING,
-                        n.personality(), n.visualDescription(), List.of(),
-                        Map.of("engine", voices.engine(), "id", n.proposedVoice()), storyId))
+                .map(n -> {
+                    ReferenceSheets.Sheet sheet = sheetsById.get(n.id());
+                    // A sheet that failed QA after all draws can still be approved: the reviewer has seen it.
+                    if (sheets.enabled() && sheet == null) {
+                        throw InvalidInputException.of("cast", n.name() + " has no reference sheet yet.");
+                    }
+                    List<String> refs = sheet == null ? List.of() : sheets.keepForever(n.id(), sheet.views());
+                    return new CharacterFile(n.id(), n.name(), story.getTopic().getId(),
+                            "one_off".equals(n.kind()) ? CharacterFile.Kind.ONE_OFF : CharacterFile.Kind.RECURRING,
+                            n.personality(), n.visualDescription(), refs,
+                            Map.of("engine", voices.engine(), "id", n.proposedVoice()), storyId);
+                })
                 .toList();
         for (CharacterFile f : files) {
             try {
@@ -75,6 +88,9 @@ public class Gates {
         Drafts.Draft draft = pending(storyId, Drafts.Kind.SCRIPT);
         status.transition(storyId, StoryStatus.AWAITING_SCRIPT_APPROVAL, StoryStatus.SCRIPT_APPROVED, by, "approved");
         drafts.review(draft.id(), "approved", null);
+        // Stages 2-4 run automatically after Gate B.
+        status.transition(storyId, StoryStatus.SCRIPT_APPROVED, StoryStatus.AUDIO_IN_PROGRESS, "system:stage1",
+                "script approved; recording narration");
     }
 
     /** Regenerate with notes: counts a rejection; the limit archives the story. */
@@ -97,6 +113,49 @@ public class Gates {
         }
         status.transition(storyId, waiting, story ? StoryStatus.STORY_IN_PROGRESS : StoryStatus.SCRIPT_IN_PROGRESS,
                 by, "regenerate: " + notes.strip());
+        return Outcome.REGENERATING;
+    }
+
+    /**
+     * Gate A: redraw one new character's reference sheet, optionally with instructions, without touching the story
+     * or the other characters. Not a rejection. The request is a new draft version; the step folds the instructions
+     * into the character's description (positive wording) and redraws only that sheet, then returns to Gate A.
+     */
+    @Transactional
+    public void redrawCharacter(long storyId, String characterId, String instructions, String by) {
+        Drafts.Draft draft = pending(storyId, Drafts.Kind.STORY);
+        StoryContent content = Json.read(draft.content(), StoryContent.class);
+        StoryContent.NewCharacter c = content.newCharacters().stream().filter(n -> n.id().equals(characterId))
+                .findFirst().orElseThrow(() -> InvalidInputException.of("character",
+                        "Only characters new in this story can be redrawn here. Existing characters keep their look."));
+        Map<String, ReferenceSheets.Sheet> sheetsById = draft.sheets() == null ? new java.util.LinkedHashMap<>()
+                : new java.util.LinkedHashMap<>(Json.MAPPER.readValue(draft.sheets(), Json.MAPPER.getTypeFactory()
+                        .constructMapType(java.util.LinkedHashMap.class, String.class, ReferenceSheets.Sheet.class)));
+        sheetsById.remove(characterId);
+        String note = instructions == null ? "" : instructions.strip();
+        drafts.addRedraw(draft, Json.write(sheetsById), Json.write(Map.of(characterId, note)));
+        drafts.review(draft.id(), "superseded", "redraw " + c.name() + (note.isEmpty() ? "" : ": " + note));
+        status.transition(storyId, StoryStatus.AWAITING_STORY_APPROVAL, StoryStatus.STORY_IN_PROGRESS, by,
+                "redraw " + c.name() + (note.isEmpty() ? "" : ": " + note));
+    }
+
+    /**
+     * From a flagged later stage (e.g. a line that can't be read, or narration too long): regenerate the script
+     * with notes. Counts as a script rejection (Stage 2 scenario 6); the limit archives the story.
+     */
+    @Transactional
+    public Outcome sendBackToScript(long storyId, String notes, String by) {
+        if (notes == null || notes.isBlank()) {
+            throw InvalidInputException.of("notes", "Say what to change in the script.");
+        }
+        drafts.approved(storyId, Drafts.Kind.SCRIPT).ifPresent(d -> drafts.review(d.id(), "rejected", notes.strip()));
+        StoryCounters.Count count = counters.increment(storyId, StoryCounter.SCRIPT_REJECTIONS);
+        if (count.reachedLimit()) {
+            status.archive(storyId, StoryStatus.NEEDS_ATTENTION, ArchiveReason.SCRIPT_REJECTIONS_EXHAUSTED, by,
+                    notes.strip());
+            return Outcome.ARCHIVED;
+        }
+        status.resumeTo(storyId, StoryStatus.SCRIPT_IN_PROGRESS, by, "sent back to Gate B: " + notes.strip());
         return Outcome.REGENERATING;
     }
 

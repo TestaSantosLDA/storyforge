@@ -10,10 +10,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class Drafts {
 
-    public enum Kind { STORY, SCRIPT }
+    public enum Kind { STORY, SCRIPT, SHOTS }
 
     public record Draft(long id, long storyId, Kind kind, int version, String content, String qaResults,
-            String promptVersion, String reviewState, String reviewerNotes, Instant createdAt) {
+            String promptVersion, String reviewState, String reviewerNotes, Instant createdAt, String sheets,
+            String redrawNotes) {
     }
 
     private final JdbcClient jdbc;
@@ -57,6 +58,34 @@ public class Drafts {
                 .param("s", storyId).param("k", kind.name().toLowerCase()).query(this::map).list();
     }
 
+    /** A new version that copies a draft's content and sheets, with a redraw request (Gate A, one character). */
+    public Draft addRedraw(Draft from, String sheetsJson, String redrawNotesJson) {
+        Draft d = add(from.storyId(), from.kind(), from.content(), from.qaResults(), from.promptVersion());
+        jdbc.sql("update story_draft set sheets = cast(:s as jsonb), redraw_notes = cast(:r as jsonb) where id = :id")
+                .param("s", sheetsJson).param("r", redrawNotesJson).param("id", d.id()).update();
+        return get(d.id());
+    }
+
+    public void setContent(long draftId, String contentJson) {
+        jdbc.sql("update story_draft set content = cast(:c as jsonb) where id = :id")
+                .param("c", contentJson).param("id", draftId).update();
+    }
+
+    public void clearRedrawNotes(long draftId) {
+        jdbc.sql("update story_draft set redraw_notes = null where id = :id").param("id", draftId).update();
+    }
+
+    public void setSheets(long draftId, String sheetsJson) {
+        jdbc.sql("update story_draft set sheets = cast(:s as jsonb) where id = :id")
+                .param("s", sheetsJson).param("id", draftId).update();
+    }
+
+    /** Marks any draft still waiting for review as abandoned (its story was archived). */
+    public void abandonPending(long storyId) {
+        jdbc.sql("update story_draft set review_state = 'abandoned' where story_id = :s and review_state = 'pending'")
+                .param("s", storyId).update();
+    }
+
     public void review(long draftId, String state, String notes) {
         jdbc.sql("update story_draft set review_state = :st, reviewer_notes = :n where id = :id")
                 .param("st", state).param("n", notes).param("id", draftId).update();
@@ -66,6 +95,6 @@ public class Drafts {
         return new Draft(rs.getLong("id"), rs.getLong("story_id"), Kind.valueOf(rs.getString("kind").toUpperCase()),
                 rs.getInt("version"), rs.getString("content"), rs.getString("qa_results"),
                 rs.getString("prompt_version"), rs.getString("review_state"), rs.getString("reviewer_notes"),
-                rs.getTimestamp("created_at").toInstant());
+                rs.getTimestamp("created_at").toInstant(), rs.getString("sheets"), rs.getString("redraw_notes"));
     }
 }

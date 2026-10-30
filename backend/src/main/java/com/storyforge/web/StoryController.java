@@ -24,13 +24,18 @@ class StoryController {
     private final StoryRepository stories;
     private final StatusChangeRepository changes;
     private final TopicService topics;
+    private final com.storyforge.stage2.AudioLines audio;
+    private final com.storyforge.stage3.ShotStore shotStore;
 
     StoryController(StoryQueueService queue, StoryRepository stories, StatusChangeRepository changes,
-            TopicService topics) {
+            TopicService topics, com.storyforge.stage2.AudioLines audio,
+            com.storyforge.stage3.ShotStore shotStore) {
         this.queue = queue;
         this.stories = stories;
         this.changes = changes;
         this.topics = topics;
+        this.audio = audio;
+        this.shotStore = shotStore;
     }
 
     @GetMapping("/stories/new")
@@ -63,6 +68,25 @@ class StoryController {
         model.addAttribute("story", story);
         model.addAttribute("history", changes.findByStoryIdOrderByIdAsc(id));
         model.addAttribute("queued", story.getStatus() == StoryStatus.QUEUED);
+        var latest = new java.util.LinkedHashMap<String, com.storyforge.stage2.AudioLines.Line>();
+        audio.forStory(id).forEach(l -> latest.put(l.lineId(), l));
+        model.addAttribute("audioLines", latest.values());
+        model.addAttribute("audioTrack", audio.track(id).orElse(null));
+        model.addAttribute("audioFlagged", story.getStatus() == StoryStatus.NEEDS_ATTENTION
+                && story.getResumeStatus() == StoryStatus.AUDIO_IN_PROGRESS);
+        var shotImages = new java.util.LinkedHashMap<String, com.storyforge.stage3.ShotStore.Image>();
+        shotStore.images(id).forEach(i -> {
+            var cur = shotImages.get(i.shotId());
+            if (cur == null || !cur.passed() && (i.passed() || i.accepted() || i.failures() <= cur.failures())) {
+                shotImages.put(i.shotId(), i);
+            }
+        });
+        var clips = new java.util.HashMap<String, String>();
+        shotStore.clips(id).forEach(c -> clips.put(c.shotId(), c.assetKey()));
+        model.addAttribute("shotImages", shotImages.values());
+        model.addAttribute("shotClips", clips);
+        model.addAttribute("visualsFlagged", story.getStatus() == StoryStatus.NEEDS_ATTENTION
+                && story.getResumeStatus() == StoryStatus.VISUALS_IN_PROGRESS);
         return "story";
     }
 

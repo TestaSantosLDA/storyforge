@@ -26,7 +26,7 @@ Goal: make the most of YouTube's search and recommendation system while describi
 
 - **Title** — curiosity-driven and searchable, roughly 50–60 characters so it isn't cut off; includes the main character or series name.
 - **Description** — first two lines are a hook (they show in search); then a short story summary, the moral, chapter timestamps, the series playlist link, music attribution if any, and channel links.
-- **Chapters** — one per scene from the timing manifest, starting at 0:00.
+- **Chapters** — one per scene from the timing manifest, starting at 0:00. Scenes under 10 seconds join the previous chapter; when fewer than 3 chapters remain the description has none (YouTube ignores fewer than 3).
 - **Tags and hashtags** — a focused set of tags plus up to 3 hashtags.
 - **Playlist** — the topic's series playlist, so viewers binge the same universe.
 - **Thumbnails** — 3 variants, each from a strong existing shot with a short text overlay (2–4 words) in the channel style, 1280×720. Three variants allow YouTube's thumbnail A/B testing.
@@ -80,6 +80,7 @@ Metadata can be edited on the page before copying, or regenerated with notes.
 | `ready_to_upload` | Mark as published (valid URL) | `published` → Pipeline B |
 | `ready_to_upload` | Music claimed, send back | `assembling` |
 | `ready_to_upload` | Visual claim | `analyzing_rejection` |
+| `ready_to_upload` | Regenerate metadata with notes | `preparing_publish` |
 | `ready_to_upload` | Kill | `archived` |
 
 ## Logging
@@ -93,6 +94,10 @@ Metadata can be edited on the page before copying, or regenerated with notes.
 - 3 thumbnail variants per video for A/B testing.
 - Upload private first; publish only after a clean copyright check.
 - Audience: fixed channel-wide setting of **not made for kids**.
+- Stories with fewer than 3 chapter-length scenes publish without chapters instead of failing metadata QA (a retry can't add scenes).
+- Thumbnails are drawn in code (Java2D) from passing shot images, with Claude choosing the shots and the 2–4 words; Claude's vision check reads them back for legibility and honesty.
+- Edits on the publish page and every regeneration are saved as new package versions; nothing is overwritten.
+- Pipeline B isn't built yet: marking as published records the URL and sets `published`; the clip trigger arrives with Pipeline B.
 
 ## Compliance note — audience setting
 

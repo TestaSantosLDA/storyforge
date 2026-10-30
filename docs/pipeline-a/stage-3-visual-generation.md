@@ -31,6 +31,7 @@ Stage 3 turns the approved scenes and the narration timing into animated shots i
 - For each shot: characters present, what they are doing, framing (wide, medium, close-up), and camera move (slow zoom in or out, pan left or right, hold).
 - Shot durations come from the timing manifest, so visuals follow the narration exactly.
 - QA: shots cover the whole timeline with no gaps or overlaps; every shot uses only the story's approved cast; durations within the configured range.
+- How it runs: Claude sees each line's on-screen seconds (including the pause after it), and code then splits any shot over the maximum at line boundaries and merges short shots into a same-scene neighbour when the result fits. The 5 s minimum is a target only: code merges short shots where it can, and a shorter shot never fails the plan (in the first real runs a hard minimum made plans unsolvable). Only the 10 s maximum is enforced, except for a single line longer than that.
 
 ## Step 3B — Image generation
 
@@ -73,7 +74,7 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 
 ## Retry rules
 
-- A failing image or clip is regenerated automatically, up to **3 times per shot**, with the failed check fed back into the prompt.
+- A failing image or clip is regenerated automatically, up to **3 times per shot**. An image retry is a fresh draw with a new seed; the failed check is never written into the image prompt, because naming a flaw ("not plaid") makes the image model draw it (seen in the 2026-10-05 reference-sheet run). Where a fix needs different wording, restate the wanted feature positively (e.g. "navy-and-white striped neckerchief").
 - If a shot still fails, the story goes to `needs_attention` listing the failing shots. Passing shots are kept.
 - Not archived: story, script and audio are already approved.
 
@@ -93,7 +94,7 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 | 2 | Character looks different from their reference | Consistency failure; regenerate that shot (up to 3) | `visuals_in_progress` |
 | 3 | Extra unplanned character appears, or a character is drawn twice | Characters check fails; regenerate | `visuals_in_progress` |
 | 3b | Characters are right but their actions are swapped | Action check fails; regenerate with the actions restated | `visuals_in_progress` |
-| 4 | Image looks like a known trademarked character | Trademark check fails; regenerate with the resemblance named as a negative | `visuals_in_progress` |
+| 4 | Image looks like a known trademarked character | Trademark check fails; regenerate with a new seed (the resemblance is not named in the prompt) | `visuals_in_progress` |
 | 5 | Colours come out too vivid | Style check fails; regenerate | `visuals_in_progress` |
 | 6 | A shot fails 3 times | Flag with failing shots listed | `needs_attention` |
 | 7 | Scene needs more than 4 characters together | Shot planner splits it into shots of at most 4 | `visuals_in_progress` |
@@ -131,3 +132,4 @@ Checked by a vision model (Claude) against the shot plan and reference images.
 - Channel style: classic storybook animation, muted palette including soft reds; studios are never named in prompts.
 - Character references are approved at Gate A; Stage 3 has no human gate.
 - 3 automatic retries per shot, then `needs_attention`. Shots are 5–10 seconds, at most 4 characters each.
+- Clip lengths are cut on the frame grid from each shot's start and end (not its rounded length), so whole-frame rounding never accumulates into picture/voice drift across a long story.

@@ -54,6 +54,16 @@ Stage 2 turns the approved, speaker-tagged script into narration audio: the fixe
 | Duration | Total length within the tolerance around the story's target length |
 | Manifest | Timing manifest covers every line and every scene, with no overlaps |
 
+## How it runs (MVP)
+
+- Kokoro-82M (Apache 2.0) and faster-whisper `small.en` (MIT) run in the local sidecar on the GPU.
+- Kokoro gives identical audio for identical input, so each retry reads the line at a slightly different speed (1.0, then 0.95, then 1.05; config `attempt-speeds`).
+- The transcript match folds UK spellings to US ones ("harbour"/"harbor") and lets cast names differ by up to two letters, because Whisper spells invented names by ear ("Tamsin" heard as "Tamsen"). Ordinary words get no such leeway. Score = matched words ÷ the longer word list, so dropped and extra words both cost.
+- Very short lines (three words or fewer) are judged by length instead of words per second, and lines of one or two words that run 2.5 s or less pass without a transcript match: in the first real run Whisper heard "Oh." as "Though?", and the engine's lead-in made "Very atmospheric." read as 1 word per second.
+- Clips are cached by a hash of (voice, speed, text sent to the engine); a passing clip is reused by any later run, so a resume or restart only makes missing or failing lines.
+- The pronunciation dictionary is `channel/pronunciation.yaml` in the repo; the needs-attention screen can add an entry and retry.
+- The track and timing manifest are written to the assets directory (`stories/<id>/audio/narration.wav`, `manifest.json`) and stored in `audio_track`.
+
 ## Retry rules
 
 - A failing line is regenerated automatically, up to **3 times per line**.
@@ -111,3 +121,4 @@ Stage 2 turns the approved, speaker-tagged script into narration audio: the fixe
 - Narrator voice is picked by listening to the Kokoro voice samples before the first run (setup task).
 - Duration tolerance: 2.5 to 6 minutes for a 3–5 minute target.
 - Pauses: 0.3 s same speaker, 0.6 s speaker change, 1.2 s scene boundary; tunable by ear.
+- Transcript match treats words that sound exactly alike ("quay" / "key", from a small fixed list) and a past-tense ending swallowed by the next word ("checked the" / "check the") as matches. Both failed correct readings three times in the 2026-10-05 harbour run.

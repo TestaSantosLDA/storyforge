@@ -11,4 +11,22 @@ public class FakeLlmConfig {
     FakeLlmEngine fakeLlmEngine() {
         return new FakeLlmEngine();
     }
+
+    @Bean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(name = "storyforge.animation.engine",
+            havingValue = "fake")
+    com.storyforge.animation.FakeAnimator fakeAnimator() {
+        return new com.storyforge.animation.FakeAnimator();
+    }
+
+    @Bean
+    com.storyforge.voice.FakeSpeech fakeSpeech() {
+        return new com.storyforge.voice.FakeSpeech();
+    }
+
+    /** Only used when a test sets storyforge.images.engine to something other than "none". */
+    @Bean
+    com.storyforge.image.FakeImageEngine fakeImageEngine() {
+        return new com.storyforge.image.FakeImageEngine();
+    }
 }
