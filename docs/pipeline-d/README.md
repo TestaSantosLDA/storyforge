@@ -24,7 +24,7 @@ C and D are both "short vertical story from a topic" and share most of their new
 - The vertical assembly profile: 1080×1920, platform safe zones, the Shorts loudness target, under-60 s QA.
 - Word-by-word captions built from Whisper word timestamps (also used by "clips from any video", `docs/pipeline-b/clips-from-any-video.md`).
 - Shorts-only metadata in Stage 5, and B3 per-platform variants applied directly.
-- The topic's `channel` field (which of the owner's channels a story publishes to).
+- Later, a topic `channel` field for multiple accounts (C needs it; D does not yet, see Decisions).
 
 The difference is only in the picture: C puts narration over a text card and stock footage; D animates every scene in code. A profile could later choose C's look as one of its visual styles, but this spec keeps them as separate formats so neither blocks the other.
 
@@ -215,7 +215,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Data changes
 
 - `story.format`: adds `motion_picture` (shared column with C).
-- `topic.profile_id`, `topic.profile_overrides` (JSON), `topic.channel`.
+- `topic.profile_id`, `topic.profile_overrides` (JSON).
 - `story.profile_snapshot` (JSON, set at Run, with the profile file's version).
 - Scene rows: plan, code path, kit version, render path, QA results (Stage 3's shot table, with a `kind` column, may hold them).
 
@@ -230,12 +230,11 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 - Own scene kit rather than Remotion, because Remotion needs a paid company license above three people; Remotion stays an option if the kit proves too slow to build.
 - Real people are named in narration only, never drawn recognisably; no living people; no invented quotes.
 - No intro or end card; watermark only.
-- The topic records its channel. This spec does not decide whether Motion Pictures share the fable channel; the owner sets it per topic.
+- Motion Pictures publish to the **same YouTube channel as the fables**, as Shorts (owner, 2026-10-30). Multiple channels and accounts are handled later; until then there is no per-topic channel setting.
 
 ## Open questions for the owner
 
-1. Which channel(s) do the first Motion Pictures topics publish to?
-2. Are the three starter profiles (`explainer`, `tale`, `chronicle`) the right first set?
+1. Are the three starter profiles (`explainer`, `tale`, `chronicle`) the right first set?
 
 ## Build order
 
