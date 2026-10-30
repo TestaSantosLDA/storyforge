@@ -42,8 +42,14 @@ public class StoryStatusService {
     @Transactional
     public Story enqueue(Topic topic, String concept, String moral, int targetLengthMin, String notes,
             String triggeredBy) {
+        return enqueue(topic, StoryFormat.FABLE, concept, moral, targetLengthMin, notes, triggeredBy);
+    }
+
+    @Transactional
+    public Story enqueue(Topic topic, StoryFormat format, String concept, String moral, int targetLengthMin,
+            String notes, String triggeredBy) {
         queueLock.acquire();
-        Story story = stories.save(new Story(topic, concept, moral, targetLengthMin, notes,
+        Story story = stories.save(new Story(topic, format, concept, moral, targetLengthMin, notes,
                 stories.maxQueuePosition() + 1));
         log(story, null, StoryStatus.QUEUED, triggeredBy, "added to queue");
         return story;
@@ -85,6 +91,19 @@ public class StoryStatusService {
             throw new IllegalArgumentException("use resume/resumeTo to leave needs_attention");
         }
         move(story, to, triggeredBy, reason);
+        return story;
+    }
+
+    /**
+     * Leaves a handoff status for the working status the story's format hands it to, e.g. {@code audio_done} goes to
+     * {@code visuals_in_progress} for a fable and to {@code assembling} for a {@code story_short}.
+     */
+    @Transactional
+    public Story handOff(long storyId, StoryStatus handoff, String triggeredBy, String reason) {
+        Story story = lockExpecting(storyId, handoff);
+        StoryStatus next = story.getFormat().next(handoff).orElseThrow(() -> new StatusConflictException(
+                "a " + story.getFormat().dbValue() + " story has no step after " + handoff.dbValue()));
+        move(story, next, triggeredBy, reason);
         return story;
     }
 
@@ -184,7 +203,7 @@ public class StoryStatusService {
 
     private void move(Story story, StoryStatus to, String triggeredBy, String reason) {
         StoryStatus from = story.getStatus();
-        if (!StoryTransitions.isAllowed(from, to)) {
+        if (!StoryTransitions.isAllowed(story.getFormat(), from, to)) {
             throw new StatusConflictException("not allowed: " + from.dbValue() + " → " + to.dbValue());
         }
         story.setStatus(to);
@@ -194,7 +213,7 @@ public class StoryStatusService {
             story.setAutoResumeAt(null);
         }
         log(story, from, to, triggeredBy, reason);
-        events.publishEvent(new StoryEnteredStatus(story.getId(), to));
+        events.publishEvent(new StoryEnteredStatus(story.getId(), story.getFormat(), to));
     }
 
     private void log(Story story, StoryStatus from, StoryStatus to, String triggeredBy, String reason) {

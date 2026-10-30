@@ -32,9 +32,33 @@ class StoryStatusTest {
             "VISUALS_DONE", "FINAL_APPROVED"})
     void every_handoff_hands_to_an_allowed_working_status(StoryStatus handoff) {
         assertThat(handoff.kind()).isEqualTo(Kind.HANDOFF);
-        StoryStatus next = handoff.handoffTarget().orElseThrow();
+        StoryStatus next = StoryFormat.FABLE.next(handoff).orElseThrow();
         assertThat(next.kind()).isEqualTo(Kind.WORKING);
         assertThat(StoryTransitions.isAllowed(handoff, next)).isTrue();
+    }
+
+    @ParameterizedTest
+    @EnumSource(StoryFormat.class)
+    void every_format_hands_off_only_to_working_statuses_and_only_where_it_routes(StoryFormat format) {
+        for (StoryStatus handoff : ofKind(Kind.HANDOFF)) {
+            for (StoryStatus to : StoryStatus.values()) {
+                boolean routed = format.next(handoff).filter(to::equals).isPresent();
+                assertThat(StoryTransitions.isAllowed(format, handoff, to)).as(handoff + " → " + to).isEqualTo(routed);
+            }
+            format.next(handoff).ifPresent(next -> assertThat(next.kind()).isEqualTo(Kind.WORKING));
+        }
+    }
+
+    @Test
+    void shorts_skip_the_steps_they_have_no_use_for() {
+        // docs/pipeline-c and docs/pipeline-d "Status transitions": one gate, so no script stage.
+        assertThat(StoryFormat.STORY_SHORT.next(STORY_APPROVED)).contains(AUDIO_IN_PROGRESS);
+        assertThat(StoryFormat.STORY_SHORT.next(AUDIO_DONE)).contains(ASSEMBLING);
+        assertThat(StoryFormat.MOTION_PICTURE.next(STORY_APPROVED)).contains(AUDIO_IN_PROGRESS);
+        assertThat(StoryFormat.MOTION_PICTURE.next(AUDIO_DONE)).contains(VISUALS_IN_PROGRESS);
+        assertThat(StoryFormat.MOTION_PICTURE.next(VISUALS_DONE)).contains(ASSEMBLING);
+        assertThat(StoryTransitions.isAllowed(StoryFormat.STORY_SHORT, STORY_APPROVED, SCRIPT_IN_PROGRESS)).isFalse();
+        assertThat(StoryTransitions.isAllowed(STORY_APPROVED, AUDIO_IN_PROGRESS)).isFalse(); // a fable has Gate B
     }
 
     @ParameterizedTest

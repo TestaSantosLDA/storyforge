@@ -113,7 +113,7 @@ public class VisualsStep {
             status.transition(storyId, StoryStatus.VISUALS_IN_PROGRESS, StoryStatus.VISUALS_DONE, TRIGGER,
                     plan.shots().size() + " shots animated");
             // Stage 4 starts automatically when visuals are done.
-            status.transition(storyId, StoryStatus.VISUALS_DONE, StoryStatus.ASSEMBLING, TRIGGER, "assembling the video");
+            status.handOff(storyId, StoryStatus.VISUALS_DONE, TRIGGER, "assembling the video");
         } catch (LlmUnavailableException e) {
             flag(storyId, "Claude unavailable after retries: " + e.getMessage());
         } catch (ImageEngineUnavailableException e) {
