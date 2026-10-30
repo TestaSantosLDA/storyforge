@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Short, illustrated, moving stories made natively for YouTube Shorts (and, through B3, TikTok and Reels), and, with a landscape profile, ~5 minute long-form episodes for YouTube (added 2026-10-30 for the Os Lusíadas series, `docs/series/lusiadas.md`). A human creates a topic and gives it a **video profile** (explanatory, entertaining, historic, and so on); stories are concepts under that topic, exactly as in Pipeline A. Claude writes a 30–60 s script in the voice the profile asks for, the app narrates it, and then Claude writes each scene as animation code (the Claude Motion approach: moving text, maps, charts, icons and cut-out illustrated characters), which the app renders and assembles into a captioned 9:16 video.
+Short, illustrated, moving stories made natively for YouTube Shorts (and, through B3, TikTok and Reels), and, with a landscape profile, 8–11 minute long-form episodes for YouTube (added 2026-10-30 for the Os Lusíadas series, `docs/series/lusiadas.md`). A human creates a topic and gives it a **video profile** (explanatory, entertaining, historic, and so on); stories are concepts under that topic, exactly as in Pipeline A. Claude writes a 30–60 s script in the voice the profile asks for, the app narrates it, and then Claude writes each scene as animation code (the Claude Motion approach: moving text, maps, charts, icons and cut-out illustrated characters), which the app renders and assembles into a captioned 9:16 video.
 
 Pipeline A stays as it is. Pipeline D reuses its stages and swaps three things: the length and frame (by default one minute in 9:16; a profile can choose landscape long-form, see [Frames and lengths](#frames-and-lengths)), the pictures (code, not image-plus-camera-move) and the look and voice (set per topic by its profile, not one channel-wide style).
 
@@ -11,7 +11,7 @@ Pipeline A stays as it is. Pipeline D reuses its stages and swaps three things: 
 | | A — Fables | B — Clips | C — Story Shorts | **D — Motion Pictures** |
 | --- | --- | --- | --- | --- |
 | Source | Topic + concept | A finished A video, or any video | Topic + concept | Topic + concept |
-| Length / frame | 3–5 min, 16:9 | 20–60 s, 9:16 | Under 60 s, 9:16 | **30–60 s, 9:16 by default; 4–6 min, 16:9 with a landscape profile** |
+| Length / frame | 3–5 min, 16:9 | 20–60 s, 9:16 | Under 60 s, 9:16 | **30–60 s, 9:16 by default; 8–11 min, 16:9 with a landscape profile** |
 | Visuals | Flux images + camera motion | Re-uses A's shots | Text card + licensed footage, **no image model** | **Code-driven motion graphics, with Flux cut-outs where needed** |
 | Look and voice | One channel style | Inherited | One card design | **Per topic, from its video profile** |
 | Human gates | Story, script, final | Clip review | Story, final | **Script + cast, final** |
@@ -51,7 +51,7 @@ Next to the profile, the topic form has a **Look notes** text box for anything t
 | `voices` | Narrator only, or narrator + character lines | `narrator_only`, `cast` |
 | `narrator_voice` | Kokoro voice and speed | default: the channel narrator |
 | `frame` | Picture shape and the rules that come with it (see below) | `vertical` (default), `landscape` |
-| `target_seconds` | Target length and allowed range | 45 (allowed 30–58) for vertical; 300 (allowed 240–360) for landscape |
+| `target_seconds` | Target length and allowed range | 45 (allowed 30–58) for vertical; 540 (allowed 480–660) for landscape, the 8-minute floor keeping mid-roll ads available |
 | `illustrations` | Whether scenes may use Flux cut-outs | `flux` (default), `none` (the kit draws everything) |
 | `opening` | What comes before the content | `none` (default), `title_sting` (a ~3 s per-episode sting drawn by the kit, after the cold open) |
 | `beat_seconds` | How often something new happens on screen | 2–4 s (Shorts cut faster than A's 5–10 s shots) |
@@ -77,9 +77,9 @@ Starter profiles shipped with the spec (plus `epic`, the landscape historic prof
 | | `vertical` (default) | `landscape` |
 | --- | --- | --- |
 | Stage | 1080×1920 with platform safe zones | 1920×1080 with YouTube title-safe margins |
-| Script length | from `target_seconds`, 110–150 words at 45 s | from `target_seconds`, about 650–800 words at 300 s |
+| Script length | from `target_seconds`, 110–150 words at 45 s | from `target_seconds`, about 1,100–1,400 words at 540 s |
 | Pauses (D2) | short-form: 0.15 / 0.3 / 0.5 s | Stage 2: 0.3 / 0.6 / 1.2 s |
-| Length check | narration over 58 s flags | outside the allowed range (Stage 4's 2.5–6 min hard limit) flags |
+| Length check | narration over 58 s flags | outside the profile's allowed range flags (Stage 4's 2.5–6 min tolerance is for fables only) |
 | Captions (D4) | burned-in word captions | Stage 4 subtitle file (toggleable), no burned-in captions |
 | Publish (D5) | Shorts metadata, cover frame, no chapters, B3 variants directly | Stage 5 long-form metadata with chapters and code-drawn thumbnails, then 2–3 Shorts through B1–B4 |
 
@@ -236,7 +236,8 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 | 17b | No library track matches the profile's music mood | Flagged before assembly, with the mood named | `needs_attention` |
 | 18 | `fable`, `story_short` and `motion_picture` stories in one queue | Each runs its own steps by `format`; one at a time | unchanged |
 | 19 | Sidecar down | Backoff, not a strike; then flag | `needs_attention` |
-| 18b | Landscape profile (`epic`), 5 min episode | 1920×1080 scenes, Stage 4 subtitles, chapters and code-drawn thumbnails; 2–3 Shorts re-rendered at 9:16 after publish | `ready_to_upload` |
+| 18b | Landscape profile (`epic`), 9 min episode | 1920×1080 scenes, Stage 4 subtitles, chapters and code-drawn thumbnails; 2–3 Shorts re-rendered at 9:16 after publish | `ready_to_upload` |
+| 18b2 | Landscape narration comes in at 7 min 40 s | Flag: under the 8-minute floor (no mid-roll ads); back to D1 to lengthen, or accept anyway | `needs_attention` |
 | 18c | Historic scene draws Vasco da Gama as an approved kit character | Allowed (died before 1900, on the topic list, drawn in code) | `visuals_in_progress` |
 | 18d | A Flux illustration shows a recognisable historical person | Image QA fails; the exception covers code-drawn characters only | `visuals_in_progress` |
 | 20 | App restarts mid-D3 | Cached illustrations, scene code and rendered scenes kept; only missing ones made | `visuals_in_progress` |
@@ -267,7 +268,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Decisions (defaults, open to change)
 
 - Same repo, app, database and queue as Pipelines A and C; told apart by `story.format`.
-- **One human gate before production** (script + cast + claims), not two, because the profile's structure fixes the story's shape; this holds for 5-minute landscape episodes too (owner, 2026-10-30).
+- **One human gate before production** (script + cast + claims), not two, because the profile's structure fixes the story's shape; this holds for 8–11 minute landscape episodes too (owner, 2026-10-30).
 - **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle` (confirmed by the owner, 2026-10-30), plus free-text look notes on the topic and the story.
 - **Motion = code-driven motion graphics, the Claude Motion approach:** Claude writes each scene against a versioned scene kit, rendered deterministically in headless Chromium and FFmpeg. Claude Motion itself is not used (no API, Team/Enterprise only, no audio).
 - Flux illustrations only where a scene needs them, as cut-out layers; the GPU is not on the critical path.
