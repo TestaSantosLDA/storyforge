@@ -82,6 +82,7 @@ Build and test one stage at a time, in pipeline order, each against its scenario
 7. **Stage 4:** music library import, assembly, subtitles, final review, rejection analysis and routing.
 8. **Stage 5:** metadata, thumbnails, publish checklist, mark-as-published.
 9. **Pipeline B:** B0 → B4.
+10. **Pipeline C (spin-off, story shorts):** see `docs/pipeline-c/README.md`. Can start once Stage 2 is on main; it does not depend on Stage 3's visuals.
 
 ## Setup tasks before the first real run (human)
 
