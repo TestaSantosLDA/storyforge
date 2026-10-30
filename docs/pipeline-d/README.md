@@ -141,13 +141,13 @@ A small, versioned library in the repo (`motion-kit/`, HTML + CSS + JS, no netwo
 
 | Part | What it gives Claude |
 | --- | --- |
-| Stage | A 1080×1920 canvas with the platform safe zones marked, and the profile's fonts and palette as CSS variables |
+| Stage | A 1080×1920 or 1920×1080 stage from the profile's `frame` (one scene file renders in both), with the safe zones marked, and the profile's fonts and palette as CSS variables |
 | Time contract | Every scene exports `duration` and `seek(t)`, which draws the exact frame for time `t`. No timers, no `requestAnimationFrame`, no randomness without a fixed seed, so a frame always renders the same |
 | Components | Kinetic text (word pops, highlights, counters), lower-thirds and date cards, timeline, map with route lines and pins (from bundled public-domain map outlines), bar/line/pie charts, icons, arrows and callouts, image layers with masks, and cut-out characters with simple rigs (bob, squash and stretch, blink, turn, walk cycle by sliding and bouncing) |
 | Easing and transitions | A fixed set (ease, overshoot, spring, whip pan, wipe, match cut) so every video shares one motion language per profile |
 | Fonts and icons | Bundled files with licenses that allow commercial use (e.g. SIL Open Font License fonts, MIT icon sets), stored with their license files like music |
 
-The kit is versioned and its version goes into every scene's cache hash, so a kit change re-renders only what it affects.
+The kit is versioned and its version goes into every scene's cache hash, so a kit change re-renders only what it affects. The API, the renderer and the series components are documented in `motion-kit/README.md`.
 
 ### Step 3A — Scene planning
 

@@ -1,0 +1,23 @@
+/* Motion kit v1 base styles. Fonts are bundled with their licences (SIL Open Font License); no network at render. */
+@font-face{font-family:"Inter";font-weight:800;src:url(fonts/inter-latin-800-normal.woff2)}
+@font-face{font-family:"Inter";font-weight:900;src:url(fonts/inter-latin-900-normal.woff2)}
+@font-face{font-family:"JetBrains Mono";font-weight:500;src:url(fonts/jetbrains-mono-latin-500-normal.woff2)}
+@font-face{font-family:"JetBrains Mono";font-weight:700;src:url(fonts/jetbrains-mono-latin-700-normal.woff2)}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:500;src:url(fonts/playfair-display-latin-500-italic.woff2)}
+@font-face{font-family:"Playfair Display";font-style:italic;font-weight:700;src:url(fonts/playfair-display-latin-700-italic.woff2)}
+
+:root{--ink:#060914;--navy:#0a0f24;--azul:#1f5fbf;--gold:#ffc83d;--coral:#ff4d3d;--cyan:#3de1ff;--cream:#f6efe2;--violet:#7b5cff}
+html,body{margin:0;background:#000;overflow:hidden}
+#wrap{position:relative;overflow:hidden;background:var(--navy)}
+#stage{position:absolute;inset:0}
+.abs{position:absolute;will-change:transform;box-sizing:border-box}
+.h{font-family:"Inter",sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;line-height:.92;color:var(--cream)}
+.b{font-family:"Inter",sans-serif;font-weight:800;color:var(--cream);line-height:1.15}
+.serif{font-family:"Playfair Display",serif;font-style:italic;font-weight:500;color:var(--cream);line-height:1.25}
+.mono{font-family:"JetBrains Mono",monospace;font-weight:700;color:var(--cyan);letter-spacing:.16em;text-transform:uppercase}
+.pill{display:inline-block;font-family:"JetBrains Mono",monospace;font-weight:700;letter-spacing:.15em;text-transform:uppercase;border:3px solid currentColor;border-radius:999px;white-space:nowrap}
+.card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:22px}
+#grain{position:absolute;inset:-200px;opacity:.10;pointer-events:none;mix-blend-mode:overlay}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#safe{position:absolute;pointer-events:none;outline:2px dashed rgba(61,225,255,.6);display:none}
