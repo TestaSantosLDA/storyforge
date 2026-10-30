@@ -1,0 +1,21 @@
+---
+id: "mackerel-the-cat"
+name: "Mackerel"
+topic_id: 2
+kind: "recurring"
+personality: "A laid-back old harbour cat with a dry sense of humour who has seen\
+  \ every kind of weather and every kind of squabble. He never tells the gulls what\
+  \ to do, only makes a wry remark and puts them somewhere dry so they can work it\
+  \ out themselves."
+visual_description: "A big, broad, heavy-set cat with thick charcoal-grey fur and\
+  \ a white-tipped tail. He wears a thick knitted sea-blue fisherman's jumper that\
+  \ covers his chest and belly, and baggy sea-blue trousers rolled up at the ankles,\
+  \ held up by a single wide red brace over one shoulder."
+reference_images:
+- "characters/mackerel-the-cat/front.png"
+- "characters/mackerel-the-cat/side.png"
+- "characters/mackerel-the-cat/expressions.png"
+voice:
+  engine: "kokoro"
+  id: "bm_lewis"
+introduced_in_story: 4

@@ -1,0 +1,19 @@
+---
+id: "bib-the-gull"
+name: "Bib"
+topic_id: 2
+kind: "recurring"
+personality: "A dreamy, stubborn young gull who thinks about food most of the time\
+  \ and digs his heels in quietly rather than loudly. He is gentle, a little anxious\
+  \ in bad weather, and usually the first to make a peace offering."
+visual_description: "A short, round, fluffy young seagull with speckled grey-brown\
+  \ feathers, a white belly and stubby orange legs. He wears a wide navy-and-white\
+  \ striped neckerchief tied in a big knot at the front."
+reference_images:
+- "characters/bib-the-gull/front.png"
+- "characters/bib-the-gull/side.png"
+- "characters/bib-the-gull/expressions.png"
+voice:
+  engine: "kokoro"
+  id: "am_puck"
+introduced_in_story: 4

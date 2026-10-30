@@ -1,0 +1,20 @@
+---
+id: "skerry-the-gull"
+name: "Skerry"
+topic_id: 2
+kind: "recurring"
+personality: "A bold, fast-talking young gull who treats every disagreement like a\
+  \ court case she intends to win. She is competitive and dramatic, but soft-hearted\
+  \ underneath and quick to be generous once she stops to look at who she is arguing\
+  \ with."
+visual_description: "A tall, lanky young seagull with bright white feathers, pale\
+  \ grey wings and long orange legs. She wears a bright yellow fisherman's raincoat\
+  \ with the collar turned up, a size too big for her."
+reference_images:
+- "characters/skerry-the-gull/front.png"
+- "characters/skerry-the-gull/side.png"
+- "characters/skerry-the-gull/expressions.png"
+voice:
+  engine: "kokoro"
+  id: "af_nova"
+introduced_in_story: 4
