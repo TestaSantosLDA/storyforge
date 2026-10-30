@@ -32,6 +32,15 @@ The difference is only in the picture: C puts narration over a text card and sto
 
 A profile is a versioned YAML file in the repo (`channel/video-profiles/<id>.yaml`), so every video can be traced to the profile version that made it, like prompt templates. A topic picks one profile and may override any field. The profile and its overrides are snapshotted onto the story at Run, like the topic description.
 
+### Look notes (free text)
+
+Next to the profile, the topic form has a **Look notes** text box for anything the settings do not cover, in plain words: "chalkboard look, white chalk lines on dark green", "every scene opens with a big number", "keep it calm, no fast whip pans", "use a lot of maps". A story can add its own look notes too (on the story form, next to the concept); they are added to the topic's notes for that story only.
+
+- Both are snapshotted at Run with the profile, so later edits never change a story in progress.
+- They are passed to Claude in scene planning (3A), illustration prompts (3B) and scene code (3C), after the profile, and the vision QA checks the frames against them.
+- They are wishes, not overrides of the rules: licensing, family safety, safe zones, the no-text-in-images rule and the real-people rule always win. Notes that name a studio, franchise, existing character or living artist are refused when the topic or story is saved, with the reason shown.
+- Final-review rejection notes about the look are offered as a one-click "add to the topic's look notes", so a fix carries over to the next stories.
+
 | Field | Meaning | Example values |
 | --- | --- | --- |
 | `genre` | What kind of video | `explanatory`, `entertaining`, `historic`, `inspirational`, `mystery` |
@@ -47,6 +56,7 @@ A profile is a versioned YAML file in the repo (`channel/video-profiles/<id>.yam
 | `on_screen_text` | How much the scenes lean on text, maps and charts | heavy for explanatory, dates and places for historic, light for entertaining |
 | `music_mood` | Mood tags for the curated music library | "light curious", "tense", "warm" |
 | `audience` | YouTube audience setting | not made for kids (family audience) |
+| `look_notes` | Free text about how the videos should look (see below) | empty |
 
 Starter profiles shipped with the spec:
 
@@ -75,7 +85,7 @@ The dispatcher picks the step by status and `format`; no new status values are n
 
 At one minute, a separate story outline and script gate cost more review time than they save. Claude writes the finished script directly.
 
-- Input: the topic, the profile snapshot, the concept, optional notes, the topic's characters (for `voices: cast`).
+- Input: the topic, the profile snapshot, the look notes, the concept, optional notes, the topic's characters (for `voices: cast`).
 - Output: a hook title, the speaker-tagged script (110–150 words at the narrator's pace, from `target_seconds`), the beats it follows, the cast (as in Stage 1A, reusing the topic's characters; new ones need a reason) and, with `facts: checked`, the claims list.
 - **The first line is the hook** and must stand alone within about 3 s.
 - Automated QA (LLM, 5 retries as in Stage 1): word count fits `target_seconds`; the first line works as a hook; it follows the profile's structure and tone; it has a payoff; claims are listed and high-confidence where required; no invented quotes; no living people; family-safe; no studio, franchise or existing character named; new characters distinct from the roster.
@@ -124,14 +134,14 @@ The kit is versioned and its version goes into every scene's cache hash, so a ki
 
 ### Step 3B — Illustrations (only where the scene needs one)
 
-- Characters, props and backgrounds the code cannot draw well are made with Flux 2 Klein 4B as in Stage 3B, with the profile's `visual_style` and the character references.
+- Characters, props and backgrounds the code cannot draw well are made with Flux 2 Klein 4B as in Stage 3B, with the profile's `visual_style`, the look notes and the character references.
 - Characters are drawn on a plain background and cut out with a background-removal model (licence to confirm in the spike; only Apache 2.0 / MIT weights) into transparent PNG layers that the kit can move and rig.
 - Image QA as Stage 3B, plus: no text in the image; with `genre: historic`, no recognisable real person.
 - Explainer profiles may need no illustrations at all; a tale needs its cast as cut-outs plus a few backgrounds. Images are cached and reused across a topic's stories (a recurring character's cut-out poses are drawn once).
 
 ### Step 3C — Scene code
 
-- Claude (`claude -p`, prompt `motion-scene-v1.md`) writes one scene file per scene against the kit, given the scene plan, the word timestamps for its lines, the profile, and the illustration files.
+- Claude (`claude -p`, prompt `motion-scene-v1.md`) writes one scene file per scene against the kit, given the scene plan, the word timestamps for its lines, the profile, the look notes, and the illustration files.
 - Static checks before rendering: only kit imports, no network or file access, `duration` matches the scene's time range, `seek(t)` exists, file under a size limit.
 - Render: `MotionRenderer` (behind `AnimationEngine`, whose input widens from one image to a scene file) opens the scene in headless Chromium (Playwright), calls `seek(t)` for every frame at the configured frame rate, screenshots it, and pipes the frames to FFmpeg. About 45 s × 30 fps = 1,350 frames per short, on the CPU.
 
@@ -180,6 +190,8 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 | 1 | Happy path (`explainer` profile) | Script + claims approved, narrated, 9 scenes written and rendered with no illustrations, assembled, reviewed, metadata ready | `ready_to_upload` |
 | 1b | Happy path (`tale` profile) | As above, with the cast drawn once as cut-outs and rigged in the scenes | `ready_to_upload` |
 | 2 | Topic created with the `chronicle` profile and a voice override | Profile and override snapshotted at Run; later profile edits do not change the story | unchanged |
+| 2b | Topic look notes say "chalkboard look"; a story adds "open on a big number" | Both reach scene planning and scene code; vision QA checks frames against them | unchanged |
+| 2c | Look notes name a film studio | Refused when the topic is saved, with the reason | unchanged |
 | 3 | Script over 150 words | QA fails, retried with the reason | `story_in_progress` |
 | 4 | Explanatory script has a low-confidence claim | QA fails, retried | `story_in_progress` |
 | 5 | Historic script quotes a real person | QA fails (no invented quotes), retried | `story_in_progress` |
@@ -215,7 +227,8 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Data changes
 
 - `story.format`: adds `motion_picture` (shared column with C).
-- `topic.profile_id`, `topic.profile_overrides` (JSON).
+- `topic.profile_id`, `topic.profile_overrides` (JSON), `topic.look_notes` (text).
+- `story.look_notes` (text, optional).
 - `story.profile_snapshot` (JSON, set at Run, with the profile file's version).
 - Scene rows: plan, code path, kit version, render path, QA results (Stage 3's shot table, with a `kind` column, may hold them).
 
@@ -223,7 +236,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 
 - Same repo, app, database and queue as Pipelines A and C; told apart by `story.format`.
 - **One human gate before production** (script + cast + claims), not two, because the script is one minute long.
-- **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle` (confirmed by the owner, 2026-10-30).
+- **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle` (confirmed by the owner, 2026-10-30), plus free-text look notes on the topic and the story.
 - **Motion = code-driven motion graphics, the Claude Motion approach:** Claude writes each scene against a versioned scene kit, rendered deterministically in headless Chromium and FFmpeg. Claude Motion itself is not used (no API, Team/Enterprise only, no audio).
 - Flux illustrations only where a scene needs them, as cut-out layers; the GPU is not on the critical path.
 - AI video (depth parallax, Wan 2.2) is out of the MVP and stays a later option behind `AnimationEngine`. Only Apache 2.0 / MIT weights, fonts and icons with commercial-use licenses.
