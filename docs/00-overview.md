@@ -67,6 +67,7 @@ One style for the whole channel: **classic storybook animation**, a vintage hand
 - Pipeline A — YouTube (horizontal): produces the full long-form story in landscape. The source of truth; generates all reusable assets. (See the Pipeline A document.)
 - Pipeline B — Short-form (vertical): produces Reels / Shorts / TikTok clips. Re-assembles from the source assets rather than cropping the finished video. (See the Pipeline B document.)
 - Pipeline C — Story Shorts (spin-off): original short stories narrated over a branded text card and background footage, vertical only, no image or video model. Reuses Foundations and Stages 0, 1, 2, 4 and 5, and publishes to its own channel, an exception to the one-channel rule above. (See the Pipeline C document.)
+- Pipeline D — Motion Pictures: vertical 30–60 s stories for Shorts, with a per-topic video profile (explanatory, entertaining, historic, …). Reuses Foundations and Stages 0, 1, 2, 4 and 5; visuals are code-driven motion graphics that Claude writes per scene (the Claude Motion approach), with illustrated cut-outs where needed. (See the Pipeline D document.)
 
 ## Management Page (MVP)
 
