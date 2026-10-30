@@ -23,6 +23,8 @@ Stage B2 rebuilds each selected slice as a vertical 9:16 video. The shots are re
 6. **Overlays** — optional hook title for the first \~3 seconds (config on/off); an end text card during the closing line pointing to the full episode.
 7. **Render** — MP4, 1080×1920, H.264/AAC.
 
+**Motion Pictures episodes** (`format: motion_picture`, landscape profile): steps 1–2 are replaced by re-rendering the slice's scenes from the same scene code at 1080×1920 (the kit is frame-aware), followed by Pipeline D's per-scene QA with vertical safe zones. A scene that fails is rewritten as a vertical variant only, up to 3 times. Captions are word captions; the closing line is the story's channel's.
+
 ## Automated QA
 
 | Check | Pass condition |
@@ -61,6 +63,7 @@ A failing shot is regenerated up to 3 times; then `needs_attention`. Vertical im
 ## Decisions
 
 - Shots re-generated in 9:16 with the same references; never cropped from 16:9.
-- Original narration reused; no narrator intro; one fixed closing line on every clip.
+- Original narration reused; no narrator intro; one fixed closing line per channel on every clip.
+- Motion Pictures episodes are re-rendered from their scene code at 9:16, not re-generated with Flux (owner, 2026-10-30).
 - Burned-in captions and an optional on-screen hook title.
 - Same music as the long-form scenes.

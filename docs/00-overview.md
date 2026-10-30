@@ -11,11 +11,11 @@
 - A **topic** is a series or world (e.g. "Fox & Owl in Whisperwood"). It owns a cast of recurring characters.
 - A **story** belongs to a topic. A human adds only the story concept; Claude expands the concept into a story and then a script.
 - **Cast generation:** Claude creates the topic's cast from the topic description, and adds characters when a new story needs them.
-- **Every character gets a character file**, including one-off characters a script introduces. The file holds name, personality, visual description, reference images, and assigned voice.
+- **Every character gets a character file**, including one-off characters a script introduces. The file holds name, personality, visual description, reference images, and assigned voice. A character drawn in code by the motion kit (`drawn_by: code`) names its kit component and poses instead of reference images (Pipeline D).
 - The full character roster is checked whenever a new character is created, so no new character looks or sounds like an existing one.
 - Character files are versioned in the repo (text); reference images live in the assets directory under keep-forever retention.
 - A character's identifying features are large shapes and colours (fur, clothing, accessories), never tiny details, because the image model does not draw tiny details reliably.
-- **One fixed narrator voice** across the whole channel, as its signature; characters get their own voices.
+- **One fixed narrator voice** per channel, as its signature; characters get their own voices.
 - **One queue of stories** across all topics; Run starts the story at the top.
 
 ## Goal
@@ -41,7 +41,9 @@
 
 ## Visual Style
 
-One style for the whole channel: **classic storybook animation**, a vintage hand-drawn look with a soft palette.
+The fables channel has one style, described below; other channels and Pipeline D topics take their look from their video profile.
+
+Fables style: **classic storybook animation**, a vintage hand-drawn look with a soft palette.
 
 - Hand-drawn characters with clean, slightly soft ink outlines and simple cel shading (one shadow tone, no gradients).
 - Painted backgrounds with a watercolour/gouache feel, softer and less detailed than the characters.
@@ -49,7 +51,7 @@ One style for the whole channel: **classic storybook animation**, a vintage hand
 - Rounded, expressive characters with big readable faces, in the mid-century feature-animation tradition.
 - Light paper grain over everything.
 - Stored once as a fixed style prompt block in channel config and added to every image generation.
-- Guardrail: prompts never name a studio or existing franchise; QA flags any character that resembles a known trademarked character.
+- Guardrail: prompts never name a studio or existing franchise; QA flags any character that resembles a known trademarked character. A topic built on a public-domain source (e.g. *Os Lusíadas*) may name that source's characters and people from its allowlist.
 
 ## Animation Approach
 
@@ -58,7 +60,8 @@ One style for the whole channel: **classic storybook animation**, a vintage hand
 
 ## Platform & Account Structure
 
-- One YouTube channel for both long videos and Shorts — Shorts feed discovery into the long-form. Do not split into two channels.
+- Each channel carries both its long videos and its Shorts — Shorts feed discovery into the long-form. Do not split one brand's long and short videos across two channels.
+- Several brands can exist: each topic belongs to a **channel** (fables, Story Shorts, the Os Lusíadas series, …) with its own accounts, narrator, closing line and audience (decided 2026-10-30; see Pipeline D, Channels).
 - Separate TikTok and Instagram accounts for the vertical clips.
 - Same brand across all platforms.
 
@@ -67,7 +70,7 @@ One style for the whole channel: **classic storybook animation**, a vintage hand
 - Pipeline A — YouTube (horizontal): produces the full long-form story in landscape. The source of truth; generates all reusable assets. (See the Pipeline A document.)
 - Pipeline B — Short-form (vertical): produces Reels / Shorts / TikTok clips. Re-assembles from the source assets rather than cropping the finished video. (See the Pipeline B document.)
 - Pipeline C — Story Shorts (spin-off): original short stories narrated over a branded text card and background footage, vertical only, no image or video model. Reuses Foundations and Stages 0, 1, 2, 4 and 5, and publishes to its own channel, an exception to the one-channel rule above. (See the Pipeline C document.)
-- Pipeline D — Motion Pictures: vertical 30–60 s stories for Shorts, with a per-topic video profile (explanatory, entertaining, historic, …). Reuses Foundations and Stages 0, 1, 2, 4 and 5; visuals are code-driven motion graphics that Claude writes per scene (the Claude Motion approach), with illustrated cut-outs where needed. (See the Pipeline D document.)
+- Pipeline D — Motion Pictures: vertical 30–60 s stories for Shorts, with a per-topic video profile (explanatory, entertaining, historic, …). Reuses Foundations and Stages 0, 1, 2, 4 and 5; visuals are code-driven motion graphics that Claude writes per scene (the Claude Motion approach), with illustrated cut-outs where needed. With a landscape profile it also makes ~5 minute 16:9 episodes, such as the "Os Lusíadas — Remixed" series on its own channel. (See the Pipeline D document and `docs/series/lusiadas.md`.)
 
 ## Management Page (MVP)
 

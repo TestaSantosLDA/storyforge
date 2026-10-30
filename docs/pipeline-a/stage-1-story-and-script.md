@@ -96,7 +96,7 @@ Stage 1 turns a story concept into an approved story, an approved cast, and an a
 
 ## Retry budgets
 
-Each gate has its own two counters; either limit reached archives the story.
+Each gate has its own two counters; either limit reached archives the story. For a story in a **series** topic (`topic.is_series`), a limit sets `needs_attention` instead, so a season never silently loses an episode; Kill still archives (owner, 2026-10-30).
 
 | Counter | Increments when | Limit |
 | --- | --- | --- |
@@ -114,6 +114,7 @@ Each gate has its own two counters; either limit reached archives the story.
 | 3 | Proposed character too similar to an existing one | Story QA failure; regenerate with the clash named | `story_in_progress` |
 | 4 | Reviewer regenerates story with notes, budget left | Increment, regenerate with notes | `story_in_progress` |
 | 5 | Any story counter reaches its limit | Archive with reason | `archived` |
+| 5b | A series episode reaches a counter limit | Flag with reason instead of archiving | `needs_attention` |
 | 6 | Reviewer kills at Gate A | Archive; no character files created | `archived` |
 | 7 | Script introduces an unapproved character | Script QA failure (cast lock); regenerate | `script_in_progress` |
 | 8 | Script QA fails or reviewer regenerates, budget left | Increment, regenerate | `script_in_progress` |
@@ -163,7 +164,8 @@ Each gate has its own two counters; either limit reached archives the story.
 - Cast is generated with the story, approved at Gate A, then locked; characters enter the universe only through Gate A.
 - Every new character, recurring or one-off, gets a character file, so future characters are checked against it.
 - Voices unique within a topic; visual distinctness checked channel-wide.
-- One fixed narrator for the channel; one visual style for the channel (defined in Stage 3).
-- Budgets per gate: 5 QA retries, 3 human rejections. Restore resets all counters.
+- One fixed narrator per channel; one visual style for the fables channel (defined in Stage 3); Pipeline D topics take their look from their profile.
+- Characters drawn in code (`drawn_by: code`, Pipeline D) get a pose sheet rendered from the kit at Gate A instead of a Flux reference sheet; Redraw rewrites the kit component with the reviewer's note.
+- Budgets per gate: 5 QA retries, 3 human rejections; series episodes go to `needs_attention` at a limit instead of `archived`. Restore resets all counters.
 - API outages never count as strikes. Any reviewer can act at either gate.
 - Characters approved at Gate A stay in the roster even if the story is later archived.

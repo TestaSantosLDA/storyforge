@@ -10,9 +10,9 @@ Turn each published long-form story into 2–3 vertical (9:16) clips for YouTube
 
 ## Key design decisions
 
-- **Re-generate, don't crop:** shots are re-generated as 9:16 illustrations with the same character references and style, so characters stay properly framed.
+- **Re-generate, don't crop:** shots are re-generated as 9:16 illustrations with the same character references and style, so characters stay properly framed. For a landscape Pipeline D episode, the slice's scenes are re-rendered at 9:16 from the same scene code instead (B2).
 - **Excerpts, not summaries:** each clip is a strong self-contained moment that leaves the ending for the full episode.
-- **No narrator intro;** an optional on-screen hook title instead. Every clip ends with one fixed narrator line: "Watch the rest of the episode on our channel!"
+- **No narrator intro;** an optional on-screen hook title instead. Every clip ends with its channel's fixed closing line (fables: "Watch the rest of the episode on our channel!").
 - **One human touchpoint:** review happens in the publish package; publishing is semi-manual.
 - **GPU priority to Pipeline A;** clip jobs run when the GPU is free.
 

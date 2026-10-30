@@ -40,8 +40,10 @@ The specs in `docs/` are the source of truth. Read `docs/00-overview.md` first, 
 ## Licensing rules (the channel is monetized)
 
 - Only use models whose **weights** allow commercial use (Apache 2.0, MIT). Excluded examples: XTTS v2, Flux 2 dev, Fish Audio S2 Pro.
-- Prompts **never name a studio, franchise or existing character**. The style is described by its ingredients (see the overview's Visual Style).
-- Music only from the curated local library, each track stored with its license file. Reject non-commercial licenses at import.
+- Prompts **never name a studio, franchise or existing character**. The style is described by its ingredients (see the overview's Visual Style). Exception: characters and people from a topic's declared **public-domain source** (e.g. *Os Lusíadas*, 1572) may be named, from the topic's allowlist.
+- Real people are never drawn recognisably, except long-dead figures (died before 1900) drawn **in code** as approved stylised kit characters. AI-generated likenesses of real people are never allowed.
+- Quote public-domain texts verbatim; use only our own translations or pre-1929 public-domain ones, credited.
+- Music and sound effects only from the curated local library, each stored with its license file. Reject non-commercial licenses at import. Tracks we synthesise ourselves are imported like any other, with an own-work license record naming the generator script and version.
 
 ## Status values
 
@@ -84,11 +86,12 @@ Build and test one stage at a time, in pipeline order, each against its scenario
 9. **Pipeline B:** B0 → B4, plus clips from any uploaded video or YouTube link (`docs/pipeline-b/clips-from-any-video.md`), which can be the first user of B1–B4.
 10. **Pipeline C (spin-off, story shorts):** see `docs/pipeline-c/README.md`. Can start once Stage 2 is on main; it does not depend on Stage 3's visuals.
 11. **Pipeline D (Motion Pictures, vertical shorts):** see `docs/pipeline-d/README.md`. Starts with a motion spike the owner judges; shares the vertical layer (format column, captions, vertical assembly) with Pipeline C.
+12. **Series "Os Lusíadas — Remixed"** (landscape long-form on Pipeline D, own channel): see `docs/series/lusiadas.md`. Order: `epic` profile → landscape kit mode seeded from Ep.00 → series and channel fields → Ep.01.
 
 ## Setup tasks before the first real run (human)
 
 - Pick the narrator voice from the Kokoro samples.
-- Record and approve the fixed clip closing line ("Watch the rest of the episode on our channel!").
+- Record and approve each channel's clip closing line (fables: "Watch the rest of the episode on our channel!").
 - Curate 15–30 music tracks with license files and mood tags.
 - Create the channel intro and end card.
 - Re-check YouTube's "made for kids" guidance before launch.
