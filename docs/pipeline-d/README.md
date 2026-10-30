@@ -282,7 +282,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 ## Build order
 
 1. **Motion spike first (minimal kit, no pipeline code):** Claude writes one 45 s vertical short for `explainer` and one for `tale` against a first cut of the kit, rendered with Playwright + FFmpeg over a Kokoro narration. Measure render time, make a contact sheet, and have the owner judge both. If they do not pass, the approach is revised before anything below is built.
-2. Shared vertical layer with C, if C has not built it yet: `format` column and dispatcher, vertical assembly profile, word captions.
+2. Shared vertical layer with C, if C has not built it yet: `format` column and dispatcher, vertical assembly profile, word captions. **Built 2026-10-30** (motion spike passed, owner: "Looks good!"): `story.format` (V13), `StoryFormat` handoff routes and `StoryStatusService.handOff`, the dispatcher picking steps by format (a `story_short` or `motion_picture` story is flagged "step not built yet" until its own steps exist), and `com.storyforge.vertical`: `storyforge.vertical.*` config (1080×1920, 30 fps, safe zone, under 60 s), `WordCaptions` (ASS, 1–3 words, a group also ends at punctuation, current word highlighted), `VerticalMix` (music −17 dB under the voice, sidechain ducking, −27 LUFS) and `VerticalQa` (length, captions vs transcript, caption safe zone). The format is not on the management page yet; it arrives with the profile form (step 3).
 3. Profiles: YAML files, topic fields, snapshot at Run, management page form.
 4. D1 prompts and QA, single gate.
 5. D2 short-form pauses and word timestamps.

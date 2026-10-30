@@ -195,6 +195,44 @@ class StoryStatusServiceTest extends DbTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    void stories_are_fables_unless_told_otherwise_and_the_format_is_stored() {
+        Story fable = add("fable");
+        Story motion = service.enqueue(topic, StoryFormat.MOTION_PICTURE, "Why the Sun sits in the middle", "-", 4,
+                null, USER);
+
+        assertThat(reload(fable).getFormat()).isEqualTo(StoryFormat.FABLE);
+        assertThat(reload(motion).getFormat()).isEqualTo(StoryFormat.MOTION_PICTURE);
+    }
+
+    @Test
+    void a_fable_hands_off_exactly_as_before() {
+        Story s = add("fable");
+        long id = s.getId();
+        service.runNext(USER);
+        service.transition(id, STORY_IN_PROGRESS, AWAITING_STORY_APPROVAL, SYS, "qa passed");
+        service.transition(id, AWAITING_STORY_APPROVAL, STORY_APPROVED, USER, "approve");
+
+        assertThat(service.handOff(id, STORY_APPROVED, SYS, "chain").getStatus()).isEqualTo(SCRIPT_IN_PROGRESS);
+    }
+
+    @Test
+    void a_short_goes_from_its_one_gate_to_audio_and_from_audio_to_its_own_next_step() {
+        Story shortStory = service.enqueue(topic, StoryFormat.STORY_SHORT, "The coworker who took credit", "-", 4, null,
+                USER);
+        long id = shortStory.getId();
+        service.runNext(USER);
+        service.transition(id, STORY_IN_PROGRESS, AWAITING_STORY_APPROVAL, SYS, "qa passed");
+        service.transition(id, AWAITING_STORY_APPROVAL, STORY_APPROVED, USER, "approve");
+        // The fable route is closed to it.
+        assertThatThrownBy(() -> service.transition(id, STORY_APPROVED, SCRIPT_IN_PROGRESS, SYS, "x"))
+                .isInstanceOf(StatusConflictException.class);
+
+        assertThat(service.handOff(id, STORY_APPROVED, SYS, "chain").getStatus()).isEqualTo(AUDIO_IN_PROGRESS);
+        service.transition(id, AUDIO_IN_PROGRESS, AUDIO_DONE, SYS, "narrated");
+        assertThat(service.handOff(id, AUDIO_DONE, SYS, "chain").getStatus()).isEqualTo(ASSEMBLING);
+    }
+
     private Story advanceToAudio(Story s) {
         long id = s.getId();
         service.runNext(USER);

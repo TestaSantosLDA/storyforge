@@ -53,8 +53,7 @@ public class Gates {
         Story story = stories.findWithTopic(storyId).orElseThrow();
         status.transition(storyId, StoryStatus.AWAITING_STORY_APPROVAL, StoryStatus.STORY_APPROVED, by, "approved");
         drafts.review(draft.id(), "approved", null);
-        status.transition(storyId, StoryStatus.STORY_APPROVED, StoryStatus.SCRIPT_IN_PROGRESS,
-                "system:stage1", "cast locked; writing the script");
+        status.handOff(storyId, StoryStatus.STORY_APPROVED, "system:stage1", "cast locked; writing the script");
         StoryContent content = Json.read(draft.content(), StoryContent.class);
         Map<String, ReferenceSheets.Sheet> sheetsById = draft.sheets() == null ? Map.of()
                 : Json.MAPPER.readValue(draft.sheets(), Json.MAPPER.getTypeFactory()
@@ -89,8 +88,7 @@ public class Gates {
         status.transition(storyId, StoryStatus.AWAITING_SCRIPT_APPROVAL, StoryStatus.SCRIPT_APPROVED, by, "approved");
         drafts.review(draft.id(), "approved", null);
         // Stages 2-4 run automatically after Gate B.
-        status.transition(storyId, StoryStatus.SCRIPT_APPROVED, StoryStatus.AUDIO_IN_PROGRESS, "system:stage1",
-                "script approved; recording narration");
+        status.handOff(storyId, StoryStatus.SCRIPT_APPROVED, "system:stage1", "script approved; recording narration");
     }
 
     /** Regenerate with notes: counts a rejection; the limit archives the story. */

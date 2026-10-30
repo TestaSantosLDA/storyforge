@@ -79,8 +79,7 @@ public class FinalReview {
     public void approve(long storyId, String by) {
         status.transition(storyId, StoryStatus.AWAITING_FINAL_REVIEW, StoryStatus.FINAL_APPROVED, by, "approved");
         // Stage 5 starts automatically.
-        status.transition(storyId, StoryStatus.FINAL_APPROVED, StoryStatus.PREPARING_PUBLISH, TRIGGER,
-                "preparing the publish package");
+        status.handOff(storyId, StoryStatus.FINAL_APPROVED, TRIGGER, "preparing the publish package");
     }
 
     @Transactional

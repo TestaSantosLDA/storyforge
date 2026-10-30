@@ -12,6 +12,9 @@ spring:
     url: ${STORYFORGE_DB_URL:jdbc:postgresql://localhost:5432/storyforge}
     username: ${STORYFORGE_DB_USER:storyforge}
     password: ${STORYFORGE_DB_PASSWORD:storyforge}
+  # Branches built in parallel reserve migration numbers (clips V12, story format V13, series V14) and may merge in
+  # any order; out-of-order lets a lower number that lands later still apply to an existing database.
+  flyway.out-of-order: true
   jpa:
     open-in-view: false
     hibernate.ddl-auto: validate
