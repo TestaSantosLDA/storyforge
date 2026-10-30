@@ -9,7 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Allowed story status changes, collected from the "Status transitions" table of every Pipeline A stage doc.
+ * Allowed story status changes, collected from the "Status transitions" table of every Pipeline A stage doc. The
+ * handoff rows are the fable's; other formats route handoffs through {@link StoryFormat}.
  * A retry inside a stage (e.g. QA fail with budget left) keeps the same status and is not a transition.
  */
 public final class StoryTransitions {
@@ -52,7 +53,19 @@ public final class StoryTransitions {
         ALLOWED.put(from, set);
     }
 
+    /** For a fable (Pipeline A). */
     public static boolean isAllowed(StoryStatus from, StoryStatus to) {
+        return isAllowed(StoryFormat.FABLE, from, to);
+    }
+
+    /**
+     * The table above, except that a handoff status may only go where the story's format sends it ({@link
+     * StoryFormat#next}): a {@code story_short} goes from {@code story_approved} straight to audio, for instance.
+     */
+    public static boolean isAllowed(StoryFormat format, StoryStatus from, StoryStatus to) {
+        if (from.kind() == StoryStatus.Kind.HANDOFF) {
+            return format.next(from).filter(to::equals).isPresent();
+        }
         return ALLOWED.getOrDefault(from, Set.of()).contains(to);
     }
 

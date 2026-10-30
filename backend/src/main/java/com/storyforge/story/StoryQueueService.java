@@ -48,7 +48,9 @@ public class StoryQueueService {
         StoryForm f = checkLookNotes(input.validated());
         Topic topic = topics.findById(f.topicId())
                 .orElseThrow(() -> InvalidInputException.of("topicId", "That topic no longer exists."));
-        Story story = status.enqueue(topic, f.concept(), f.moral(), f.targetLengthMin(), f.notes(), by);
+        // A topic with a video profile makes Motion Pictures (Pipeline D); without one, fables.
+        StoryFormat format = topic.getProfileId() == null ? StoryFormat.FABLE : StoryFormat.MOTION_PICTURE;
+        Story story = status.enqueue(topic, format, f.concept(), f.moral(), f.targetLengthMin(), f.notes(), by);
         story.setLookNotes(f.lookNotes());
         changeLog.record("story", story.getId(), "create", null, story.details(), by);
         return story;

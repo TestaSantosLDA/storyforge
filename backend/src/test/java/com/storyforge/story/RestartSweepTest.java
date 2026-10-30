@@ -72,7 +72,7 @@ class RestartSweepTest extends DbTest {
         final List<String> calls = new ArrayList<>();
 
         @Override
-        public void dispatch(long storyId, StoryStatus status) {
+        public void dispatch(long storyId, StoryFormat format, StoryStatus status) {
             calls.add(storyId + ":" + status.dbValue());
         }
     }

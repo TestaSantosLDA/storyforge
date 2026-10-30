@@ -28,6 +28,7 @@ public record StoryforgeProperties(
         @DefaultValue Brand brand,
         @DefaultValue Channel channel,
         @DefaultValue Profiles profiles,
+        @DefaultValue Vertical vertical,
         @DefaultValue("false") boolean madeForKids) {
 
     /**
@@ -113,7 +114,43 @@ public record StoryforgeProperties(
             @DefaultValue("20s") Duration minSlice,
             @DefaultValue("52s") Duration maxSlice,
             @DefaultValue("60s") Duration maxWithClosingLine,
-            @DefaultValue("3") int rejections) {
+            @DefaultValue("3") int rejections,
+            /** Clips from any video (docs/pipeline-b/clips-from-any-video.md). */
+            @DefaultValue("180") int maxSourceMinutes,
+            @DefaultValue("60s") Duration minSpeech,
+            @DefaultValue("700ms") Duration linePause,
+            /** A stretch of speech with no sentence end or pause still becomes a line at this length. */
+            @DefaultValue("12s") Duration maxLine,
+            @DefaultValue("500ms") Duration sceneSnap,
+            @DefaultValue("0.3") double sceneThreshold,
+            @DefaultValue("3") int selectionTries,
+            @DefaultValue("3") int formatTries,
+            @DefaultValue("3") int downloadRetries,
+            @DefaultValue("30s") Duration downloadBackoff,
+            @DefaultValue("yt-dlp") String ytDlp,
+            /** The version the app is pinned to; empty skips the check. */
+            @DefaultValue("2026.10.26") String ytDlpVersion,
+            @DefaultValue("3h") Duration transcribeTimeout,
+            /** How long a job waits for the GPU, and how often it looks. */
+            @DefaultValue("2h") Duration gpuWait,
+            @DefaultValue("5s") Duration gpuPoll,
+            @DefaultValue("1080") int width,
+            @DefaultValue("1920") int height,
+            @DefaultValue("3") double hookSeconds,
+            @DefaultValue("-14") double loudnessTarget,
+            @DefaultValue("2") double loudnessTolerance,
+            /** Platform limits (B3 scenario 2: a change here needs no code). */
+            @DefaultValue("100") int youtubeTitleMax,
+            @DefaultValue("3") int youtubeHashtagsMax,
+            @DefaultValue("2200") int tiktokCaptionMax,
+            @DefaultValue("2200") int instagramCaptionMax,
+            @DefaultValue("5") int otherHashtagsMax,
+            @DefaultValue("256") int maxFileMb,
+            /** The owner's channels; none configured means one unnamed channel with no closing line. */
+            @DefaultValue({}) java.util.List<ClipChannel> channels) {
+
+        public record ClipChannel(String name, String closingLine) {
+        }
     }
 
     public record Gpu(@DefaultValue("15m") Duration leaseTtl) {
@@ -190,6 +227,52 @@ public record StoryforgeProperties(
     }
 
     /** FFmpeg, installed per machine (CLAUDE.md "Stack"). */
+    /**
+     * The vertical (9:16) layer shared by Pipelines C and D (docs/pipeline-d "Shared with Pipeline C"): frame size,
+     * the platform safe zone, word captions and the audio mix.
+     */
+    public record Vertical(
+            @DefaultValue("1080") int width,
+            @DefaultValue("1920") int height,
+            @DefaultValue("30") int fps,
+            /** Shorts must stay under this. */
+            @DefaultValue("60s") Duration maxDuration,
+            @DefaultValue SafeZone safeZone,
+            @DefaultValue Captions captions,
+            @DefaultValue Mix mix) {
+
+        /** Pixels kept clear of the platform's own buttons and text (title, channel name, like and share column). */
+        public record SafeZone(
+                @DefaultValue("290") int top,
+                @DefaultValue("480") int bottom,
+                @DefaultValue("60") int left,
+                @DefaultValue("140") int right) {
+        }
+
+        public record Captions(
+                /** Words on screen at once (1 to this many; a group also ends at punctuation). */
+                @DefaultValue("3") int maxWords,
+                @DefaultValue("Arial") String font,
+                @DefaultValue("84") int fontSize,
+                @DefaultValue("#FFFFFF") String colour,
+                /** The word being spoken. */
+                @DefaultValue("#FFD23F") String highlight,
+                /** Distance from the bottom of the frame to the caption baseline; inside the safe zone. */
+                @DefaultValue("560") int bottomMargin) {
+        }
+
+        public record Mix(
+                /** On by default (owner, 2026-10-30); a profile or story can turn it off. */
+                @DefaultValue("true") boolean music,
+                /** Music level under the voice between lines, before ducking; 9 and 11 dB were too loud. */
+                @DefaultValue("-17") double musicDb,
+                /** Whole-mix loudness; -14, -17.5 and -23 were too loud for the owner. */
+                @DefaultValue("-27") double targetLufs,
+                @DefaultValue("-2") double truePeakDb,
+                @DefaultValue("1.5") double musicFadeSec) {
+        }
+    }
+
     public record Media(
             @DefaultValue("ffmpeg") String ffmpeg,
             @DefaultValue("ffprobe") String ffprobe) {

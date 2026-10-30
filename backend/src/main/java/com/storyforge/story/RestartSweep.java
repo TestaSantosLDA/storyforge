@@ -40,9 +40,8 @@ public class RestartSweep {
     public void run() {
         gpu.releaseAll();
         for (Story s : stories.findByStatusIn(StoryStatus.ofKind(StoryStatus.Kind.HANDOFF))) {
-            StoryStatus next = s.getStatus().handoffTarget().orElseThrow();
             try {
-                status.transition(s.getId(), s.getStatus(), next, TRIGGER, "handoff not picked up before restart");
+                status.handOff(s.getId(), s.getStatus(), TRIGGER, "handoff not picked up before restart");
             } catch (StatusConflictException e) {
                 log.info("story {} moved on during the sweep: {}", s.getId(), e.getMessage());
             }
@@ -52,7 +51,7 @@ public class RestartSweep {
             if (d == null) {
                 log.info("story {} is {}; no stage is implemented for it yet", s.getId(), s.getStatus().dbValue());
             } else {
-                d.dispatch(s.getId(), s.getStatus());
+                d.dispatch(s.getId(), s.getFormat(), s.getStatus());
             }
         }
     }

@@ -100,7 +100,7 @@ The stage dispatcher picks the step by status and `format`; no new status values
 
 ## Build order
 
-1. `format` column and dispatcher routing (with tests showing a fable story is unaffected).
+1. `format` column and dispatcher routing (with tests showing a fable story is unaffected). **Built 2026-10-30 with Pipeline D's shared vertical layer** (`docs/pipeline-d/README.md` build order step 2), including the caption builder and the vertical audio mix that step 4 uses.
 2. C1 prompts and QA.
 3. Stage 2 lands on main, then the C2 word-timestamp change.
 4. Card renderer, caption builder, background library import, C3 assembly.

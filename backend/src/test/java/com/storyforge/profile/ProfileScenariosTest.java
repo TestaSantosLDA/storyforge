@@ -8,6 +8,7 @@ import com.storyforge.story.ArchiveReason;
 import com.storyforge.story.RunResult;
 import com.storyforge.story.Story;
 import com.storyforge.story.StoryForm;
+import com.storyforge.story.StoryFormat;
 import com.storyforge.story.StoryQueueService;
 import com.storyforge.story.StoryRepository;
 import com.storyforge.story.StoryStatus;
@@ -138,6 +139,28 @@ class ProfileScenariosTest extends DbTest {
         Story ran = stories.findById(s.getId()).orElseThrow();
         assertThat(ran.getProfileSnapshot()).isNull();
         assertThat(ran.getTopicSnapshot()).isEqualTo("A world.");
+    }
+
+    @Test
+    void a_topic_with_a_profile_makes_motion_pictures_and_one_without_makes_fables() {
+        Topic motion = topic("Maps");
+        topics.setProfile(motion.getId(), "chronicle", null, null, BY);
+        Topic fable = topic("Wood");
+
+        assertThat(add(motion, null).getFormat()).isEqualTo(StoryFormat.MOTION_PICTURE);
+        assertThat(add(fable, null).getFormat()).isEqualTo(StoryFormat.FABLE);
+    }
+
+    @Test
+    void a_motion_picture_whose_topic_lost_its_profile_is_refused_at_run() {
+        Topic t = topic("Fickle");
+        topics.setProfile(t.getId(), "tale", null, null, BY);
+        Story s = add(t, null);
+        topics.setProfile(t.getId(), "", null, null, BY);
+
+        assertThatThrownBy(() -> queue.run(BY)).isInstanceOf(ProfileException.class)
+                .hasMessageContaining("has no video profile");
+        assertThat(stories.findById(s.getId()).orElseThrow().getStatus()).isEqualTo(StoryStatus.QUEUED);
     }
 
     @Test

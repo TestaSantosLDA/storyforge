@@ -22,7 +22,7 @@ Every story status has one kind. The kind drives the concurrency cap and the res
 | --- | --- | --- | --- |
 | Queued | `queued` | No | Left alone |
 | Working | `story_in_progress`, `script_in_progress`, `audio_in_progress`, `visuals_in_progress`, `assembling`, `analyzing_rejection`, `preparing_publish` | Yes | The owning stage is started again; input-hash caching means only missing work is redone |
-| Handoff | `story_approved`, `script_approved`, `audio_done`, `visuals_done`, `final_approved` | Yes | Advanced to the working status it hands to |
+| Handoff | `story_approved`, `script_approved`, `audio_done`, `visuals_done`, `final_approved` | Yes | Advanced to the working status it hands to in the story's format (`StoryFormat`; a short skips the script and, for `story_short`, the visuals) |
 | Human | `awaiting_story_approval`, `awaiting_script_approval`, `awaiting_final_review`, `ready_to_upload`, `needs_attention` | Yes | Left alone |
 | Terminal | `published`, `archived` | No | Left alone (`archived` can be restored) |
 

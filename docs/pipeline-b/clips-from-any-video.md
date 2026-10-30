@@ -14,6 +14,8 @@ A page on the management site where a person uploads a video file or pastes a Yo
 | --- | --- |
 | Video | File upload (mp4, mov, mkv, webm) **or** a YouTube link; exactly one |
 | Source and permission | Required free text, e.g. "my own video" or "streamer X, clipping program, terms link". Stored with the job, like a music license record |
+| This is my own video | Checkbox. Decides the call to action and whether clips carry a credit line |
+| Framing | Blurred fill (default) or centre crop; crop with offset is picked per clip in B4 |
 | Channel | Which of the owner's channels the clips are for (sets the closing line, branding and caption style) |
 | Number of clips | 1–5; default 3 |
 | Notes for the clip picker | Optional, e.g. "focus on the funny moments", "skip the intro" |
@@ -25,7 +27,7 @@ The page also lists every external video job with its status, like the clip queu
 
 1. **Fetch:** an upload is saved to the assets directory. A YouTube link is downloaded with **yt-dlp** (Unlicense) at the best quality up to 1080p. The yt-dlp version is pinned in config and logged with every download.
 2. **Validate (ffprobe):** it must have a video and an audio stream, and its length must be within `storyforge.clips.max-source-minutes` (default 180). The same file (by content hash) is never stored twice; resubmitting it reuses the earlier intake.
-3. **Transcribe:** Whisper (sidecar, GPU lock) with word-level timestamps, language auto-detected. Words are grouped into lines (sentences, or pauses of 0.7 s or more), which produces the same timing manifest shape B1 reads for stories.
+3. **Transcribe:** Whisper (sidecar, GPU lock) with word-level timestamps, language auto-detected. Words are grouped into lines (sentences, or pauses of 0.7 s or more; a line with neither stops at `storyforge.clips.max-line`, default 12 s, so a slice can always end on a boundary), which produces the same timing manifest shape B1 reads for stories.
 4. **Scene cuts:** FFmpeg scene detection, saved so B2 can avoid cutting a clip mid-shot.
 
 ### Intake QA
@@ -54,7 +56,7 @@ Replaces steps 1–2 of B2 (vertical images, animation). Steps 3–7 stay, adapt
    - **Centre crop:** a 9:16 window from the middle of the frame. It fills the screen but may cut people off.
    - **Crop with offset:** a 9:16 window at a horizontal position the reviewer picks in B4.
    - Vertical sources pass through unchanged.
-2. **Audio:** the original audio of the slice, normalized to the Shorts loudness target. No new narration. The closing line is optional per channel; it is off unless that channel has one recorded.
+2. **Audio:** the original audio of the slice, normalized to the Shorts loudness target. No new narration. The closing line is optional per channel; it is off unless that channel has one recorded (`storyforge.clips.channels`: name and closing-line file; with none configured the form offers one "Main channel").
 3. **Captions:** word-by-word from the Whisper word timings (1–3 words at a time, current word highlighted), inside the safe zone.
 4. **Overlays:** hook title for the first ~3 s; a credit line ("Clip from …") when the source is not the owner's own video.
 
@@ -80,6 +82,8 @@ The clip job gains two statuses before the existing ones:
 Side states: `needs_attention`, `clip_killed`.
 
 Story-based clip jobs still start at `clips_queued`; external video jobs skip it because they don't wait for a story.
+
+Each clip has its own status, so a rejection redoes one clip. The job's status is the earliest stage any of its clips needs, and it stays `clip_ready` until every clip is published or killed, so `clip_approved` appears on clips only. A rejection without a new framing passes through `analyzing_rejection` while Claude routes it, as in Pipeline A. A job with nothing left but killed clips ends `clip_killed`.
 
 ## Scenarios
 
@@ -109,6 +113,8 @@ Story-based clip jobs still start at `clips_queued`; external video jobs skip it
 | `transcribing` | Manifest written, QA passes | `selecting` (B1) |
 | `transcribing` | Too little speech or sidecar failure | `needs_attention` |
 | `needs_attention` | Retry, new file uploaded, or manual slices | `ingesting` / `transcribing` / `rendering` |
+| `ingesting` | Same video as an earlier job | `selecting` |
+| `needs_attention` | Stop this job | `clip_killed` |
 | `selecting` onwards | As in B1–B4 | — |
 
 ## Decisions
@@ -118,3 +124,6 @@ Story-based clip jobs still start at `clips_queued`; external video jobs skip it
 - Footage is reframed, never re-generated: blurred fill by default.
 - Original audio only; no new narration. Captions come from the Whisper word timings.
 - Clips are reviewed and posted by a human in B4, as for story clips.
+- Whisper here uses the multilingual `small` model and reads the file from disk (`POST /transcribe/words`); Stage 2 keeps `small.en`. The GPU lease is renewed while it runs, since a long video outlasts one lease.
+- Choosing a new framing when rejecting goes straight to B2. Otherwise a rejection Claude routes to B2 switches a cropped clip to blurred fill, and may set a new hook title; a blurred-fill clip with no other change renders the same.
+- Clip jobs have their own worker thread, so a long download never holds up Pipeline A. Attempts are logged against the job; there is no per-job cost budget.

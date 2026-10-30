@@ -2,7 +2,6 @@ package com.storyforge.story;
 
 import java.util.Arrays;
 import java.util.EnumSet;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -67,18 +66,6 @@ public enum StoryStatus {
     /** Counts toward {@code max_concurrent_stories}: everything that has left the queue and is not finished. */
     public boolean inFlight() {
         return kind != Kind.QUEUED && kind != Kind.TERMINAL;
-    }
-
-    /** The working status a handoff status hands to. Empty for every other kind. */
-    public Optional<StoryStatus> handoffTarget() {
-        return Optional.ofNullable(switch (this) {
-            case STORY_APPROVED -> SCRIPT_IN_PROGRESS;
-            case SCRIPT_APPROVED -> AUDIO_IN_PROGRESS;
-            case AUDIO_DONE -> VISUALS_IN_PROGRESS;
-            case VISUALS_DONE -> ASSEMBLING;
-            case FINAL_APPROVED -> PREPARING_PUBLISH;
-            default -> null;
-        });
     }
 
     public static Set<StoryStatus> ofKind(Kind kind) {

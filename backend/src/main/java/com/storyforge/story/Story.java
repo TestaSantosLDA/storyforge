@@ -49,6 +49,9 @@ public class Story {
     @Column(nullable = false)
     private StoryStatus status;
 
+    @Column(nullable = false)
+    private StoryFormat format = StoryFormat.FABLE;
+
     private StoryStatus resumeStatus;
     private String attentionReason;
 
@@ -83,6 +86,12 @@ public class Story {
     }
 
     public Story(Topic topic, String concept, String moral, int targetLengthMin, String notes, int queuePosition) {
+        this(topic, StoryFormat.FABLE, concept, moral, targetLengthMin, notes, queuePosition);
+    }
+
+    public Story(Topic topic, StoryFormat format, String concept, String moral, int targetLengthMin, String notes,
+            int queuePosition) {
+        this.format = format;
         this.topic = topic;
         this.concept = concept;
         this.moral = moral;
@@ -157,6 +166,7 @@ public class Story {
         m.put("notes", notes);
         m.put("look_notes", lookNotes);
         m.put("queue_position", queuePosition);
+        m.put("format", format.dbValue());
         m.put("status", status.dbValue());
         return m;
     }
@@ -205,6 +215,10 @@ public class Story {
 
     public Integer getQueuePosition() {
         return queuePosition;
+    }
+
+    public StoryFormat getFormat() {
+        return format;
     }
 
     public StoryStatus getStatus() {

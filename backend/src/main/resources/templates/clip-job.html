@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Clips · ' + ${title})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('clips')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <p class="muted"><a th:href="@{/clips}">← Clips</a></p>
+    <h1 th:text="${title}">Video</h1>
+    <p>
+        <span class="status" th:classappend="${job.status().working()} ? 'k-working' : 'k-human'"
+              th:text="${#strings.replace(job.status().dbValue(), '_', ' ')}"></span>
+        <span class="muted small" th:if="${job.status().working()}"> · this page refreshes itself</span>
+    </p>
+    <p class="small"><strong>Source and permission:</strong> <span th:text="${job.sourceText()}"></span></p>
+
+    <section class="card" th:if="${job.status().name() == 'NEEDS_ATTENTION'}">
+        <h2>Needs attention</h2>
+        <p th:text="${job.attentionReason()}"></p>
+        <form th:action="@{/clips/{id}/resume(id=${job.id()})}" method="post"><button class="primary" type="submit">Try again</button></form>
+        <form th:action="@{/clips/{id}/file(id=${job.id()})}" method="post" enctype="multipart/form-data" class="row" style="margin-top:.75rem">
+            <input id="new-file" name="file" type="file" accept=".mp4,.mov,.mkv,.webm" style="flex:1;min-width:14rem" aria-label="Upload the file instead">
+            <button type="submit">Upload the file instead</button>
+        </form>
+        <details th:if="${source != null and source.lines() != null}" style="margin-top:.75rem">
+            <summary>Pick a slice by hand</summary>
+            <form th:action="@{/clips/{id}/slice(id=${job.id()})}" method="post" class="grid" style="margin-top:.5rem">
+                <label>Start line <input id="slice-start" name="startLine" required placeholder="L0001"></label>
+                <label>End line <input id="slice-end" name="endLine" required placeholder="L0012"></label>
+                <label>Hook title <input id="slice-hook" name="hook" required maxlength="60"></label>
+                <div><button type="submit">Render this slice</button></div>
+            </form>
+            <ul class="list small">
+                <li th:each="l : ${source.lines()}" th:text="${l.lineId()} + ' · ' + ${#numbers.formatDecimal(l.start(), 1, 1)} + ' s · ' + ${l.text()}"></li>
+            </ul>
+        </details>
+        <form th:action="@{/clips/{id}/kill(id=${job.id()})}" method="post" style="margin-top:.75rem"
+              onsubmit="return confirm('Stop this job?')"><button class="danger" type="submit">Stop this job</button></form>
+    </section>
+
+    <p class="empty" th:if="${clips.isEmpty() and job.status().working()}">Working on it. Clips appear here as they're picked.</p>
+
+    <section class="card" th:each="v : ${clips}" th:with="c=${v.clip()}">
+        <h2 th:text="'Clip ' + ${c.index()} + ': ' + ${c.hookTitle()}">Clip</h2>
+        <p class="small">
+            <span class="status" th:classappend="${c.status().working()} ? 'k-working' : 'k-human'"
+                  th:text="${#strings.replace(c.status().dbValue(), '_', ' ')}"></span>
+            <span class="muted" th:text="' ' + ${c.startLineId()} + '–' + ${c.endLineId()} + ' · ' + ${#numbers.formatDecimal(c.startSec(), 1, 1)} + '–' + ${#numbers.formatDecimal(c.endSec(), 1, 1)} + ' s · ' + ${c.rejections()} + ' of 3 rejections'"></span>
+        </p>
+        <video th:if="${c.videoKey()}" controls preload="metadata" style="max-height:32rem;max-width:100%;display:block" th:src="@{/media(key=${c.videoKey()})}"></video>
+        <p class="small muted" th:text="${v.spoken()}"></p>
+        <p th:if="${c.videoKey()}"><a th:href="@{/media(key=${c.videoKey()})}" download>Download the video</a></p>
+
+        <div th:each="p : ${v.variants()}" style="margin-top:1rem">
+            <h3 th:text="${p.platform() == 'youtube' ? 'YouTube Shorts' : (p.platform() == 'tiktok' ? 'TikTok' : 'Instagram Reels')}"></h3>
+            <p class="small muted" th:if="${p.skipped()}">Skipped</p>
+            <p class="small" th:if="${p.postUrl()}"><a th:href="${p.postUrl()}" target="_blank" rel="noopener" th:text="${p.postUrl()}"></a></p>
+            <th:block th:unless="${p.done()}">
+                <label th:text="${p.platform() == 'youtube' ? 'Title' : 'Caption'}"></label>
+                <span class="row"><input th:id="'cap-' + ${c.id()} + '-' + ${p.platform()}" th:value="${p.caption()} + ' ' + ${p.hashtags()}" style="flex:1" readonly aria-label="Caption and hashtags">
+                    <button type="button" class="copy" th:attr="data-copy='cap-' + ${c.id()} + '-' + ${p.platform()}">Copy</button></span>
+                <span class="row" style="margin-top:.4rem"><input th:id="'cta-' + ${c.id()} + '-' + ${p.platform()}" th:value="${p.cta()}" style="flex:1" readonly aria-label="Call to action">
+                    <button type="button" class="copy" th:attr="data-copy='cta-' + ${c.id()} + '-' + ${p.platform()}">Copy</button></span>
+                <p class="small muted" th:if="${p.platform() == 'youtube' and source != null and source.url() != null and job.ownVideo()}"
+                   th:text="'Set the related video to ' + ${source.url()}"></p>
+                <form class="row" style="margin-top:.4rem" th:if="${c.status().name() == 'CLIP_APPROVED'}"
+                      th:action="@{/clips/{id}/clip/{c}/posted(id=${job.id()},c=${c.id()})}" method="post">
+                    <input type="hidden" name="platform" th:value="${p.platform()}">
+                    <input type="url" name="url" required placeholder="Link to the post" style="flex:1;min-width:14rem" aria-label="Link to the post">
+                    <button type="submit">Mark as posted</button>
+                </form>
+                <form th:if="${c.status().name() == 'CLIP_APPROVED' or c.status().name() == 'CLIP_READY'}" style="margin-top:.4rem"
+                      th:action="@{/clips/{id}/clip/{c}/skip(id=${job.id()},c=${c.id()})}" method="post">
+                    <input type="hidden" name="platform" th:value="${p.platform()}">
+                    <button type="submit">Skip this platform</button>
+                </form>
+            </th:block>
+        </div>
+        <p th:if="${!v.variants().isEmpty()}" style="margin-top:1rem">
+            <a th:href="@{/assets(key=${v.variants()[0].coverKey()})}" download>
+                <img th:src="@{/assets(key=${v.variants()[0].coverKey()})}" alt="Cover frame" style="max-height:12rem"></a>
+        </p>
+
+        <th:block th:if="${c.status().name() == 'CLIP_APPROVED'}">
+            <ol class="checklist small">
+                <li>YouTube Shorts: upload as <strong>private</strong>, set the related video, wait for the copyright check, then publish.</li>
+                <li>TikTok: upload with the TikTok caption and cover.</li>
+                <li>Instagram Reels: upload with the Instagram caption and cover.</li>
+                <li>Paste each post's link above.</li>
+            </ol>
+        </th:block>
+
+        <th:block th:if="${c.status().name() == 'CLIP_READY'}">
+            <form th:action="@{/clips/{id}/clip/{c}/approve(id=${job.id()},c=${c.id()})}" method="post" style="margin-top:1rem">
+                <button class="primary" type="submit">Approve</button>
+            </form>
+            <form th:action="@{/clips/{id}/clip/{c}/reject(id=${job.id()},c=${c.id()})}" method="post" class="grid" style="margin-top:.75rem">
+                <label>Reject with a reason
+                    <textarea name="reason" rows="2" required placeholder="e.g. wrong moment, or speaker cut off"></textarea>
+                </label>
+                <label>New framing (optional)
+                    <select name="framing">
+                        <option value="">Keep it, and work out what to redo from the reason</option>
+                        <option value="blurred_fill">Blurred fill</option>
+                        <option value="centre_crop">Centre crop</option>
+                        <option value="crop_offset">Crop at the position below</option>
+                    </select>
+                </label>
+                <label>Crop position, left to right
+                    <input name="offset" type="range" min="0" max="1" step="0.05" value="0.5">
+                </label>
+                <div><button type="submit">Reject</button></div>
+            </form>
+        </th:block>
+        <form th:if="${c.status().name() == 'CLIP_READY' or c.status().name() == 'CLIP_APPROVED'}"
+              th:action="@{/clips/{id}/clip/{c}/kill(id=${job.id()},c=${c.id()})}" method="post" style="margin-top:.75rem"
+              onsubmit="return confirm('Kill this clip?')">
+            <button class="danger" type="submit">Kill clip</button>
+        </form>
+    </section>
+</main>
+<script th:if="${job.status().working()}">setTimeout(() => location.reload(), 10000);</script>
+<script>
+    document.querySelectorAll('.copy').forEach(b => b.addEventListener('click', async () => {
+        const field = document.getElementById(b.dataset.copy);
+        try { await navigator.clipboard.writeText(field.value); b.textContent = 'Copied'; }
+        catch (e) { field.select(); b.textContent = 'Press Ctrl+C'; }
+        setTimeout(() => b.textContent = 'Copy', 1500);
+    }));
+</script>
+</body>
+</html>

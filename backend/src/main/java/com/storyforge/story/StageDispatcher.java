@@ -6,5 +6,5 @@ package com.storyforge.story;
  */
 public interface StageDispatcher {
 
-    void dispatch(long storyId, StoryStatus status);
+    void dispatch(long storyId, StoryFormat format, StoryStatus status);
 }

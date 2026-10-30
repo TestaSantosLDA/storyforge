@@ -10,6 +10,7 @@ import com.storyforge.stage5.PublishStep;
 
 import com.storyforge.story.StageDispatcher;
 import com.storyforge.story.StoryEnteredStatus;
+import com.storyforge.story.StoryFormat;
 import com.storyforge.story.StoryStatus;
 import com.storyforge.story.StoryStatusService;
 import java.util.Set;
@@ -27,7 +28,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * flow (CLAUDE.md rule 2). One worker thread: stories run one step at a time. The "running" set only stops the same
  * step of the same story being queued twice in this process; it is keyed by story and status, so a step that moves
  * its story straight on (visuals → assembling) queues the next step behind itself. The status column stays the
- * source of truth.
+ * source of truth. Steps are picked by status and the story's format.
  */
 @Component
 @ConditionalOnProperty(name = "storyforge.pipeline.auto-dispatch", havingValue = "true", matchIfMissing = true)
@@ -66,12 +67,19 @@ public class PipelineDispatcher implements StageDispatcher {
     @TransactionalEventListener
     void onStatus(StoryEnteredStatus e) {
         if (e.status().kind() == StoryStatus.Kind.WORKING) {
-            dispatch(e.storyId(), e.status());
+            dispatch(e.storyId(), e.format(), e.status());
         }
     }
 
     @Override
-    public void dispatch(long storyId, StoryStatus s) {
+    public void dispatch(long storyId, StoryFormat format, StoryStatus s) {
+        if (format != StoryFormat.FABLE) {
+            // Pipelines C and D share the statuses but none of their own steps is built yet (docs/pipeline-c,
+            // docs/pipeline-d "Build order"). Stop and flag rather than run a fable step on a short.
+            submit(storyId, s, () -> status.flag(storyId, s, "The " + format.dbValue() + " step for " + s.dbValue()
+                    + " is not built yet.", "system:pipeline"));
+            return;
+        }
         Runnable step = switch (s) {
             case STORY_IN_PROGRESS -> () -> storyStep.run(storyId);
             case SCRIPT_IN_PROGRESS -> () -> scriptStep.run(storyId);
@@ -86,6 +94,10 @@ public class PipelineDispatcher implements StageDispatcher {
             log.info("story {} is {}; no stage is implemented for it yet", storyId, s.dbValue());
             return;
         }
+        submit(storyId, s, step);
+    }
+
+    private void submit(long storyId, StoryStatus s, Runnable step) {
         String key = storyId + ":" + s.name();
         if (!running.add(key)) {
             return;

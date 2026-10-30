@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["clips"],
+  "properties": {
+    "clips": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["start_line", "end_line", "hook_title"],
+        "properties": {
+          "start_line": {"type": "string"},
+          "end_line": {"type": "string"},
+          "hook_title": {"type": "string"}
+        }
+      }
+    }
+  }
+}

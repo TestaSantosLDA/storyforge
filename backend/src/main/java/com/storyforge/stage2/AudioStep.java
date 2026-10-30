@@ -269,9 +269,8 @@ public class AudioStep {
         try {
             status.transition(storyId, StoryStatus.AUDIO_IN_PROGRESS, StoryStatus.AUDIO_DONE, TRIGGER,
                     String.format("%d lines, %.1f min", clips.size(), minutes));
-            // Stage 3 starts automatically when audio is done.
-            status.transition(storyId, StoryStatus.AUDIO_DONE, StoryStatus.VISUALS_IN_PROGRESS, TRIGGER,
-                    "narration ready; planning shots");
+            // The next stage (visuals, or assembly for a story short) starts automatically when audio is done.
+            status.handOff(storyId, StoryStatus.AUDIO_DONE, TRIGGER, "narration ready");
         } catch (StatusConflictException e) {
             log.info("story {} moved on before audio finished: {}", storyId, e.getMessage());
         }

@@ -3,6 +3,7 @@ package com.storyforge.story;
 import com.storyforge.config.StoryforgeProperties;
 import com.storyforge.log.StatusChange;
 import com.storyforge.log.StatusChangeRepository;
+import com.storyforge.profile.ProfileException;
 import com.storyforge.profile.ProfileSnapshots;
 import com.storyforge.topic.Topic;
 import java.util.EnumSet;
@@ -45,8 +46,14 @@ public class StoryStatusService {
     @Transactional
     public Story enqueue(Topic topic, String concept, String moral, int targetLengthMin, String notes,
             String triggeredBy) {
+        return enqueue(topic, StoryFormat.FABLE, concept, moral, targetLengthMin, notes, triggeredBy);
+    }
+
+    @Transactional
+    public Story enqueue(Topic topic, StoryFormat format, String concept, String moral, int targetLengthMin,
+            String notes, String triggeredBy) {
         queueLock.acquire();
-        Story story = stories.save(new Story(topic, concept, moral, targetLengthMin, notes,
+        Story story = stories.save(new Story(topic, format, concept, moral, targetLengthMin, notes,
                 stories.maxQueuePosition() + 1));
         log(story, null, StoryStatus.QUEUED, triggeredBy, "added to queue");
         return story;
@@ -72,8 +79,13 @@ public class StoryStatusService {
         Story story = top.getFirst();
         story.setQueuePosition(null);
         story.setTopicSnapshot(story.getTopic().getDescription());
-        // A profile that can't be read refuses Run (the transaction rolls back and the story stays queued).
-        story.setProfileSnapshot(profileSnapshots.snapshot(story.getTopic(), story.getLookNotes()).orElse(null));
+        if (story.getFormat() == StoryFormat.MOTION_PICTURE) {
+            // A profile that can't be read refuses Run (the transaction rolls back and the story stays queued).
+            story.setProfileSnapshot(profileSnapshots.snapshot(story.getTopic(), story.getLookNotes())
+                    .orElseThrow(() -> new ProfileException("Topic \"" + story.getTopic().getName()
+                            + "\" has no video profile, so its Motion Pictures story can't run. Pick a profile on "
+                            + "the topic page, then Run again.")));
+        }
         move(story, StoryStatus.STORY_IN_PROGRESS, triggeredBy, "run: first in queue");
         return new RunResult.Started(story.getId());
     }
@@ -90,6 +102,19 @@ public class StoryStatusService {
             throw new IllegalArgumentException("use resume/resumeTo to leave needs_attention");
         }
         move(story, to, triggeredBy, reason);
+        return story;
+    }
+
+    /**
+     * Leaves a handoff status for the working status the story's format hands it to, e.g. {@code audio_done} goes to
+     * {@code visuals_in_progress} for a fable and to {@code assembling} for a {@code story_short}.
+     */
+    @Transactional
+    public Story handOff(long storyId, StoryStatus handoff, String triggeredBy, String reason) {
+        Story story = lockExpecting(storyId, handoff);
+        StoryStatus next = story.getFormat().next(handoff).orElseThrow(() -> new StatusConflictException(
+                "a " + story.getFormat().dbValue() + " story has no step after " + handoff.dbValue()));
+        move(story, next, triggeredBy, reason);
         return story;
     }
 
@@ -190,7 +215,7 @@ public class StoryStatusService {
 
     private void move(Story story, StoryStatus to, String triggeredBy, String reason) {
         StoryStatus from = story.getStatus();
-        if (!StoryTransitions.isAllowed(from, to)) {
+        if (!StoryTransitions.isAllowed(story.getFormat(), from, to)) {
             throw new StatusConflictException("not allowed: " + from.dbValue() + " → " + to.dbValue());
         }
         story.setStatus(to);
@@ -200,7 +225,7 @@ public class StoryStatusService {
             story.setAutoResumeAt(null);
         }
         log(story, from, to, triggeredBy, reason);
-        events.publishEvent(new StoryEnteredStatus(story.getId(), to));
+        events.publishEvent(new StoryEnteredStatus(story.getId(), story.getFormat(), to));
     }
 
     private void log(Story story, StoryStatus from, StoryStatus to, String triggeredBy, String reason) {

@@ -12,7 +12,7 @@ import java.util.function.Function;
  * Test stand-in for Kokoro and Whisper. Each clip is a WAV whose length follows the word count at
  * {@code wordsPerSecond}; the transcriber "hears" the text that was spoken unless {@code mishear} changes it.
  */
-public class FakeSpeech implements VoiceEngine, Transcriber {
+public class FakeSpeech implements VoiceEngine, Transcriber, WordTranscriber {
 
     public record Call(String text, String voice, double speed) {
     }
@@ -21,6 +21,9 @@ public class FakeSpeech implements VoiceEngine, Transcriber {
     public volatile double wordsPerSecond = 2.5;
     public volatile int failNext;
     public volatile Function<Call, String> mishear = c -> c.text();
+    /** What a whole video "says"; null means the sidecar is down. */
+    public volatile Words words;
+    public volatile int wordCalls;
     private final Map<byte[], Call> spoken = new IdentityHashMap<>();
 
     public synchronized void reset() {
@@ -29,6 +32,17 @@ public class FakeSpeech implements VoiceEngine, Transcriber {
         wordsPerSecond = 2.5;
         failNext = 0;
         mishear = c -> c.text();
+        words = null;
+        wordCalls = 0;
+    }
+
+    @Override
+    public synchronized Words transcribeWords(java.nio.file.Path media) {
+        wordCalls++;
+        if (words == null) {
+            throw new SpeechUnavailableException("fake sidecar down", null);
+        }
+        return words;
     }
 
     @Override
