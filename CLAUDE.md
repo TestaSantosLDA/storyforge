@@ -50,7 +50,7 @@ The specs in `docs/` are the source of truth. Read `docs/00-overview.md` first, 
 Side states: `needs_attention`, `archived`.
 
 **Clip job / clip (Pipeline B):**
-`clips_queued` → `selecting` → `rendering` → `formatting` → `clip_ready` → `clip_approved` → `clip_published`
+`clips_queued` (story clips) or `ingesting` → `transcribing` (clips from any video) → `selecting` → `rendering` → `formatting` → `clip_ready` → `clip_approved` → `clip_published`
 Side states: `needs_attention`, `clip_killed`.
 
 ## Key config defaults
@@ -81,7 +81,7 @@ Build and test one stage at a time, in pipeline order, each against its scenario
 6. **Stage 3:** shot planning, image generation + vision QA, storybook animation.
 7. **Stage 4:** music library import, assembly, subtitles, final review, rejection analysis and routing.
 8. **Stage 5:** metadata, thumbnails, publish checklist, mark-as-published.
-9. **Pipeline B:** B0 → B4.
+9. **Pipeline B:** B0 → B4, plus clips from any uploaded video or YouTube link (`docs/pipeline-b/clips-from-any-video.md`), which can be the first user of B1–B4.
 10. **Pipeline C (spin-off, story shorts):** see `docs/pipeline-c/README.md`. Can start once Stage 2 is on main; it does not depend on Stage 3's visuals.
 
 ## Setup tasks before the first real run (human)
