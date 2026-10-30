@@ -54,6 +54,7 @@ Next to the profile, the topic form has a **Look notes** text box for anything t
 | `beat_seconds` | How often something new happens on screen | 2–4 s (Shorts cut faster than A's 5–10 s shots) |
 | `motion` | Motion language from the scene kit | `calm` (eases, slow reveals), `snappy` (overshoot, whip pans, word pops), `documentary` (map routes, slow push-ins) |
 | `on_screen_text` | How much the scenes lean on text, maps and charts | heavy for explanatory, dates and places for historic, light for entertaining |
+| `music` | Background music on or off | **on** (default for every profile) |
 | `music_mood` | Mood tags for the curated music library | "light curious", "tense", "warm" |
 | `audience` | YouTube audience setting | not made for kids (family audience) |
 | `look_notes` | Free text about how the videos should look (see below) | empty |
@@ -171,7 +172,8 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 
 - Rendered scenes on one 1080×1920 timeline, cut on the frame grid from the timing manifest (Stage 3 rule).
 - Word captions (shared with C), unless the scene already shows the words as kinetic text; the scenes carry all other on-screen text.
-- Music from the curated library by `music_mood`, ducked under speech, normalised to the Shorts loudness target.
+- **Background music is on by default** (owner, 2026-10-30): a track from the curated library picked by `music_mood`, never the same track twice in a row, looped or trimmed to length, faded in and out, and ducked under the voice (sidechain compression; about 9 dB under the voice between lines and lower while speaking). The mix is normalised to the Shorts loudness target (−14 LUFS). A profile or story can turn music off.
+- If no licensed track matches the mood, the story is flagged before assembly (`needs_attention`), as in Pipeline C; it never ships silent by accident. The first motion test used a short ambient bed synthesised from scratch by a script, which is a possible later source for the library.
 - No intro and no end card (they waste the first seconds of a Short); the channel's watermark sits in a safe corner.
 - QA: Stage 4's sync, loudness, license and integrity rows, plus length under 60 s, captions and text inside safe zones, every caption word in the transcript.
 - **Final review**: Stage 4's screen with the video, contact sheet, script, claims list and licenses. Rejection reasons route through rejection analysis to D1 (script), D2 (a line), D3 (named scenes, rewritten with the note; other scenes and illustrations reused) or D4 (captions, music); 3 final rejections flag the story.
@@ -208,6 +210,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 | 15 | Final review: "slow down the second scene" | Routed to D3; only that scene rewritten and re-rendered | `visuals_in_progress` |
 | 16 | Final review: "captions cover the face" | Routed to D4; everything else reused | `assembling` |
 | 17 | Scene kit updated | Only scenes whose hash includes the old kit version are re-rendered on the next run | unchanged |
+| 17b | No library track matches the profile's music mood | Flagged before assembly, with the mood named | `needs_attention` |
 | 18 | `fable`, `story_short` and `motion_picture` stories in one queue | Each runs its own steps by `format`; one at a time | unchanged |
 | 19 | Sidecar down | Backoff, not a strike; then flag | `needs_attention` |
 | 20 | App restarts mid-D3 | Cached illustrations, scene code and rendered scenes kept; only missing ones made | `visuals_in_progress` |
