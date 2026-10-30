@@ -14,6 +14,11 @@
             <dt>Moral</dt><dd th:text="${story.moral}"></dd>
             <dt>Target length</dt><dd th:text="${story.targetLengthMin} + ' min'"></dd>
             <dt th:if="${story.notes}">Notes</dt><dd th:if="${story.notes}" th:text="${story.notes}"></dd>
+            <dt th:if="${story.lookNotes}">Look notes</dt><dd th:if="${story.lookNotes}" th:text="${story.lookNotes}"></dd>
+            <dt th:if="${story.profileSnapshot}">Video profile</dt>
+            <dd th:if="${story.profileSnapshot}">
+                <details><summary>Captured at Run</summary><pre class="small" th:text="${story.profileSnapshot}"></pre></details>
+            </dd>
             <dt th:if="${queued}">Queue position</dt><dd th:if="${queued}" th:text="${story.queuePosition}"></dd>
             <dt th:if="${story.attentionReason}">Why it stopped</dt>
             <dd th:if="${story.attentionReason}" th:text="${story.attentionReason}"></dd>

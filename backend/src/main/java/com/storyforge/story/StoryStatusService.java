@@ -3,6 +3,7 @@ package com.storyforge.story;
 import com.storyforge.config.StoryforgeProperties;
 import com.storyforge.log.StatusChange;
 import com.storyforge.log.StatusChangeRepository;
+import com.storyforge.profile.ProfileSnapshots;
 import com.storyforge.topic.Topic;
 import java.util.EnumSet;
 import java.util.Set;
@@ -28,14 +29,16 @@ public class StoryStatusService {
     private final QueueLock queueLock;
     private final StoryforgeProperties props;
     private final ApplicationEventPublisher events;
+    private final ProfileSnapshots profileSnapshots;
 
     StoryStatusService(StoryRepository stories, StatusChangeRepository changes, QueueLock queueLock,
-            StoryforgeProperties props, ApplicationEventPublisher events) {
+            StoryforgeProperties props, ApplicationEventPublisher events, ProfileSnapshots profileSnapshots) {
         this.stories = stories;
         this.changes = changes;
         this.queueLock = queueLock;
         this.props = props;
         this.events = events;
+        this.profileSnapshots = profileSnapshots;
     }
 
     /** Adds a story at the bottom of the queue as {@code queued}. Validation of fields belongs to Stage 0. */
@@ -69,6 +72,8 @@ public class StoryStatusService {
         Story story = top.getFirst();
         story.setQueuePosition(null);
         story.setTopicSnapshot(story.getTopic().getDescription());
+        // A profile that can't be read refuses Run (the transaction rolls back and the story stays queued).
+        story.setProfileSnapshot(profileSnapshots.snapshot(story.getTopic(), story.getLookNotes()).orElse(null));
         move(story, StoryStatus.STORY_IN_PROGRESS, triggeredBy, "run: first in queue");
         return new RunResult.Started(story.getId());
     }
@@ -147,6 +152,7 @@ public class StoryStatusService {
         story.setArchiveReason(null);
         story.setAttentionReason(null);
         story.setTopicSnapshot(null);
+        story.setProfileSnapshot(null);
         story.resetCounters();
         move(story, StoryStatus.QUEUED, triggeredBy, "restored");
         return story;

@@ -1,0 +1,34 @@
+# Video profile for the "Os Lusíadas — Remixed" series (docs/series/lusiadas.md "The epic video profile").
+# Versioned in the repo: bump `version` on every change so each story's snapshot names the profile version.
+id: epic
+version: 1
+genre: historic
+tone: >-
+  Witty, confident, a little irreverent, never mocking the source. Teens should find it cool, and teachers
+  should still be able to use it.
+facts: checked
+structure: >-
+  Cold open on the episode's most dramatic moment (15 s at most, no intro), then the title sting (about 3 s),
+  then an optional "previously on" recap (15 s at most), then 4 to 6 chapters each opened by a chapter tag.
+  Inside the chapters, exactly one Verse Moment (the original Portuguese typed on screen, our English
+  translation under it, Canto and stanza shown) and exactly one "Fact or Legend?" beat (a claim put to the
+  viewer, answered with a LEGEND or DOCUMENTED stamp and its source). The last 10 s are the next-episode teaser.
+visual_style: >-
+  Flat geometric motion graphics. Ink navy #0a0f24 base, azulejo blue #1f5fbf, gold #ffc83d for heroes and
+  key words, coral #ff4d3d for danger and impacts, cyan #3de1ff for labels and translations, cream #f6efe2 for
+  text. Heavy uppercase sans headlines, italic serif for poetry, monospace for tags and dates. Azulejo tile
+  patterns and Manueline and armillary-sphere motifs as the Portuguese signature. Subtle grain and vignette.
+  White flash plus a sound hit on big reveals.
+voices: narrator_only
+narrator_voice:
+frame: landscape
+target_seconds: {target: 540, min: 480, max: 660}
+beat_seconds: {min: 3, max: 5}
+motion: snappy
+on_screen_text: heavy
+illustrations: none
+opening: title_sting
+music: true
+music_mood: [epic, tense, playful, wonder]
+audience: not_made_for_kids
+look_notes: ""

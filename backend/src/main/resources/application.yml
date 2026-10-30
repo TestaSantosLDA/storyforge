@@ -23,7 +23,37 @@ storyforge:
     prompts: ${STORYFORGE_PROMPTS_DIR:../prompts}
     # Channel pronunciation dictionary (what the voice engine reads, never the script).
     pronunciation: ${STORYFORGE_PRONUNCIATION_FILE:../channel/pronunciation.yaml}
+    # Pipeline D video profiles (one YAML per profile, versioned in the repo).
+    profiles: ${STORYFORGE_PROFILES_DIR:../channel/video-profiles}
   pipeline:
     max-concurrent-stories: 1
     story-cost-budget-usd: 10.00
   made-for-kids: false
+  profiles:
+    vertical-max-seconds: 58
+    landscape-min-seconds: 480
+    # Refused in look notes and profile text (CLAUDE.md licensing rules). Case-insensitive, whole words.
+    banned-names:
+      - Disney
+      - Pixar
+      - DreamWorks
+      - Studio Ghibli
+      - Ghibli
+      - Marvel
+      - DC Comics
+      - Warner Bros
+      - Looney Tunes
+      - Nickelodeon
+      - Cartoon Network
+      - Illumination
+      - Minions
+      - Aardman
+      - Nintendo
+      - Pokémon
+      - Pokemon
+      - Sanrio
+      - Hello Kitty
+      - Peppa Pig
+      - Bluey
+      - Mickey Mouse
+      - Kurzgesagt

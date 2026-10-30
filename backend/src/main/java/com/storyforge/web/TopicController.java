@@ -1,6 +1,9 @@
 package com.storyforge.web;
 
 import com.storyforge.character.CharacterStore;
+import com.storyforge.profile.ProfileException;
+import com.storyforge.profile.ProfileSnapshots;
+import com.storyforge.profile.VideoProfiles;
 import com.storyforge.story.StoryRepository;
 import com.storyforge.topic.Topic;
 import com.storyforge.topic.TopicRepository;
@@ -21,9 +24,13 @@ class TopicController {
     private final TopicRepository topicRepo;
     private final StoryRepository stories;
     private final CharacterStore characters;
+    private final VideoProfiles profiles;
+    private final ProfileSnapshots snapshots;
 
     TopicController(TopicService topics, TopicRepository topicRepo, StoryRepository stories,
-            CharacterStore characters) {
+            CharacterStore characters, VideoProfiles profiles, ProfileSnapshots snapshots) {
+        this.profiles = profiles;
+        this.snapshots = snapshots;
         this.topics = topics;
         this.topicRepo = topicRepo;
         this.stories = stories;
@@ -58,7 +65,37 @@ class TopicController {
         model.addAttribute("topic", topic);
         model.addAttribute("stories", stories.findByTopicId(id));
         model.addAttribute("characters", characters.byTopic(id));
+        model.addAttribute("profiles", profiles.all());
+        if (!model.containsAttribute("profileId")) {
+            model.addAttribute("profileId", topic.getProfileId());
+            model.addAttribute("overrides", ProfileSnapshots.overridesAsYaml(topic.getProfileOverrides()));
+            model.addAttribute("lookNotes", topic.getLookNotes());
+        }
+        if (topic.getProfileId() != null) {
+            try {
+                model.addAttribute("effective", snapshots.effective(topic.getProfileId(),
+                        ProfileSnapshots.fromJson(topic.getProfileOverrides())));
+            } catch (ProfileException e) {
+                model.addAttribute("profileProblem", e.getMessage());
+            }
+        }
         return "topic";
+    }
+
+    @PostMapping("/topics/{id}/profile")
+    String setProfile(@PathVariable long id, @RequestParam(required = false) String profileId,
+            @RequestParam(required = false) String overrides, @RequestParam(required = false) String lookNotes,
+            RedirectAttributes flash) {
+        try {
+            topics.setProfile(id, profileId, overrides, lookNotes, Actor.LOCAL);
+            flash.addFlashAttribute("notice", "Saved. Stories already running keep the profile they started with.");
+        } catch (InvalidInputException e) {
+            flash.addFlashAttribute("profileErrors", e.fieldErrors());
+            flash.addFlashAttribute("profileId", profileId);
+            flash.addFlashAttribute("overrides", overrides);
+            flash.addFlashAttribute("lookNotes", lookNotes);
+        }
+        return "redirect:/topics/" + id;
     }
 
     @PostMapping("/topics/{id}/description")

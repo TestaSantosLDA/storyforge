@@ -1,0 +1,22 @@
+# Video profile (docs/pipeline-d/README.md "Video profiles"). Versioned in the repo: bump `version` on every
+# change so each story's snapshot names the profile version that made it.
+id: explainer
+version: 1
+genre: explanatory
+tone: curious and clear, like a friend who just found out something amazing
+facts: checked
+structure: hook question, then three beats that each answer part of it, then a payoff and a "so what"
+visual_style: flat explainer illustration, clean geometric shapes, bold readable labels drawn in code, a calm palette with one accent colour
+voices: narrator_only
+narrator_voice:
+frame: vertical
+target_seconds: {target: 45, min: 30, max: 58}
+beat_seconds: {min: 2, max: 4}
+motion: snappy
+on_screen_text: heavy
+illustrations: flux
+opening: none
+music: true
+music_mood: [light curious]
+audience: not_made_for_kids
+look_notes: ""
