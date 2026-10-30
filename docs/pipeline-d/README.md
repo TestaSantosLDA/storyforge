@@ -223,7 +223,7 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 
 - Same repo, app, database and queue as Pipelines A and C; told apart by `story.format`.
 - **One human gate before production** (script + cast + claims), not two, because the script is one minute long.
-- **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle`.
+- **Profiles are versioned YAML files**, picked per topic with overrides; three starters: `explainer`, `tale`, `chronicle` (confirmed by the owner, 2026-10-30).
 - **Motion = code-driven motion graphics, the Claude Motion approach:** Claude writes each scene against a versioned scene kit, rendered deterministically in headless Chromium and FFmpeg. Claude Motion itself is not used (no API, Team/Enterprise only, no audio).
 - Flux illustrations only where a scene needs them, as cut-out layers; the GPU is not on the critical path.
 - AI video (depth parallax, Wan 2.2) is out of the MVP and stays a later option behind `AnimationEngine`. Only Apache 2.0 / MIT weights, fonts and icons with commercial-use licenses.
@@ -231,10 +231,6 @@ If a profile ever needs real camera footage feel, the 2026-10-19 options still a
 - Real people are named in narration only, never drawn recognisably; no living people; no invented quotes.
 - No intro or end card; watermark only.
 - Motion Pictures publish to the **same YouTube channel as the fables**, as Shorts (owner, 2026-10-30). Multiple channels and accounts are handled later; until then there is no per-topic channel setting.
-
-## Open questions for the owner
-
-1. Are the three starter profiles (`explainer`, `tale`, `chronicle`) the right first set?
 
 ## Build order
 
