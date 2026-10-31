@@ -27,10 +27,12 @@ class AttemptLogTest extends DbTest {
     StoryRepository stories;
     @Autowired
     TopicRepository topics;
+    @Autowired
+    com.storyforge.series.ChannelRepository channels;
 
     @Test
     void attempts_are_logged_and_crossing_the_cost_budget_flags_the_story() {
-        Topic topic = topics.save(new Topic("T", "D"));
+        Topic topic = topics.save(new Topic("T", "D", channels.findDefault()));
         long id = service.enqueue(topic, "c", "m", 4, null, "user:t").getId();
         service.runNext("user:t");
 

@@ -1,0 +1,45 @@
+# Os Lusíadas (Luís Vaz de Camões, 1572): public domain. Verse Moments quote this text verbatim
+# (docs/series/lusiadas.md "Accuracy and rights"). The canto files are created once by
+# sources/tools/import_gutenberg.py, which refuses a text whose stanza counts don't match the ones below.
+id: lusiadas
+title: Os Lusíadas
+author: Luís Vaz de Camões
+year: 1572
+language: pt
+edition: Project Gutenberg eBook #3333 (modern Portuguese orthography), produced by Maria Helena Moreira Rodrigues and Victor Calha
+provenance: >-
+  Text of the 1572 poem as transcribed by Project Gutenberg (https://www.gutenberg.org/ebooks/3333). The poem is in
+  the public domain; the Project Gutenberg header and licence are stripped, as its licence allows for public-domain
+  works. Stanza numbering follows the Gutenberg text.
+# Stanzas per canto, I to X (1,102 in all).
+stanza_counts: [106, 113, 143, 104, 100, 99, 87, 99, 95, 156]
+# Suggested public-domain names for a topic's allowlist (C9); the topic stores its own copy.
+names:
+  - Camões
+  - Vasco da Gama
+  - Paulo da Gama
+  - Jupiter
+  - Venus
+  - Bacchus
+  - Mars
+  - Neptune
+  - Mercury
+  - Tethys
+  - Adamastor
+  - Old Man of Restelo
+  - Lusus
+  - Viriato
+  - Afonso Henriques
+  - Inês de Castro
+  - Pedro I
+  - João I
+  - Nuno Álvares Pereira
+  - Manuel I
+  - Samorim
+  - Monçaide
+# Translations Verse Moments may use (scenario 5): our own, or pre-1929 public-domain ones, always credited.
+translations:
+  - {id: own, credit: "English translation: Os Lusíadas Remixed"}
+  - {id: mickle-1776, credit: "English: William Julius Mickle, 1776 (public domain)"}
+  - {id: aubertin-1878, credit: "English: J. J. Aubertin, 1878 (public domain)"}
+  - {id: burton-1880, credit: "English: Richard F. Burton, 1880 (public domain)"}

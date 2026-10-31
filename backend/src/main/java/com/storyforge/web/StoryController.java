@@ -42,6 +42,7 @@ class StoryController {
     String newStory(@RequestParam(required = false) Long topicId, Model model) {
         model.addAttribute("form", StoryForm.blank(topicId));
         model.addAttribute("topics", topics.all());
+        model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
         model.addAttribute("storyId", null);
         return "story-form";
     }
@@ -57,6 +58,8 @@ class StoryController {
             model.addAttribute("form", form);
             model.addAttribute("errors", e.fieldErrors());
             model.addAttribute("topics", topics.all());
+            model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
+        model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
             model.addAttribute("storyId", null);
             return "story-form";
         }
@@ -66,6 +69,7 @@ class StoryController {
     String show(@PathVariable long id, Model model) {
         Story story = stories.findWithTopic(id).orElseThrow(() -> new NotFoundException("story " + id));
         model.addAttribute("story", story);
+        model.addAttribute("channelName", channelName(story));
         model.addAttribute("history", changes.findByStoryIdOrderByIdAsc(id));
         model.addAttribute("queued", story.getStatus() == StoryStatus.QUEUED);
         var latest = new java.util.LinkedHashMap<String, com.storyforge.stage2.AudioLines.Line>();
@@ -99,6 +103,7 @@ class StoryController {
         }
         model.addAttribute("form", StoryForm.of(story));
         model.addAttribute("topics", topics.all());
+        model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
         model.addAttribute("storyId", id);
         return "story-form";
     }
@@ -113,6 +118,8 @@ class StoryController {
             model.addAttribute("form", form);
             model.addAttribute("errors", e.fieldErrors());
             model.addAttribute("topics", topics.all());
+            model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
+        model.addAttribute("anySeries", topics.all().stream().anyMatch(t -> t.isSeries()));
             model.addAttribute("storyId", id);
             return "story-form";
         }
@@ -142,5 +149,14 @@ class StoryController {
     /** Only local paths, so a crafted link can't redirect off the app. */
     static String safeBack(String back) {
         return back != null && back.startsWith("/") && !back.startsWith("//") ? back : "/queue";
+    }
+
+    /** The channel name the story captured at Run (C2), or null before Run. */
+    private static String channelName(Story story) {
+        if (story.getChannelSnapshot() == null) {
+            return null;
+        }
+        return String.valueOf(tools.jackson.databind.json.JsonMapper.builder().build()
+                .readTree(story.getChannelSnapshot()).path("name").asString());
     }
 }

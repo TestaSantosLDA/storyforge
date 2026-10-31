@@ -7,11 +7,13 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Refuses free text that names a studio, franchise or existing character (CLAUDE.md licensing rules; Pipeline D
- * "Look notes"). The names come from config ({@code storyforge.profiles.banned-names}); a topic's public-domain
- * allowlist is a later series field.
+ * "Look notes"). The names come from config ({@code storyforge.profiles.banned-names}). A name on the topic's
+ * public-domain allowlist is let through (docs/series/lusiadas.md C9).
  */
 @Component
 public class LookNotesCheck {
@@ -27,14 +29,21 @@ public class LookNotesCheck {
         this.banned = banned == null ? List.of() : List.copyOf(banned);
     }
 
+    private static final JsonMapper JSON = JsonMapper.builder().build();
+
     /** The first banned name found in the text, if any. */
     public Optional<String> findBanned(String text) {
+        return findBanned(text, List.of());
+    }
+
+    /** The first banned name found in the text that isn't on the allowlist (compared case-insensitively). */
+    public Optional<String> findBanned(String text, List<String> allowlist) {
         if (text == null || text.isBlank()) {
             return Optional.empty();
         }
         String lower = text.toLowerCase(Locale.ROOT);
         for (String name : banned) {
-            if (name == null || name.isBlank()) {
+            if (name == null || name.isBlank() || allowlist.stream().anyMatch(name::equalsIgnoreCase)) {
                 continue;
             }
             Pattern p = Pattern.compile("(?<![\\p{L}\\p{N}])" + Pattern.quote(name.toLowerCase(Locale.ROOT))
@@ -44,6 +53,15 @@ public class LookNotesCheck {
             }
         }
         return Optional.empty();
+    }
+
+    /** A topic's allowlist from its JSON column; empty when there is none. */
+    public static List<String> allowlist(String json) {
+        return json == null ? List.of() : JSON.readValue(json, new TypeReference<List<String>>() { });
+    }
+
+    public static String allowlistJson(List<String> names) {
+        return JSON.writeValueAsString(names);
     }
 
     /** The message shown when a note is refused. */

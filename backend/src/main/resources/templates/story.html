@@ -8,10 +8,17 @@
 
     <section class="card">
         <p class="muted"><a th:href="@{/topics/{id}(id=${story.topic.id})}" th:text="${story.topic.name}">Topic</a></p>
+        <p class="muted" th:if="${story.episodeLabel}" th:text="${story.episodeLabel}">S1 · Ep.01</p>
         <h1 th:text="${story.concept}">Concept</h1>
         <p><span th:replace="~{fragments/layout :: status(${story.status})}"></span></p>
         <dl class="facts">
             <dt>Moral</dt><dd th:text="${story.moral}"></dd>
+            <dt th:if="${story.sourceExcerptLabel}">Source</dt>
+            <dd th:if="${story.sourceExcerptLabel}" th:text="${story.sourceExcerptLabel}"></dd>
+            <dt th:if="${story.episodeLabel}">Recap</dt>
+            <dd th:if="${story.episodeLabel}" th:text="${story.recapEnabled} ? 'On: a short &quot;previously on&quot;' : 'Off'"></dd>
+            <dt>Channel</dt>
+            <dd th:text="${story.channelSnapshot != null} ? ${channelName} + ' (captured at Run)' : ${story.topic.channel.name}"></dd>
             <dt>Target length</dt><dd th:text="${story.targetLengthMin} + ' min'"></dd>
             <dt th:if="${story.notes}">Notes</dt><dd th:if="${story.notes}" th:text="${story.notes}"></dd>
             <dt th:if="${story.lookNotes}">Look notes</dt><dd th:if="${story.lookNotes}" th:text="${story.lookNotes}"></dd>

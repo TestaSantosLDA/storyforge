@@ -35,7 +35,8 @@ public record StoryforgeProperties(
      * Bound as strings: Spring's String-to-Path conversion treats a relative value like {@code ../characters} as a
      * classpath resource and rejects it.
      */
-    public record Paths(String assets, String characters, String prompts, String pronunciation, String profiles) {
+    public record Paths(String assets, String characters, String prompts, String pronunciation, String profiles,
+            String sources, String series) {
 
         public Path assetsDir() {
             return Path.of(assets);
@@ -56,6 +57,16 @@ public record StoryforgeProperties(
         /** Video profile files, versioned in the repo (Pipeline D "Video profiles"). */
         public Path profilesDir() {
             return Path.of(profiles == null ? "../channel/video-profiles" : profiles);
+        }
+
+        /** Public-domain source texts, versioned in the repo (docs/series/lusiadas.md "Accuracy and rights"). */
+        public Path sourcesDir() {
+            return Path.of(sources == null ? "../sources" : sources);
+        }
+
+        /** Series files such as the season route (docs/series/lusiadas.md). */
+        public Path seriesDir() {
+            return Path.of(series == null ? "../series" : series);
         }
     }
 
@@ -218,12 +229,15 @@ public record StoryforgeProperties(
 
     /**
      * Video profiles (Pipeline D "Frames and lengths"): a vertical Short stays at or under 58 s; a landscape episode
-     * is at least 8 minutes so mid-roll ads stay available. Names refused in look notes and profile text.
+     * is at least 8 minutes so mid-roll ads stay available. Names refused in look notes and profile text, and the
+ * historical-figure cut-off year.
      */
     public record Profiles(
             @DefaultValue("58") int verticalMaxSeconds,
             @DefaultValue("480") int landscapeMinSeconds,
-            @DefaultValue({}) java.util.List<String> bannedNames) {
+            @DefaultValue({}) java.util.List<String> bannedNames,
+            /** A real person may be drawn (by kit code only) if they died before this year (series C3). */
+            @DefaultValue("1900") int historicalDiedBefore) {
     }
 
     /** FFmpeg, installed per machine (CLAUDE.md "Stack"). */

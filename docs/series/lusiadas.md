@@ -132,7 +132,7 @@ On top of Pipeline D's rules for `facts: checked`:
 - Profile fields `frame` and `illustrations`; `target_seconds` becomes a target plus an allowed range (C1).
 - `topic.is_series`; `story.season`, `story.episode_number` (unique per topic and season), `story.source_excerpt` (JSON list of `{canto, from_stanza, to_stanza}`), `story.recap_enabled` (C5).
 - `claims[].kind`: `documented` | `tradition` | `legend`; `verses[]` with `canto`, `stanza`, `pt`, `en`, `translation_source`.
-- Character file: `drawn_by: code`, `kit_component`, `historical: true`, `died` (C3, C10).
+- Character file: `drawn_by: code`, `kit_component`, `poses`, `historical: true`, `died` (C3, C10). A historical figure must have died before `storyforge.profiles.historical-died-before` (1900) and be drawn by code; the character store refuses anything else.
 - Repo files: `channel/video-profiles/epic.yaml`, `sources/lusiadas/canto-01.txt` … `canto-10.txt` with a provenance note, `series/lusiadas/route.yaml`, `reference/lusiadas-ep00/`.
 
 ## Scenarios
@@ -231,6 +231,6 @@ The owner accepted every proposed default on 2026-10-30 ("let's use your recomme
 1. Put Ep.00's source in `reference/lusiadas-ep00/` (done: `ep0.html`).
 2. The `epic` profile (YAML, plus the new `frame` and `illustrations` fields) (done).
 3. Landscape mode in `motion-kit/`, seeded from `ep0.html`, plus the series components above, working in both frames (done: kit 1.0.0, see `motion-kit/README.md`).
-4. Series fields (C5), channel (C2), character file changes (C10), claim kinds and verses.
-5. Source text in `sources/lusiadas/` and `series/lusiadas/route.yaml`.
+4. Series fields (C5), channel (C2), character file changes (C10) (done: `channel` table and Channels page; `topic.is_series`, `source_id`, `name_allowlist`; the story's season, episode number, source excerpt and recap; Run asks for a confirmation when the previous episode isn't final-approved; `drawn_by`, `kit_component`, `poses`, `historical`, `died` in character files). Claim kinds and the verses list belong to the D1 script format and are built with D1; the lookups they need (verbatim check, allowed translations) are in `SourceTexts`.
+5. Source text in `sources/lusiadas/` and `series/lusiadas/route.yaml` (done: `source.yaml` with provenance, stanza counts, suggested names and allowed translations; the route file. The canto files come from one run of `sources/tools/import_gutenberg.py`, which checks every canto's stanza count against `source.yaml` before writing).
 6. Ep.01, "The Gods Have a Group Chat", as the first real run; judged by the owner from the video and its contact sheet before Ep.02 starts.

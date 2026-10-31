@@ -1,0 +1,19 @@
+# Season route map for "Os Lusíadas — Remixed" (docs/series/lusiadas.md "Scene kit additions").
+# The voyage of 1497–99 in voyage order. `episode` is the episode that first shows the stop on the map: earlier
+# episodes' stops are drawn as reached, this episode's stops animate in, later ones are hidden (scenario 11).
+# The poem tells the outward voyage out of order (Canto V is a flashback told at Malindi), so the map follows the
+# voyage, not the cantos. Dates are the commonly cited ones; each episode's claims list carries their sources.
+series: lusiadas
+extent: {west: -30, east: 80, north: 40, south: -40}
+stops:
+  - {id: lisbon, name: Lisbon, lat: 38.71, lon: -9.14, date: "1497-07-08", episode: 1}
+  - {id: cape-verde, name: Cape Verde, lat: 14.92, lon: -23.51, date: "1497-07-26", episode: 1}
+  - {id: st-helena-bay, name: St Helena Bay, lat: -32.75, lon: 18.05, date: "1497-11-07", episode: 1}
+  - {id: cape-of-good-hope, name: Cape of Good Hope, lat: -34.36, lon: 18.47, date: "1497-11-22", episode: 1}
+  - {id: mozambique, name: Mozambique, lat: -15.03, lon: 40.73, date: "1498-03-02", episode: 1}
+  - {id: mombasa, name: Mombasa, lat: -4.04, lon: 39.67, date: "1498-04-07", episode: 2}
+  - {id: malindi, name: Malindi, lat: -3.22, lon: 40.12, date: "1498-04-14", episode: 2}
+  - {id: calicut, name: Calicut, lat: 11.25, lon: 75.78, date: "1498-05-20", episode: 9}
+  # The Island of Love is the poem's invention (Canto IX), shown on the way home and stamped as legend.
+  - {id: island-of-love, name: Island of Love, lat: -8.0, lon: 62.0, episode: 10, kind: legend}
+  - {id: lisbon-return, name: Lisbon, lat: 38.71, lon: -9.14, date: "1499-09", episode: 11}

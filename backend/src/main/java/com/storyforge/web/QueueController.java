@@ -16,6 +16,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -53,11 +54,18 @@ class QueueController {
             model.addAttribute("form", StoryForm.blank(null));
         }
         model.addAttribute("state", state(queued, inFlight));
+        model.addAttribute("runWarning", queue.runWarning().orElse(null));
         return "queue";
     }
 
+    /** Run; when the next episode's previous one isn't final-approved, only with the page's confirmation (C5). */
     @PostMapping("/queue/run")
-    String run(RedirectAttributes flash) {
+    String run(@RequestParam(defaultValue = "false") boolean confirm, RedirectAttributes flash) {
+        var warning = queue.runWarning();
+        if (warning.isPresent() && !confirm) {
+            flash.addFlashAttribute("error", warning.get() + " Press Run again and confirm to start it anyway.");
+            return "redirect:/queue";
+        }
         switch (queue.run(Actor.LOCAL)) {
             case RunResult.Started s -> flash.addFlashAttribute("notice", "Started: " + stories.findById(s.storyId())
                     .map(Story::getConcept).orElse("story " + s.storyId()));

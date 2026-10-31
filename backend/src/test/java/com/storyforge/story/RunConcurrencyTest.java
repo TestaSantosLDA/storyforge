@@ -28,11 +28,13 @@ class RunConcurrencyTest extends DbTest {
     @Autowired
     TopicRepository topics;
     @Autowired
+    com.storyforge.series.ChannelRepository channels;
+    @Autowired
     StoryforgeProperties props;
 
     @Test
     void twenty_simultaneous_runs_start_exactly_cap_stories() throws Exception {
-        Topic topic = topics.save(new Topic("T", "D"));
+        Topic topic = topics.save(new Topic("T", "D", channels.findDefault()));
         for (int i = 0; i < 5; i++) {
             service.enqueue(topic, "concept " + i, "moral", 4, null, "user:t");
         }

@@ -21,6 +21,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class StoryStatusService {
 
+    private static final tools.jackson.databind.json.JsonMapper SNAPSHOT_JSON =
+            tools.jackson.databind.json.JsonMapper.builder().build();
+
     /** Targets with their own method, because they carry extra state (resume target, reason, queue position). */
     private static final Set<StoryStatus> SPECIAL_TARGETS =
             EnumSet.of(StoryStatus.QUEUED, StoryStatus.NEEDS_ATTENTION, StoryStatus.ARCHIVED);
@@ -79,6 +82,8 @@ public class StoryStatusService {
         Story story = top.getFirst();
         story.setQueuePosition(null);
         story.setTopicSnapshot(story.getTopic().getDescription());
+        // Where the story will be published, as the channel stood at Run (series C2).
+        story.setChannelSnapshot(SNAPSHOT_JSON.writeValueAsString(story.getTopic().getChannel().details()));
         if (story.getFormat() == StoryFormat.MOTION_PICTURE) {
             // A profile that can't be read refuses Run (the transaction rolls back and the story stays queued).
             story.setProfileSnapshot(profileSnapshots.snapshot(story.getTopic(), story.getLookNotes())

@@ -28,13 +28,15 @@ class RestartSweepTest extends DbTest {
     @Autowired
     TopicRepository topics;
     @Autowired
+    com.storyforge.series.ChannelRepository channels;
+    @Autowired
     RecordingDispatcher dispatcher;
     @Autowired
     GpuLease gpu;
 
     @Test
     void handoffs_advance_working_statuses_are_redispatched_and_the_rest_are_left_alone() {
-        Topic topic = topics.save(new Topic("T", "D"));
+        Topic topic = topics.save(new Topic("T", "D", channels.findDefault()));
         long handoff = startedStory(topic, "handoff");
         service.transition(handoff, STORY_IN_PROGRESS, AWAITING_STORY_APPROVAL, "system:t", "qa");
         service.transition(handoff, AWAITING_STORY_APPROVAL, STORY_APPROVED, "user:t", "approve");

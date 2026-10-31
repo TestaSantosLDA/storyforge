@@ -32,6 +32,9 @@ public interface StoryRepository extends JpaRepository<Story, Long> {
     @Query("select s from Story s where s.topic.id = :topicId order by s.createdAt")
     List<Story> findByTopicId(long topicId);
 
+    /** A series episode by its number (unique per topic and season, series C5). */
+    java.util.Optional<Story> findByTopicIdAndSeasonAndEpisodeNumber(long topicId, Integer season, Integer episodeNumber);
+
     /** True if any of the topic's stories ever left the queue (restored stories included). */
     @Query(value = """
             select exists (select 1 from status_change c join story s on s.id = c.story_id
