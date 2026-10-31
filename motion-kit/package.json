@@ -1,0 +1,10 @@
+{
+  "name": "storyforge-motion-kit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Code-drawn motion graphics scenes for Pipeline D (landscape and vertical)",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "render": "node render/render.js"
+  }
+}

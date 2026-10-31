@@ -11,7 +11,7 @@ One season of twelve episodes (Ep.00 already exists), 8–11 minutes each in 16:
 ## Inputs this spec is built on
 
 - The owner's brief (2026-10-30), quoted in the profile, beat sheet and rules below.
-- **Ep.00 — "The Poet Who Swam"** (5:00, 16:9, 1080p30), the finished reference episode. Its source (`ep0.html`, `render.py`, `music.py`) is meant to live in `reference/lusiadas-ep00/`. `ep0.html` is a deterministic timeline engine: `render(t)` draws the exact frame for time `t`, Playwright screenshots every frame and FFmpeg encodes. That is the Pipeline D time contract (`seek(t)`) in landscape, so it seeds the landscape side of `motion-kit/`. *(Not yet in the repo; see the build order.)*
+- **Ep.00 — "The Poet Who Swam"** (5:00, 16:9, 1080p30), the finished reference episode. Its source (`ep0.html`, `render.py`, `music.py`) is meant to live in `reference/lusiadas-ep00/`. `ep0.html` is a deterministic timeline engine: `render(t)` draws the exact frame for time `t`, Playwright screenshots every frame and FFmpeg encodes. That is the Pipeline D time contract (`seek(t)`) in landscape, so it seeds the landscape side of `motion-kit/`. `ep0.html` is in the repo; `render.py` and `music.py` were not supplied, and `motion-kit/render/render.js` replaces the renderer.
 - **Motion test 2, "Os Lusíadas Remixed Ep.1"** (40 s, 9:16, 2026-10-30): flat geometric gods drawn in code, gods' group chat, typed verse in Portuguese with an English line under it (Canto I, st. 30), stat card, LEGEND stamp, original synthesised score. Its source (`lus.js`, `render.js`, `narrate.py`, `sound.py`) is in the project files under `motion-test/lusiadas/` and seeds the vertical side of the kit components below.
 
 ## How the series runs on Pipeline D
@@ -228,9 +228,9 @@ The owner accepted every proposed default on 2026-10-30 ("let's use your recomme
 
 ## Build order
 
-1. Put Ep.00's source in `reference/lusiadas-ep00/` (it is not in the repo yet).
-2. The `epic` profile (YAML, plus the new `frame` and `illustrations` fields).
-3. Landscape mode in `motion-kit/`, seeded from `ep0.html`, plus the series components above, working in both frames.
+1. Put Ep.00's source in `reference/lusiadas-ep00/` (done: `ep0.html`).
+2. The `epic` profile (YAML, plus the new `frame` and `illustrations` fields) (done).
+3. Landscape mode in `motion-kit/`, seeded from `ep0.html`, plus the series components above, working in both frames (done: kit 1.0.0, see `motion-kit/README.md`).
 4. Series fields (C5), channel (C2), character file changes (C10), claim kinds and verses.
 5. Source text in `sources/lusiadas/` and `series/lusiadas/route.yaml`.
 6. Ep.01, "The Gods Have a Group Chat", as the first real run; judged by the owner from the video and its contact sheet before Ep.02 starts.

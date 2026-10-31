@@ -1,0 +1,12 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><link rel="stylesheet" href="../../kit/kit.css"></head><body>
+<div id="wrap"><div id="stage"></div><canvas id="grain" width="512" height="512"></canvas><div id="vignette"></div><div id="flash"></div><div id="safe"></div></div>
+<script src="../../kit/core.js"></script>
+<script src="../../kit/components.js"></script>
+<script>
+// A scene with a bug: the render must fail, not produce a video.
+K.setup({ frame: 'landscape', duration: 2 });
+const s = K.scene(0, 2);
+K.hook(t => { if (t > 1) notDefined(); });
+K.ready();
+</script></body></html>

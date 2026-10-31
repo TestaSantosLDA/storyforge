@@ -1,0 +1,441 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Os Lusíadas Ep.0</title>
+<style>
+:root{--navy:#0a0f24;--ink:#060914;--coral:#ff4d3d;--gold:#ffc83d;--cyan:#3de1ff;--cream:#f6efe2;--violet:#7b5cff;}
+html,body{margin:0;background:#000;overflow:hidden}
+#wrap{width:1920px;height:1080px;position:relative;overflow:hidden;background:var(--ink);transform-origin:0 0}
+#stage{position:absolute;inset:0}
+.abs{position:absolute;will-change:transform}
+.full{left:0;top:0;width:1920px;height:1080px}
+.h{font-family:'Inter Display','Inter',sans-serif;font-weight:900;text-transform:uppercase;letter-spacing:-0.02em;line-height:.9;color:var(--cream)}
+.b{font-family:'Inter',sans-serif;font-weight:700;color:var(--cream);line-height:1.15}
+.serif{font-family:'DejaVu Serif',serif;font-style:italic;color:var(--cream);line-height:1.2}
+.mono{font-family:'DejaVu Sans Mono',monospace;color:var(--cyan);letter-spacing:.18em;text-transform:uppercase}
+.tag{font-family:'DejaVu Sans Mono',monospace;font-size:26px;letter-spacing:.15em;text-transform:uppercase;padding:10px 22px;border:3px solid currentColor;border-radius:999px;white-space:nowrap}
+.card{background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.18);border-radius:22px;padding:26px 32px;backdrop-filter:none}
+.center{left:0;width:1920px;text-align:center}
+#grain{position:absolute;inset:-200px;opacity:.10;pointer-events:none;mix-blend-mode:overlay}
+#vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.55) 100%)}
+#flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#bar{position:absolute;left:0;bottom:0;height:6px;background:var(--gold);width:0}
+#bug{position:absolute;right:48px;top:40px;font-family:'DejaVu Sans Mono',monospace;font-size:20px;letter-spacing:.2em;color:rgba(246,239,226,.55)}
+</style></head>
+<body>
+<div id="wrap"><div id="stage"></div>
+<canvas id="grain" width="512" height="512"></canvas>
+<div id="vignette"></div><div id="flash"></div><div id="bar"></div>
+<div id="bug">OS LUSÍADAS · EP.00</div>
+</div>
+<script>
+const W=1920,H=1080,DUR=510;
+const stage=document.getElementById('stage');
+const ALL=[],HOOKS=[];
+let OFF=0; // scene time offset: blocks are written in local time; OFF places them on the master timeline
+function HK(f){const o=OFF;HOOKS.push(t=>f(t-o));}
+const E={lin:x=>x,out:x=>1-Math.pow(1-x,3),in:x=>x*x*x,io:x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,
+  back:x=>{const c=1.9,c3=c+1;return 1+c3*Math.pow(x-1,3)+c*Math.pow(x-1,2)},
+  el:x=>x===0||x===1?x:Math.pow(2,-10*x)*Math.sin((x*10-.75)*(2*Math.PI)/3)+1};
+const DEF={x:0,y:0,s:1,r:0,o:1,b:0,cl:1,tc:1};
+function mk(html,style={},parent=stage,cls=''){
+  const d=document.createElement('div');d.className='abs '+cls;d.innerHTML=html;
+  Object.assign(d.style,style);(parent.el||parent).appendChild(d);
+  d._tw=[];d._disp=style.display||'';ALL.push(d);d.tw=(t0,dur,from,to,ease='out')=>{d._tw.push({t0:t0+OFF,t1:t0+OFF+dur,from,to,ease});return d};
+  return d;}
+function svg(inner,style={},parent=stage,vb='0 0 1920 1080'){
+  return mk(`<svg viewBox="${vb}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`,style,parent);}
+// typewriter element
+function typed(text,style,parent,cls){const d=mk('',style,parent,cls);d._text=text;return d;}
+function scene(s,e,bg){
+  const c=mk('',{left:0,top:0,width:W+'px',height:H+'px',background:bg||'transparent'});
+  c.tw(s,.45,{o:0},{o:1},'lin');c.tw(e-.45,.45,{},{o:0},'lin');c._s=s+OFF;c._e=e+OFF;c.el=c;return c;}
+// text helper: x,y px; size px
+function T(html,x,y,size,cls='h',ex={},parent){
+  const st=Object.assign({left:x+'px',top:y+'px',fontSize:size+'px'},ex);return mk(html,st,parent,cls);}
+function C(html,y,size,cls='h',ex={},parent){return T(html,0,y,size,cls+' center',ex,parent);}
+// entrance shortcuts
+const IN=(d,t,dy=60,dur=.7)=>d.tw(t,dur,{o:0,y:dy},{o:1,y:0},'out');
+const POP=(d,t,dur=.6)=>d.tw(t,dur,{o:0,s:.4},{o:1,s:1},'back');
+const OUT=(d,t,dur=.4)=>d.tw(t,dur,{},{o:0,y:-30},'in');
+const WIPE=(d,t,dur=.8)=>d.tw(t,dur,{cl:0},{cl:1},'io');
+
+function render(t){
+  for(const d of ALL){
+    const st={...DEF},touched={};
+    for(const w of d._tw){
+      if(t>=w.t0){
+        const p=w.t1>w.t0?Math.min(1,(t-w.t0)/(w.t1-w.t0)):1,k=E[w.ease](p);
+        for(const key in w.to){const a=(key in w.from)?w.from[key]:st[key];st[key]=a+(w.to[key]-a)*k;touched[key]=1;}
+        for(const key in w.from){if(!(key in w.to)){st[key]=w.from[key];touched[key]=1;}}
+      }else{for(const key in w.from){if(!touched[key]){st[key]=w.from[key];touched[key]=1;}}}
+    }
+    if(d._s!==undefined&&(t<d._s-.01||t>d._e+.01)){d.style.display='none';continue;}
+    if(st.o<=0.002){d.style.display='none';continue;}
+    d.style.display=d._disp;
+    d.style.opacity=st.o;
+    d.style.transform=`translate(${st.x}px,${st.y}px) rotate(${st.r}deg) scale(${st.s})`;
+    d.style.filter=st.b>0.05?`blur(${st.b}px)`:'';
+    if(st.cl<0.999)d.style.clipPath=`inset(-10% ${(1-st.cl)*110}% -10% -5%)`;else d.style.clipPath='';
+    if(d._text!==undefined){const n=Math.round(d._text.length*st.tc);d.textContent=d._text.slice(0,n);}
+  }
+  for(const h of HOOKS)h(t);
+  document.getElementById('bar').style.width=(t/DUR*100)+'%';
+  // grain
+  const g=document.getElementById('grain');const r=Math.floor(t*24)*7919;
+  g.style.transform=`translate(${(r%173)-86}px,${(r%131)-65}px) scale(4)`;
+}
+// grain canvas
+(()=>{const g=document.getElementById('grain'),c=g.getContext('2d'),im=c.createImageData(512,512);
+ let s=12345;const rnd=()=>(s=(s*16807)%2147483647)/2147483647;
+ for(let i=0;i<im.data.length;i+=4){const v=rnd()*255;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}c.putImageData(im,0,0);})();
+const flash=document.getElementById('flash');
+const FLASHES=[];function FL(t,a=.9,d=.35){FLASHES.push([t+OFF,a,d]);}
+HOOKS.push(t=>{let o=0;for(const[f,a,d]of FLASHES){if(t>=f&&t<f+d)o=Math.max(o,a*(1-(t-f)/d));}flash.style.opacity=o;});
+
+// ---------- reusable: waves ----------
+function waves(parent,s,e,color,base=820,amp=26,n=4,speed=1){
+  const paths=[];let inner='';
+  for(let i=0;i<n;i++)inner+=`<path id="" fill="${color}" opacity="${0.25+0.18*i}"/>`;
+  const w=svg(inner,{left:0,top:0,width:W+'px',height:H+'px'},parent);
+  const ps=w.querySelectorAll('path');
+  HK(t=>{if(t<s||t>e)return;ps.forEach((p,i)=>{let d=`M0 ${H} `;const yb=base+i*55;
+    for(let x=0;x<=W;x+=40){const y=yb+Math.sin(x/170+t*speed*(1.2+i*.35)+i)*amp+Math.sin(x/63-t*speed*2.1+i*2)*amp*.35;d+=`L${x} ${y.toFixed(1)} `;}
+    p.setAttribute('d',d+`L${W} ${H} Z`);});});
+  return w;}
+function rain(parent,s,e,n=90){
+  let inner='';for(let i=0;i<n;i++)inner+=`<line stroke="rgba(160,200,255,.35)" stroke-width="2"/>`;
+  const w=svg(inner,{left:0,top:0,width:W+'px',height:H+'px'},parent);const ls=w.querySelectorAll('line');
+  const seeds=[...ls].map((_,i)=>[(i*977)%W,(i*613)%H,700+(i*37)%500]);
+  HK(t=>{if(t<s||t>e)return;ls.forEach((l,i)=>{const[x0,y0,v]=seeds[i];const y=(y0+t*v)%(H+120)-60;const x=(x0-t*v*.25)%W;const xx=x<0?x+W:x;
+    l.setAttribute('x1',xx);l.setAttribute('y1',y);l.setAttribute('x2',xx-14);l.setAttribute('y2',y+55);});});
+  return w;}
+const SHIP=`<g><path d="M-170 0 L170 0 L120 70 L-130 70 Z" fill="#1a1f3a" stroke="#f6efe2" stroke-width="5"/>
+<line x1="0" y1="0" x2="0" y2="-260" stroke="#f6efe2" stroke-width="7"/><line x1="-90" y1="-60" x2="-90" y2="-190" stroke="#f6efe2" stroke-width="5"/>
+<path d="M8 -245 Q95 -170 8 -95 Z" fill="#f6efe2"/><path d="M-84 -180 Q-25 -130 -84 -75 Z" fill="#f6efe2"/>
+<path d="M28 -210 h44 v44 h-44z" fill="none"/><path d="M40 -200 l22 0 M51 -211 l0 22" stroke="#ff4d3d" stroke-width="7"/></g>`;
+
+
+// ---------- reusable: Camões avatar + speech bubbles (speaking scenes) ----------
+const CAMOES_SVG=`<defs><clipPath id="cc"><circle cx="230" cy="230" r="210"/></clipPath></defs>
+   <circle cx="230" cy="230" r="215" fill="#14103a" stroke="#ffc83d" stroke-width="8"/>
+   <g clip-path="url(#cc)"><path d="M120 460 Q130 330 230 320 Q330 330 340 460Z" fill="#ff4d3d"/>
+   <ellipse cx="230" cy="215" rx="88" ry="105" fill="#f6efe2"/>
+   <path d="M150 230 Q160 330 230 345 Q300 330 310 230 Q300 300 230 310 Q160 300 150 230Z" fill="#c9a36a"/>
+   <path d="M150 190 Q230 160 310 190" stroke="#0a0f24" stroke-width="10" fill="none"/>
+   <ellipse cx="265" cy="205" rx="22" ry="16" fill="#0a0f24"/>
+   <path d="M175 205 h40" stroke="#0a0f24" stroke-width="9" stroke-linecap="round"/>
+   ${Array.from({length:9},(_,i)=>{const a=Math.PI*(1.05+i*.11);const x=230+Math.cos(a)*112,y=200+Math.sin(a)*112;return `<ellipse cx="${x}" cy="${y}" rx="26" ry="11" fill="#3fbf6a" transform="rotate(${a*180/Math.PI+90} ${x} ${y})"/>`}).join('')}
+   </g>`;
+function camoes(parent,x,y,size,t0,talk=[]){
+  const a=svg(CAMOES_SVG,{left:x+'px',top:y+'px',width:size+'px',height:size+'px'},parent,'0 0 460 460');POP(a,t0,.7);
+  HK(t=>{const on=talk.some(([s,e])=>t>=s&&t<e);a.firstChild.style.transform=`translateY(${Math.sin(t*(on?9:1.5))*(on?6:8)}px)`;});
+  return a;}
+function SAY(parent,text,x,y,w,t,col='#ffc83d',size=50,dur=null){
+  const b=mk('',{left:x+'px',top:y+'px',width:w+'px',background:'rgba(255,255,255,.07)',border:`3px solid ${col}`,borderRadius:'34px 34px 34px 8px',padding:'26px 36px'},parent);
+  b.tw(t,.45,{o:0,s:.7,y:30},{o:1,s:1,y:0},'back');
+  const tx=typed(text,{position:'relative',fontSize:size+'px'},b,'b');tx.tw(t+.25,dur||Math.max(.6,text.length/34),{tc:0},{tc:1},'lin');
+  return b;}
+
+// =================== SCENE 1: cold open 0-18 ===================
+{const s=scene(0,18.2,'radial-gradient(ellipse at 50% 30%,#141c3d,#05070f 70%)');
+ rain(s,0,18.2);
+ const shipWrap=svg(`<g id="sh" transform="translate(960 760)">${SHIP}</g>`,{left:0,top:0,width:W+'px',height:H+'px'},s);
+ const sh=shipWrap.querySelector('#sh');
+ HK(t=>{if(t>18.3)return;const sink=Math.max(0,(t-9))*30;const tilt=Math.sin(t*1.3)*6+Math.max(0,t-9)*3.2;
+   sh.setAttribute('transform',`translate(960 ${760+sink+Math.sin(t*1.7)*12}) rotate(${tilt})`);});
+ waves(s,0,18.3,'#0f3b6b',800,30,4,1.3);
+ const loc=typed('Somewhere off the Mekong Delta',{left:'120px',top:'120px',fontSize:'30px'},s,'mono');loc.tw(1,1.8,{tc:0},{tc:1},'lin');
+ const yr=T('c. 1559',120,180,250,'h',{color:'#f6efe2'},s);yr.tw(2.8,.9,{o:0,s:1.25,b:12},{o:1,s:1,b:0},'out');
+ const l1=T('A ship is going down.',125,450,64,'serif',{},s);IN(l1,7.2);
+ OUT(yr,12.5);OUT(l1,12.5);OUT(loc,12.5);
+ const l2=C('Nobody on board knows<br>this night will save a masterpiece.',300,72,'b',{},s);IN(l2,13.3);
+ FL(5.6,.7,.3);FL(6.1,.5,.25);FL(11.8,.8,.4);}
+
+// =================== SCENE 2: grab 18-33 ===================
+{const s=scene(18,33.4,'#05070f');
+ const a=C('Everyone grabs what they can.',170,70,'b',{},s);IN(a,18.4);
+ const items=[['Gold.',20.6],['Spices.',22.0],['Anything.',23.4]];
+ items.forEach(([w,t],i)=>{const d=T(w,[230,760,1300][i],360,110,'h',{color:i==2?'#3de1ff':'#ffc83d',whiteSpace:'nowrap'},s);POP(d,t);
+   const st=mk('',{left:([230,760,1300][i]-10)+'px',top:'400px',width:(d.offsetWidth+20)+'px',height:'14px',background:'#ff4d3d',transformOrigin:'0 50%'},s);
+   st.tw(t+.8,.35,{o:0,cl:0},{o:1,cl:1},'out');});
+ [a].forEach(d=>OUT(d,25.6));
+ const b=C('One man swims with one arm…',600,64,'serif',{},s);IN(b,26.2);
+ const c=C('…and holds a <span style="color:#ff4d3d">POEM</span><br>above the water.',720,120,'h',{},s);c.tw(28.6,.9,{o:0,s:.7,b:10},{o:1,s:1,b:0},'back');
+ FL(28.6,.4,.3);}
+
+// =================== SCENE 3: title 33-46.5 ===================
+{const s=scene(33.2,46.6,'linear-gradient(160deg,#0a0f24 0%,#14103a 60%,#2a0f2f 100%)');
+ const stripes=svg(Array.from({length:14},(_,i)=>`<rect x="${-400+i*190}" y="-200" width="60" height="1600" fill="rgba(255,200,61,.05)" transform="rotate(20 960 540)"/>`).join(''),{left:0,top:0,width:W+'px',height:H+'px'},s);
+ HK(t=>{if(t<33||t>47)return;stripes.style.transform=`translateX(${(t-33)*30}px)`;});
+ const tg=C('<span class="tag" style="color:#3de1ff">EP.00 — The Poet Who Swam</span>',230,26,'mono',{color:'#3de1ff'},s);POP(tg,33.8);
+ const word='OS LUSÍADAS';const row=mk('',{left:'0',top:'380px',width:W+'px',textAlign:'center'},s);
+ [...word].forEach((ch,i)=>{const sp=mk(ch===' '?'&nbsp;':ch,{position:'relative',display:'inline-block',fontSize:'230px',color:'#ffc83d'},row,'h');sp.style.position='relative';sp.tw(34.2+i*.07,.7,{o:0,y:120,r:-12},{o:1,y:0,r:0},'back');});
+ const ul=mk('',{left:'560px',top:'640px',width:'800px',height:'10px',background:'#ff4d3d'},s);WIPE(ul,35.4,.6);
+ const sub=C('The epic poem that made Portugal — remixed for 2026',690,44,'b',{color:'#f6efe2'},s);IN(sub,35.8);
+ const fine=C('Luís Vaz de Camões · 1572 · 10 cantos',800,26,'mono',{color:'rgba(246,239,226,.6)'},s);IN(fine,36.6);
+ waves(s,33,47,'#3de1ff',990,14,3,1);
+ FL(34.1,.85,.4);}
+
+// =================== SCENE 4: meet Camões 46-76 ===================
+{const s=scene(46.2,76.4,'#0a0f24');
+ const m=T('Meet',120,110,44,'mono',{color:'#3de1ff'},s);IN(m,46.6,30);
+ const n1=T('Luís Vaz',115,170,170,'h',{},s);IN(n1,47);
+ const n2=T('de Camões',115,320,170,'h',{color:'#ffc83d'},s);IN(n2,47.4);
+ const tl=T('The guy who wrote Portugal’s national epic.<br>Also: a total disaster magnet.',120,520,40,'b',{color:'rgba(246,239,226,.85)',width:'900px'},s);IN(tl,49);
+ // avatar
+ const av=svg(`<defs><clipPath id="cc"><circle cx="230" cy="230" r="210"/></clipPath></defs>
+   <circle cx="230" cy="230" r="215" fill="#14103a" stroke="#ffc83d" stroke-width="8"/>
+   <g clip-path="url(#cc)"><path d="M120 460 Q130 330 230 320 Q330 330 340 460Z" fill="#ff4d3d"/>
+   <ellipse cx="230" cy="215" rx="88" ry="105" fill="#f6efe2"/>
+   <path d="M150 230 Q160 330 230 345 Q300 330 310 230 Q300 300 230 310 Q160 300 150 230Z" fill="#c9a36a"/>
+   <path d="M150 190 Q230 160 310 190" stroke="#0a0f24" stroke-width="10" fill="none"/>
+   <ellipse cx="265" cy="205" rx="22" ry="16" fill="#0a0f24"/>
+   <path d="M175 205 h40" stroke="#0a0f24" stroke-width="9" stroke-linecap="round"/>
+   ${Array.from({length:9},(_,i)=>{const a=Math.PI*(1.05+i*.11);const x=230+Math.cos(a)*112,y=200+Math.sin(a)*112;return `<ellipse cx="${x}" cy="${y}" rx="26" ry="11" fill="#3fbf6a" transform="rotate(${a*180/Math.PI+90} ${x} ${y})"/>`}).join('')}
+   </g>`,{left:'1340px',top:'90px',width:'460px',height:'460px'},s,'0 0 460 460');
+ POP(av,48.2,.8);
+ HK(t=>{if(t<46||t>77)return;av.firstChild.style.transform=`translateY(${Math.sin(t*1.5)*8}px)`;});
+ const rows=[['Born','c. 1524–25 · probably Lisbon'],['Class','Minor nobility (aka: broke)'],['Skills','Poetry · Sword · Trouble'],['Weakness','Falling for the wrong people']];
+ rows.forEach(([k,v],i)=>{const cd=mk(`<span class="mono" style="font-size:22px;color:#3de1ff">${k}</span><div class="b" style="font-size:38px;margin-top:6px">${v}</div>`,{left:(120+(i%2)*840)+'px',top:(680+Math.floor(i/2)*170)+'px',width:'720px'},s,'card');
+   cd.tw(53+i*2.2,.6,{o:0,x:-80},{o:1,x:0},'out');});
+ const hp=T('HP ▮▮▮▮▮▯▯▯',1380,580,30,'mono',{color:'#ff4d3d'},s);IN(hp,63,20);
+ const note=T('*Character stats unofficial. Vibes accurate.',120,1020,20,'mono',{color:'rgba(246,239,226,.45)',whiteSpace:'nowrap'},s);IN(note,66,10);}
+
+// =================== NEW A: why Africa? (legend) local 76-102 ===================
+{const s=scene(76,102.4,'linear-gradient(180deg,#1a0f2f,#0a0f24)');
+ const tg=T('<span class="tag" style="color:#ffc83d">Fact or Legend?</span>',120,110,26,'mono',{color:'#ffc83d'},s);POP(tg,76.4);
+ const a=T('Why does a young poet<br>end up a soldier in Africa?',120,200,84,'h',{},s);IN(a,77);
+ const b=T('The romantic version:',125,470,44,'mono',{color:'#3de1ff',letterSpacing:'.06em'},s);IN(b,80.2,20);
+ const c=T('He falls for a lady at court — Catarina de Ataíde —<br>and gets banished for it.',125,540,52,'serif',{},s);IN(c,82);
+ const heart=svg(`<path d="M150 260 L40 150 Q-10 90 40 45 Q95 5 150 70 Q205 5 260 45 Q310 90 260 150 Z" fill="#ff4d3d"/><path id="crk" d="M150 70 L130 120 L165 150 L135 200 L150 260" stroke="#0a0f24" stroke-width="12" fill="none" stroke-linejoin="round"/>`,{left:'1500px',top:'330px',width:'300px',height:'280px'},s,'0 0 300 280');
+ POP(heart,83.5);const crk=heart.querySelector('#crk');HK(t=>{if(t<76||t>103)return;crk.style.opacity=t>86.5?1:0;heart.firstChild.style.transform=`scale(${1+0.06*Math.max(0,Math.sin(t*7))})`;heart.firstChild.style.transformOrigin='50% 50%';});
+ const st=T('LEGEND',1180,700,150,'h',{color:'#ff4d3d',border:'12px solid #ff4d3d',padding:'6px 34px',borderRadius:'22px',whiteSpace:'nowrap'},s);st.tw(88.2,.35,{o:0,s:2.4,r:-30},{o:1,s:1,r:-12},'out');FL(88.2,.55,.28);
+ [a,b,c,heart,st].forEach(d=>OUT(d,91.2));
+ const d=T('What we can document:',125,230,44,'mono',{color:'#3de1ff',letterSpacing:'.06em'},s);IN(d,92,20);
+ const e=T('He served as a soldier in Ceuta<br>in the late 1540s.',115,300,96,'h',{color:'#ffc83d'},s);IN(e,93.2);
+ const f=T('Why he went? Nobody knows for sure.<br>Plenty of broke young nobles did the same.',125,560,48,'b',{color:'rgba(246,239,226,.85)'},s);IN(f,96.8);}
+OFF=26;
+// =================== SCENE 5: Ceuta 76-100 ===================
+{const s=scene(76,100.4,'linear-gradient(180deg,#2a0f14,#0a0f24)');
+ const tg=T('<span class="tag" style="color:#ffc83d">Chapter 1 · Ceuta</span>',120,110,26,'mono',{color:'#ffc83d'},s);POP(tg,76.4);
+ const a=T('North Africa,<br>late 1540s.',120,200,120,'h',{},s);IN(a,77);
+ const b=T('Camões signs up as a soldier<br>in Portugal’s fortress at Ceuta.',125,470,46,'b',{color:'rgba(246,239,226,.85)'},s);IN(b,79.5);
+ const eye=svg(`<path d="M30 150 Q210 0 390 150 Q210 300 30 150Z" fill="#f6efe2"/><circle cx="210" cy="150" r="70" fill="#3de1ff"/><circle cx="210" cy="150" r="32" fill="#0a0f24"/><circle cx="232" cy="128" r="12" fill="#fff"/>`,
+   {left:'1200px',top:'220px',width:'420px',height:'300px'},s,'0 0 420 300');POP(eye,81.5);
+ HK(t=>{if(t<81||t>101)return;const blink=((t*10)%37<1.2&&t<86)?0.1:1;eye.firstChild.style.transform=`scaleY(${blink})`;eye.firstChild.style.transformOrigin='50% 50%';});
+ const slash=mk('',{left:'1150px',top:'360px',width:'520px',height:'22px',background:'#ff4d3d',transformOrigin:'0 50%',rotate:'-28deg',borderRadius:'11px'},s);slash.tw(86,.25,{cl:0,o:0},{cl:1,o:1},'out');
+ FL(86,.9,.3);
+ eye.tw(86.3,1.2,{},{o:.25},'lin');
+ const dmg=T('−1 EYE',1290,560,120,'h',{color:'#ff4d3d'},s);dmg.tw(86.4,.8,{o:0,y:40,s:.5},{o:1,y:0,s:1},'back');dmg.tw(89,1.5,{},{y:-40},'out');
+ const c=T('In a fight, he loses his right eye.',125,640,58,'serif',{},s);IN(c,88);
+ const d=T('His reaction? Keep writing poems.',125,760,58,'h',{color:'#ffc83d',fontSize:'64px'},s);IN(d,92.5);
+ const e=T('(That’s why every portrait shows him with one eye closed.)',125,880,30,'mono',{color:'rgba(246,239,226,.6)',letterSpacing:'.05em'},s);IN(e,95.5,20);}
+
+// =================== SCENE 6: Lisbon jail 100-126 ===================
+{const s=scene(100,126.4,'#0a0f24');
+ const tg=T('<span class="tag" style="color:#3de1ff">Chapter 2 · Lisbon, 1552</span>',120,110,26,'mono',{color:'#3de1ff'},s);POP(tg,100.4);
+ const a=T('Religious holiday.<br>Busy street.',120,200,110,'h',{},s);IN(a,101);
+ const b=T('A street fight breaks out.',125,460,56,'serif',{},s);IN(b,103.5);
+ const c=T('Camões wounds a royal official with his sword.',125,550,48,'b',{color:'rgba(246,239,226,.85)'},s);IN(c,106);
+ const stamp=T('JAIL',1250,250,260,'h',{color:'#ff4d3d',border:'14px solid #ff4d3d',padding:'10px 40px',borderRadius:'24px'},s);
+ stamp.tw(108.5,.35,{o:0,s:2.4,r:-30},{o:1,s:1,r:-12},'out');FL(108.6,.5,.25);
+ const bars=svg(Array.from({length:9},(_,i)=>`<rect x="${1180+i*80}" y="0" width="16" height="1080" fill="rgba(246,239,226,.12)"/>`).join(''),{left:0,top:0,width:W+'px',height:H+'px'},s);
+ bars.tw(108.5,.6,{o:0,y:-1080},{o:1,y:0},'out');
+ [a,b,c,stamp,bars].forEach(d=>OUT(d,113.5));
+ const d1=T('1553: King João III pardons him…',125,260,62,'b',{},s);IN(d1,114.2);
+ const d2=T('…on one condition:',125,370,62,'serif',{color:'rgba(246,239,226,.8)'},s);IN(d2,116.6);
+ const d3=T('Go to India.',115,470,220,'h',{color:'#ffc83d',whiteSpace:'nowrap'},s);d3.tw(118.8,.8,{o:0,x:-200,b:14},{o:1,x:0,b:0},'out');
+ const arrow=T('→',115+d3.offsetWidth+40,450,240,'h',{color:'#ff4d3d'},s);arrow.tw(119.6,.6,{o:0,x:-60},{o:1,x:0},'back');
+ HK(t=>{if(t<119||t>127)return;arrow.style.marginLeft=(Math.sin(t*6)*14)+'px';});
+ const d4=T('Basically: “Get out of the country. Far.”',125,760,38,'mono',{color:'#3de1ff',letterSpacing:'.04em'},s);IN(d4,121.5,20);}
+
+// =================== SCENE 7: route map 126-162 ===================
+{const s=scene(126,162.4,'#071226');
+ // projection: lon -30..130 -> 120..1800 ; lat 50..-45 -> 120..1000
+ const P=(lon,lat)=>[120+(lon+30)/160*1680,120+(50-lat)/95*880];
+ let grid='';for(let lo=-30;lo<=130;lo+=10){const[x]=P(lo,0);grid+=`<line x1="${x}" y1="120" x2="${x}" y2="1000" stroke="rgba(61,225,255,.08)" stroke-width="2"/>`;}
+ for(let la=50;la>=-45;la-=10){const[,y]=P(0,la);grid+=`<line x1="120" y1="${y}" x2="1800" y2="${y}" stroke="rgba(61,225,255,.08)" stroke-width="2"/>`;}
+ const[ex,ey]=P(-30,0),[ex2]=P(130,0);grid+=`<line x1="${ex}" y1="${ey}" x2="${ex2}" y2="${ey}" stroke="rgba(255,200,61,.25)" stroke-width="2" stroke-dasharray="10 10"/><text x="${ex+10}" y="${ey-12}" fill="rgba(255,200,61,.5)" font-family="DejaVu Sans Mono" font-size="20">EQUATOR</text>`;
+ // stylised landmasses (very rough blobs)
+ const blob=(pts,f)=>`<path d="M${pts.map(p=>P(...p).join(' ')).join(' L')} Z" fill="${f}"/>`;
+ const land='rgba(246,239,226,.09)';
+ grid+=blob([[-10,44],[3,43],[10,44],[20,40],[30,41],[36,36],[32,31],[34,28],[43,12],[51,11],[40,-3],[40,-15],[35,-24],[32,-29],[26,-34],[18,-35],[14,-22],[12,-5],[9,4],[-8,5],[-17,14],[-17,21],[-10,30],[-6,36],[-9,39],[-9,43]],land);
+ grid+=blob([[43,13],[52,16],[57,22],[60,25],[67,24],[73,21],[73,16],[77,8],[80,13],[80,16],[88,22],[92,22],[98,16],[100,13],[100,6],[104,1],[101,4],[99,9],[103,10],[106,10],[109,12],[109,18],[108,21],[113,22],[120,25],[122,31],[121,40],[130,42],[130,50],[60,50],[45,40],[36,36],[35,32],[39,22]],land);
+ const map=svg(grid+`<path id="route" fill="none" stroke="#ffc83d" stroke-width="7" stroke-linecap="round" stroke-dasharray="1 0"/>`,{left:0,top:0,width:W+'px',height:H+'px'},s);
+ map.tw(126.2,1,{o:0,s:1.15},{o:1,s:1},'out');
+ const way=[[-9.1,38.7],[-18,25],[-25,5],[-20,-20],[5,-38],[18.5,-35.5],[33,-28],[40.7,-15],[45,-4],[58,8],[73.8,15.5],[78,6],[95,5],[102.2,2.2],[107,8],[113.5,22.2]];
+ const pts=way.map(w=>P(...w));
+ const route=map.querySelector('#route');let dstr='M'+pts[0].join(' ');
+ for(let i=1;i<pts.length;i++){const[a,b]=pts[i-1],[c,d]=pts[i];dstr+=` Q${a} ${b} ${(a+c)/2} ${(b+d)/2}`;}dstr+=` L${pts[pts.length-1].join(' ')}`;
+ route.setAttribute('d',dstr);
+ const segFrac=i=>{let tot=0,acc=[0];for(let k=1;k<pts.length;k++){tot+=Math.hypot(pts[k][0]-pts[k-1][0],pts[k][1]-pts[k-1][1]);acc.push(tot);}return acc[i]/tot;};
+ // route progress keyframes: Goa (idx10) at 143, Macau end at 154
+ HK(t=>{if(t<126||t>163)return;const L=route.getTotalLength();let f;
+   const fg=segFrac(10);if(t<130)f=0;else if(t<143)f=fg*E.io((t-130)/13);else if(t<146)f=fg;else if(t<154)f=fg+(1-fg)*E.io((t-146)/8);else f=1;
+   route.setAttribute('stroke-dasharray',`${L*f} ${L}`);});
+ const cities=[['Lisbon',-9.1,38.7,129.5,1],['Cape of Good Hope',18.5,-34.4,136.5,1],['Mozambique',40.7,-15,139.5,1],['Goa',73.8,15.5,143,-1],['Malacca',102.2,2.2,150,1],['Macau',113.5,22.2,154,-1]];
+ cities.forEach(([n,lo,la,t,side])=>{const[x,y]=P(lo,la);
+   const dot=mk('',{left:(x-14)+'px',top:(y-14)+'px',width:'28px',height:'28px',borderRadius:'50%',background:'#ff4d3d',boxShadow:'0 0 0 8px rgba(255,77,61,.25)'},s);POP(dot,t,.5);
+   const lb=T(n,x+(side<0?-20:28),y+(side<0?-62:-20),30,'b',{whiteSpace:'nowrap',textShadow:'0 2px 8px #071226'},s);
+   
+   IN(lb,t+.15,20,.5);});
+ const ttl=T('The Route',120,60,90,'h',{color:'#ffc83d'},s);IN(ttl,126.6);
+ const cnt=T('',1180,90,30,'mono',{color:'#3de1ff',whiteSpace:'nowrap'},s);IN(cnt,130,10);
+ HK(t=>{if(t<130||t>163)return;const days=Math.min(180,Math.round(Math.max(0,(t-130)/13)*180));cnt.textContent=`Days at sea: ${days}${days>=180?' (≈6 months)':''}`;});
+ const box=mk('<div class="b" style="font-size:40px">He spends <span style="color:#ffc83d">~17 years</span> in the East: soldier, official — and writing the epic on the road.</div>',{left:'1010px',top:'850px',width:'820px',background:'rgba(7,18,38,.9)',padding:'18px 24px',borderRadius:'16px'},s);IN(box,155);}
+
+OFF=26;
+// =================== NEW B1: Goa local 162-192 ===================
+{const s=scene(162,192.4,'linear-gradient(160deg,#0b2a5c,#0a0f24 70%)');
+ const tg=T('<span class="tag" style="color:#3de1ff">Chapter 3 · Goa, 1553</span>',120,110,26,'mono',{color:'#3de1ff'},s);POP(tg,162.4);
+ const a=T('Goa.',115,190,260,'h',{color:'#ffc83d'},s);a.tw(163,.8,{o:0,x:-140,b:12},{o:1,x:0,b:0},'out');
+ const b=T('Capital of Portugal’s empire in Asia.',125,470,52,'serif',{},s);IN(b,165);
+ const rows=[['Sep 1553','Arrives after ~6 months at sea'],['Nov 1553','Fights in an expedition on the Malabar coast'],['Meanwhile','Writes poems about exile and homesickness'],['Always','Keeps working on the epic']];
+ rows.forEach(([k,v],i)=>{const cd=mk(`<span class="mono" style="font-size:22px;color:#3de1ff">${k}</span><div class="b" style="font-size:36px;margin-top:6px">${v}</div>`,{left:'1000px',top:(200+i*175)+'px',width:'800px'},s,'card');
+   cd.tw(167.5+i*2.4,.6,{o:0,x:90},{o:1,x:0},'out');});
+ const xp=T('XP +1000 · GOLD +0',125,600,40,'mono',{color:'#ff4d3d'},s);IN(xp,178,20);
+ const c=T('Rich city.<br><span style="color:#ff4d3d">Still broke.</span>',115,700,110,'h',{},s);IN(c,182);
+ const n=T('*Stats unofficial. Vibes accurate.',125,1020,20,'mono',{color:'rgba(246,239,226,.45)',whiteSpace:'nowrap'},s);IN(n,178,10);}
+
+// =================== NEW B2: Macau (tradition) local 192-228 ===================
+{const s=scene(192,228.4,'linear-gradient(180deg,#2a0f2f,#0a0f24)');
+ const tg=T('<span class="tag" style="color:#ffc83d">Fact or Legend? · Macau</span>',120,110,26,'mono',{color:'#ffc83d'},s);POP(tg,192.4);
+ const a=T('The story goes he’s posted<br>to Macau, around 1556–58…',120,200,72,'h',{},s);IN(a,193);
+ const job=mk('<span class="mono" style="font-size:22px;color:#3de1ff">Job title</span><div class="b" style="font-size:40px;margin-top:8px">Trustee for the property of the dead and absent</div><div class="mono" style="font-size:20px;margin-top:10px;color:rgba(246,239,226,.6);letter-spacing:.05em">(yes, that was a real job)</div>',{left:'120px',top:'440px',width:'820px'},s,'card');
+ job.tw(196.5,.6,{o:0,x:-80},{o:1,x:0},'out');
+ const cave=svg(`<path d="M20 360 Q20 60 260 40 Q500 60 500 360 Z" fill="#3a2f45"/><path d="M110 360 Q110 160 260 150 Q410 160 410 360 Z" fill="#0a0f24"/><circle cx="260" cy="250" r="26" fill="#ffc83d"/><circle cx="260" cy="250" r="60" fill="rgba(255,200,61,.18)"/><rect x="215" y="300" width="90" height="12" rx="6" fill="#f6efe2"/>`,{left:'1300px',top:'330px',width:'460px',height:'336px'},s,'0 0 520 380');
+ POP(cave,200.5);HK(t=>{if(t<192||t>229)return;cave.firstChild.style.opacity=0.85+0.15*Math.sin(t*9)*Math.sin(t*3.7);});
+ const b=T('…and writes the epic in a cave.',125,700,56,'serif',{},s);IN(b,201.5);
+ const st=T('TRADITION',1240,720,110,'h',{color:'#ffc83d',border:'12px solid #ffc83d',padding:'6px 34px',borderRadius:'22px',whiteSpace:'nowrap'},s);st.tw(206,.35,{o:0,s:2.4,r:-28},{o:1,s:1,r:-10},'out');FL(206,.55,.28);
+ [a,job,b,cave,st].forEach(d=>OUT(d,211.5));
+ const c=T('Today Macau has a Camões Grotto garden, with his bust.',125,230,46,'b',{},s);IN(c,212.2);
+ const d=T('But historians still debate<br>whether he was ever there.',115,330,90,'h',{color:'#3de1ff'},s);IN(d,215.5);
+ const e=T('What seems likelier: he’s accused of misconduct<br>and shipped back toward Goa…',125,600,46,'serif',{},s);IN(e,220.5);
+ const f=T('…and that’s the voyage that sinks.',125,760,60,'h',{color:'#ff4d3d',fontSize:'64px'},s);IN(f,224.6);}
+OFF=92;
+// =================== SCENE 8: the legend 162-188 ===================
+{const s=scene(162,188.4,'linear-gradient(180deg,#04263a,#020a14)');
+ waves(s,162,189,'#1b7fa8',700,34,4,1.6);
+ const tg=T('<span class="tag" style="color:#ffc83d">The Legend</span>',120,110,26,'mono',{color:'#ffc83d'},s);POP(tg,162.4);
+ const a=T('Shipwreck.',115,190,200,'h',{},s);a.tw(163,.8,{o:0,x:-120,b:10},{o:1,x:0,b:0},'out');FL(163,.6,.3);
+ const b=T('Mouth of the Mekong River, around 1559.',125,420,46,'b',{color:'rgba(246,239,226,.85)'},s);IN(b,165);
+ const book=svg(`<rect x="10" y="20" width="200" height="150" rx="10" fill="#f6efe2"/><line x1="110" y1="20" x2="110" y2="170" stroke="#0a0f24" stroke-width="5"/>
+   ${[50,75,100,125].map(y=>`<line x1="30" y1="${y}" x2="95" y2="${y}" stroke="#7b8aa8" stroke-width="5"/><line x1="125" y1="${y}" x2="190" y2="${y}" stroke="#7b8aa8" stroke-width="5"/>`).join('')}
+   <rect x="95" y="170" width="30" height="160" rx="12" fill="#c9a36a"/>`,{left:'1350px',top:'300px',width:'220px',height:'340px'},s,'0 0 220 340');
+ POP(book,167);HK(t=>{if(t<162||t>189)return;book.firstChild.style.transform=`translateY(${Math.sin(t*2.2)*16}px) rotate(${Math.sin(t*1.1)*5}deg)`;});
+ const c=T('The story goes he swam to shore<br>holding the manuscript out of the water.',125,520,52,'serif',{},s);IN(c,168);
+ [a,b,c,book].forEach(d=>OUT(d,176.5));
+ const d=T('Historians can’t confirm every detail.',125,250,56,'b',{color:'rgba(246,239,226,.8)'},s);IN(d,177.2);
+ const e=T('But the poem made it.',115,360,150,'h',{color:'#3de1ff'},s);e.tw(180,.9,{o:0,s:.8},{o:1,s:1},'back');
+ const f=T('And that poem would become Portugal’s identity.',125,560,40,'mono',{color:'#ffc83d',letterSpacing:'.03em'},s);IN(f,183.2,20);}
+
+OFF=92;
+// =================== NEW C1: Dinamene local 188-218 ===================
+{const s=scene(188,218.4,'linear-gradient(135deg,#14103a,#05070f)');
+ const tg=T('<span class="tag" style="color:#ffc83d">Tradition</span>',120,90,26,'mono',{color:'#ffc83d'},s);POP(tg,188.4);
+ const a=T('The poem survived.<br><span style="color:#7b5cff">Someone else didn’t.</span>',120,170,96,'h',{},s);IN(a,188.8);
+ const b=T('Tradition says a young Chinese woman travelling with him drowned that night.<br>In his poems he calls her <span style="color:#ffc83d">Dinamene</span>.',125,410,40,'b',{color:'rgba(246,239,226,.85)',width:'1600px'},s);IN(b,191.5);
+ [a,b].forEach(d=>OUT(d,197.6));
+ camoes(s,1380,330,400,198,[[199,201.6],[203,205.4],[206.8,209.6]]);
+ SAY(s,'You left this life so soon…',120,250,1150,198.8,'#7b5cff',50);
+ SAY(s,'Rest up there in Heaven.',120,440,1150,202.8,'#7b5cff',50);
+ SAY(s,'I’ll stay down here. Always sad.',120,630,1150,206.6,'#7b5cff',50);
+ const cr=T('From his sonnet “Alma minha gentil” · tradition links it to Dinamene, but that’s debated',120,880,24,'mono',{color:'rgba(246,239,226,.5)',letterSpacing:'.04em',textTransform:'none',whiteSpace:'nowrap'},s);IN(cr,200,10);
+ const d=T('One of the most famous love poems in Portuguese.',120,960,36,'b',{color:'#ffc83d'},s);IN(d,211);}
+
+// =================== NEW C2: Mozambique local 218-252 ===================
+{const s=scene(218,252.4,'linear-gradient(180deg,#2a1a0f,#0a0f24)');
+ const tg=T('<span class="tag" style="color:#ffc83d">Chapter 4 · Mozambique, 1567</span>',120,110,26,'mono',{color:'#ffc83d'},s);POP(tg,218.4);
+ const a=T('Heading home…<br>he gets stuck.',120,200,120,'h',{},s);IN(a,219);
+ const b=T('Two years on Mozambique Island. No money.',125,480,50,'serif',{},s);IN(b,222.5);
+ const q=mk('<div class="serif" style="font-size:46px">His friend, the historian <span style="color:#ffc83d">Diogo do Couto</span>, found him so poor he lived off his friends.</div><div class="mono" style="font-size:20px;margin-top:16px;letter-spacing:.06em">Source: Diogo do Couto, Décadas da Ásia</div>',{left:'120px',top:'590px',width:'1150px'},s,'card');
+ IN(q,226);
+ const c=T('Friends chip in to pay his way home.',125,880,44,'b',{color:'#3de1ff'},s);IN(c,231.5);
+ [a,b,q,c].forEach(d=>OUT(d,236));
+ const d=T('Also: another manuscript —<br>a poetry book called <span style="color:#ffc83d">Parnaso</span> —',120,220,80,'h',{},s);IN(d,236.6);
+ const st=T('STOLEN',1180,520,150,'h',{color:'#ff4d3d',border:'12px solid #ff4d3d',padding:'6px 34px',borderRadius:'22px',whiteSpace:'nowrap'},s);st.tw(241,.35,{o:0,s:2.4,r:-30},{o:1,s:1,r:-12},'out');FL(241,.55,.28);
+ const e=T('It has never been found.',125,520,56,'serif',{},s);IN(e,243);
+ const f=T('Good thing the epic stayed in his hands.',125,700,60,'h',{color:'#ffc83d',fontSize:'64px'},s);IN(f,246.4);}
+OFF=156;
+// =================== SCENE 9: return & stats 188-216 ===================
+{const s=scene(188,216.4,'#0a0f24');
+ const a=T('<span style="color:#3de1ff">1570</span> Back in Lisbon. Still broke.',120,120,64,'h',{},s);IN(a,188.5);
+ const b=T('<span style="color:#ffc83d">1572</span> The poem is printed.',120,220,64,'h',{},s);IN(b,190.5);
+ const stats=[['10','Cantos','(chapters)'],['1,102','Stanzas','of 8 lines each'],['8,816','Lines','of pure drama']];
+ stats.forEach(([n,l,sub],i)=>{const cd=mk(`<div class="h num" style="font-size:150px;color:${['#ffc83d','#ff4d3d','#3de1ff'][i]}">0</div><div class="h" style="font-size:48px;margin-top:10px">${l}</div><div class="mono" style="font-size:22px;margin-top:10px;letter-spacing:.08em">${sub}</div>`,{left:(120+i*580)+'px',top:'380px',width:'520px'},s,'card');
+   POP(cd,193+i*1.3);const num=cd.querySelector('.num');const target=parseInt(n.replace(',',''));const t0=193.2+i*1.3;
+   HK(t=>{if(t<188||t>217)return;const k=E.out(Math.min(1,Math.max(0,(t-t0)/1.6)));num.textContent=Math.round(target*k).toLocaleString('en-US');});});
+ const rh=T('Every stanza rhymes the same way:',120,790,40,'b',{},s);IN(rh,200.5);
+ const letters='ABABABCC';letters.split('').forEach((L,i)=>{const d=T(L,120+i*120,860,110,'h',{color:L=='C'?'#ff4d3d':(L=='A'?'#ffc83d':'#3de1ff'),width:'110px',textAlign:'center'},s);POP(d,202+i*.25,.5);
+   HK(t=>{if(t<202||t>217)return;d.style.marginTop=(Math.sin(t*4-i*.6)*10)+'px';});});
+ const oc=T('It’s called <i>ottava rima</i> — and the last two lines always land the punch.',1120,870,34,'b',{width:'680px',color:'rgba(246,239,226,.85)'},s);IN(oc,205.5);}
+
+OFF=156;
+// =================== NEW D: the pension local 216-240 ===================
+{const s=scene(216,240.4,'#0a0f24');
+ const tg=T('<span class="tag" style="color:#3de1ff">Fact · 1572</span>',120,110,26,'mono',{color:'#3de1ff'},s);POP(tg,216.4);
+ const a=T('A reward from the king.',120,200,100,'h',{},s);IN(a,217);
+ const cd=mk('<div class="h num" style="font-size:200px;color:#ffc83d">0</div><div class="h" style="font-size:52px;margin-top:6px">réis per year</div><div class="mono" style="font-size:22px;margin-top:10px;letter-spacing:.06em">for 3 years at first, later renewed</div>',{left:'120px',top:'360px',width:'900px'},s,'card');
+ POP(cd,219);const num=cd.querySelector('.num');HK(t=>{if(t<216||t>241)return;const k=E.out(Math.min(1,Math.max(0,(t-219.3)/1.8)));num.textContent=Math.round(15000*k).toLocaleString('en-US');});
+ const b=T('From King Sebastião,<br>18 years old.',1110,380,64,'h',{color:'#f6efe2'},s);IN(b,223);
+ const c=T('(Remember him: the poem is dedicated to him.)',1115,560,30,'mono',{color:'#3de1ff',letterSpacing:'.03em',width:'700px'},s);IN(c,226,20);
+ const d=T('Enough to get by. Not enough to be rich.',125,800,52,'serif',{},s);IN(d,229.5);
+ const e=T('And it was often paid late.',125,900,44,'b',{color:'#ff4d3d'},s);IN(e,233.5);}
+OFF=180;
+// =================== SCENE 10: Camões speaks the opening (local 216-246) ===================
+{const s=scene(216,246.4,'linear-gradient(135deg,#14103a,#0a0f24)');
+ const tg=T('<span class="tag" style="color:#ffc83d">The opening line</span>',120,90,26,'mono',{color:'#ffc83d'},s);POP(tg,216.4);
+ camoes(s,120,250,430,216.8,[[217.6,220.5],[221.8,225],[226.2,229.6],[230.8,233]]);
+ const q=[['I sing of weapons… and of heroes.',217.4],['Men who left Portugal’s western shore…',221.6],['…and sailed seas no one had ever sailed before.',226],['All the way past Taprobana!',230.6]];
+ const bs=q.map(([tx,t],i)=>SAY(s,tx,640,200+i*165,1160,t,i==3?'#ff4d3d':'#ffc83d',46));
+ const fn=mk('<span class="mono" style="font-size:24px;color:#0a0f24;letter-spacing:.06em">Taprobana = old name for Sri Lanka</span>',{left:'1240px',top:'845px',background:'#ffc83d',padding:'14px 22px',borderRadius:'14px',rotate:'-3deg',whiteSpace:'nowrap'},s);POP(fn,232.6);
+ const pt=T('“As armas e os barões assinalados…” · Os Lusíadas, Canto I, stanza 1',124,740,22,'mono',{color:'rgba(61,225,255,.75)',letterSpacing:'.04em',textTransform:'none',whiteSpace:'nowrap'},s);IN(pt,218.4,10);pt.tw(226.5,.6,{},{o:0},'lin');
+ const out=T('First line ever: <span style="color:#ffc83d">weapons</span> and <span style="color:#ff4d3d">heroes</span>.<br>Camões isn’t subtle. He’s announcing a blockbuster.',120,930,40,'b',{},s);IN(out,235.5);}
+
+// =================== SCENE 11: what's inside 246-272 ===================
+{const s=scene(246,272.4,'#0a0f24');
+ const a=T('What’s inside?',120,90,120,'h',{color:'#ffc83d'},s);IN(a,246.4);
+ const tiles=[['Gods fighting over a fleet','CANTO I','#7b5cff'],['A queen crowned after death','CANTO III','#ff4d3d'],['A medieval underdog battle','CANTO IV','#ffc83d'],
+   ['An old man yelling “this is madness”','CANTO IV','#3de1ff'],['A storm giant at the edge of Africa','CANTO V','#ff4d3d'],['A secret island of love','CANTO IX','#7b5cff']];
+ tiles.forEach(([txt,ep,col],i)=>{const x=120+(i%3)*575,y=290+Math.floor(i/3)*330;
+   const tl=mk(`<div class="mono" style="font-size:22px;color:${col}">${ep}</div><div class="h" style="font-size:52px;margin-top:18px;line-height:1">${txt}</div>`,
+     {left:x+'px',top:y+'px',width:'470px',height:'230px',borderTop:`10px solid ${col}`},s,'card');
+   tl.tw(248+i*1.4,.6,{o:0,y:80,r:i%2?4:-4},{o:1,y:0,r:0},'back');});
+ const b=C('10 cantos. One epic. Zero boring.',990,44,'mono',{color:'#f6efe2',letterSpacing:'.12em'},s);IN(b,258,20);}
+
+OFF=180;
+// =================== NEW E: 1578-1580 local 272-302 ===================
+{const s=scene(272,302.4,'linear-gradient(180deg,#2a0f14,#05070f)');
+ const tg=T('<span class="tag" style="color:#ff4d3d">The End of an Era</span>',120,110,26,'mono',{color:'#ff4d3d'},s);POP(tg,272.4);
+ const a=T('1578.',115,170,260,'h',{},s);a.tw(273,.9,{o:0,s:1.25,b:12},{o:1,s:1,b:0},'out');
+ const b=T('King Sebastião leads an army into Morocco.<br>The Battle of Alcácer Quibir.',125,460,48,'b',{color:'rgba(246,239,226,.85)'},s);IN(b,276);
+ const c=T('The king is never seen again.',115,620,96,'h',{color:'#ff4d3d'},s);c.tw(283,.6,{o:0,x:-120},{o:1,x:0},'out');FL(283,.7,.35);
+ const d=T('No heir. Portugal’s crown is up for grabs — and Spain’s Philip II wants it.',125,800,40,'mono',{color:'#3de1ff',letterSpacing:'.03em',textTransform:'none'},s);IN(d,286.5,20);
+ [a,b,c,d].forEach(x=>OUT(x,291.5));
+ const q=mk('<div class="serif" style="font-size:52px;line-height:1.3">“…não me contentei de morrer nela, mas com ela.”</div><div class="mono" style="font-size:30px;margin-top:22px;letter-spacing:.03em;text-transform:none">“I wasn’t content to die in my country. I’ll die with it.”</div><div class="mono" style="font-size:20px;margin-top:22px;color:rgba(246,239,226,.55);letter-spacing:.05em">From a letter attributed to Camões · authenticity debated · our translation</div>',{left:'120px',top:'260px',width:'1500px'},s,'card');
+ IN(q,292.2);
+ const st=T('ATTRIBUTED',1300,720,90,'h',{color:'#ffc83d',border:'10px solid #ffc83d',padding:'6px 30px',borderRadius:'20px',whiteSpace:'nowrap'},s);st.tw(297,.35,{o:0,s:2.2,r:-28},{o:1,s:1,r:-10},'out');}
+OFF=210;
+// =================== SCENE 12: death & Portugal Day 272-291 ===================
+{const s=scene(272,291.2,'#05070f');
+ const a=C('10 June 1580.',300,110,'h',{},s);IN(a,272.6);
+ const b=C('Camões dies in Lisbon. Poor. Almost forgotten.',460,54,'serif',{color:'rgba(246,239,226,.85)'},s);IN(b,275);
+ [a,b].forEach(d=>OUT(d,280));
+ const c=C('Today, that date is',240,56,'b',{},s);IN(c,280.6);
+ const d=C('10.06',330,330,'h',{color:'#ffc83d'},s);d.tw(281.8,1,{o:0,s:.6,b:20},{o:1,s:1,b:0},'back');FL(281.8,.5,.35);
+ const e=C('Portugal Day.',680,110,'h',{color:'#ff4d3d'},s);IN(e,283.4);
+ const f=C('A whole country celebrates… a poet.',840,44,'mono',{color:'#3de1ff',letterSpacing:'.06em'},s);IN(f,285.8,20);}
+
+// =================== SCENE 13: next episode 291-300 ===================
+{const s=scene(291,300.6,'linear-gradient(160deg,#14103a,#2a0f2f)');
+ const a=T('<span class="tag" style="color:#3de1ff">Next episode</span>',120,110,26,'mono',{color:'#3de1ff'},s);POP(a,291.3);
+ const b=T('The Gods<br>Have a<br>Group Chat',115,200,130,'h',{color:'#ffc83d'},s);IN(b,291.7);
+ const msgs=[['VENUS','These sailors are brave. Let them through.','#7b5cff',0],['BACCHUS','Absolutely not. India is MY legacy.','#ff4d3d',1],['JUPITER','Fate already decided. They sail on.','#3de1ff',0]];
+ msgs.forEach(([who,m,c,side],i)=>{const d=mk(`<div class="mono" style="font-size:20px;color:${c}">${who}</div><div class="b" style="font-size:32px;margin-top:6px">${m}</div>`,
+   {left:(side?1160:1060)+'px',top:(200+i*200)+'px',width:'640px',background:'rgba(255,255,255,.08)',border:`2px solid ${c}`,borderRadius:side?'28px 28px 6px 28px':'28px 28px 28px 6px',padding:'22px 30px'},s);
+   d.tw(293+i*1.4,.5,{o:0,s:.6,y:30},{o:1,s:1,y:0},'back');});
+ const c=T('Follow so you don’t miss it.',120,640,44,'b',{},s);IN(c,296);}
+
+OFF=0;
+window.__render=render;window.__dur=DUR;
+render(parseFloat(new URLSearchParams(location.search).get('t')||'0'));
+</script></body></html>

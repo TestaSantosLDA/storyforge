@@ -1,0 +1,86 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Os Lusíadas kit demo</title>
+<link rel="stylesheet" href="../../kit/kit.css">
+</head><body>
+<div id="wrap"><div id="stage"></div><canvas id="grain" width="512" height="512"></canvas><div id="vignette"></div><div id="flash"></div><div id="safe"></div></div>
+<script src="../../kit/core.js"></script>
+<script src="../../kit/components.js"></script>
+<script>
+// Kit demo: one scene file, rendered in both frames (?frame=landscape | vertical). Every component appears once.
+// Verse text: Canto I, 1 and I, 3 (public domain, 1572); English: R. F. Burton, 1880 (public domain).
+K.setup({ frame: 'landscape', duration: 58 });
+const { C, T, IN, POP, OUT, scene, flash, c } = K;
+const L = K.landscape;
+
+// 0-7 title sting
+{ const s = scene(0, 7, 'linear-gradient(160deg,#0a0f24 0%,#14103a 60%,#2a0f2f 100%)');
+  c.titleSting(s, 0, { tag: 'EP.01 — The Council of the Gods', title: 'OS LUSÍADAS', sub: 'The epic poem that made Portugal — remixed' });
+  c.waves(s, 0, 7, '#3de1ff', K.H * .9, 14, 1); }
+
+// 7-14 Camões speaks (his own verse, cited)
+{ const s = scene(7, 14, 'radial-gradient(ellipse at 50% 30%,#141c3d,#05070f 75%)');
+  c.azulejo(s, 7, 14, .08);
+  c.chapterTag(s, 7.3, 1, 'THE POET');
+  const cam = c.camoes(s, 7.4, { from: 'left', talk: [[8.2, 12.5]], poses: [[12.6, 13.6, 'wink']] });
+  c.say(s, cam, 8.0, 'Cesse tudo o que a Musa antiga canta, que outro valor mais alto se alevanta.', { cite: 'Canto I · st. 3', dur: 2.6 });
+  const en = L ? T('“Let all the old Muse sang be still: a higher valour rises.”', cam._box.x + cam._box.size + 30 * K.u, cam._box.y + cam._box.size - 40 * K.u, 36, 'b', { width: (K.safe.x + K.safe.w - cam._box.x - cam._box.size - 30 * K.u) + 'px', color: 'var(--cyan)' }, s)
+               : C('“Let all the old Muse sang be still: a higher valour rises.”', K.safe.y + K.safe.h * .1, 44, 'b', { color: 'var(--cyan)' }, s);
+  IN(en, 11.2); }
+
+// 14-22 route map
+{ const s = scene(14, 22, '#07122a');
+  c.chapterTag(s, 14.2, 2, 'THE ROUTE');
+  if (L) { const h = T('Lisbon to<br>India', K.safe.x, K.safe.y + 120 * K.u, 96, 'h', { color: 'var(--gold)' }, s); IN(h, 14.4); }
+  else { const h = C('Lisbon to India', K.safe.y + 90 * K.u, 84, 'h', { color: 'var(--gold)' }, s); IN(h, 14.4); }
+  c.routeMap(s, 14.3, [
+    { name: 'Lisbon', year: '1497', x: .14, y: .1, t: 14.8 },
+    { name: 'Cape Verde', x: .06, y: .36, t: 15.9 },
+    { name: 'Cape of Good Hope', x: .3, y: .92, t: 17.0 },
+    { name: 'Mozambique', x: .56, y: .66, t: 18.1 },
+    { name: 'Malindi', x: .6, y: .5, t: 19.0 },
+    { name: 'Calicut', year: '1498', x: .78, y: .3, t: 20.0 },
+  ]);
+  flash(20.6, .5, .25); }
+
+// 22-31 Verse Moment
+{ const s = scene(22, 31, 'linear-gradient(180deg,#0a0f24,#14103a)');
+  c.verse(s, 22.2, {
+    ref: 'Canto I · st. 1',
+    pt: ['As armas e os barões assinalados', 'Que da ocidental praia Lusitana', 'Por mares nunca de antes navegados', 'Passaram ainda além da Taprobana,'],
+    en: ['The feats of Arms, and famed heroick Host,', 'from occidental Lusitanian strand,', 'who o’er the waters ne’er by seaman crost,', 'farèd beyond the Taprobane-land,'],
+    translator: 'English: Richard F. Burton, 1880 (public domain)',
+  }); }
+
+// 31-37 stat card + documented stamp
+{ const s = scene(31, 37, 'radial-gradient(ellipse at 50% 40%,#13306a,#05070f 80%)');
+  c.chapterTag(s, 31.2, 3, 'THE CREW');
+  c.statCard(s, 31.5, { value: 170, prefix: 'c. ', unit: 'men set sail', label: 'Lisbon, 8 July 1497' });
+  c.stamp(s, 33.4, 'documented'); }
+
+// 37-43 Fact or Legend?
+{ const s = scene(37, 43, 'linear-gradient(160deg,#14103a,#2a0f2f)');
+  c.factOrLegend(s, 37.2, { claim: 'A storm giant called Adamastor guarded the Cape of Good Hope.', reveal: 2.4, answer: 'legend',
+    why: 'Camões invented him in Canto V to stand for the storms of the Cape.' }); }
+
+// 43-46 teaser
+{ const s = scene(43, 46, '#05070f');
+  c.teaser(s, 43.1, { title: 'The Giant of the Cape', hook: 'He has been waiting at the end of the world.' }); }
+
+// 46-52 gods' chat (Canto I council)
+{ const s = scene(46, 52, 'linear-gradient(180deg,#14103a,#0a0f24)');
+  c.armillary(s, 46, 52, { opacity: .12 });
+  c.godsChat(s, 46.2, 'OLYMPUS · 3 ONLINE', [
+    { who: 'Jupiter', text: 'Council. Now. It is about the Portuguese.', t: 47.0, colour: 'var(--gold)' },
+    { who: 'Bacchus', text: 'Absolutely not. India is MY thing.', t: 48.6, side: 'r', colour: 'var(--coral)' },
+    { who: 'Venus', text: 'They remind me of the Romans. I am helping.', t: 50.2, colour: 'var(--cyan)' },
+  ]); }
+
+// 52-58 character card + Camões shrug
+{ const s = scene(52, 58, 'radial-gradient(ellipse at 30% 40%,#13306a,#05070f 80%)');
+  c.chapterTag(s, 52.2, 4, 'THE CAPTAIN');
+  c.characterCard(s, 52.5, { name: 'Vasco da Gama', years: 'c. 1469–1524', role: 'Captain-major', stats: [['Nerve', 9], ['Patience', 3], ['Map skills', 7]] });
+  c.camoes(s, 53, { from: 'bottom', size: K.landscape ? 380 : 260, poses: [[54.5, 57.5, 'shrug']] }); }
+
+K.ready();
+</script>
+</body></html>
