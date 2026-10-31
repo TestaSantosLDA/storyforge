@@ -3,7 +3,10 @@ package com.storyforge.web;
 import com.storyforge.character.CharacterStore;
 import com.storyforge.profile.ProfileException;
 import com.storyforge.profile.ProfileSnapshots;
+import com.storyforge.profile.LookNotesCheck;
 import com.storyforge.profile.VideoProfiles;
+import com.storyforge.series.ChannelService;
+import com.storyforge.series.SourceTexts;
 import com.storyforge.story.StoryRepository;
 import com.storyforge.topic.Topic;
 import com.storyforge.topic.TopicRepository;
@@ -26,9 +29,14 @@ class TopicController {
     private final CharacterStore characters;
     private final VideoProfiles profiles;
     private final ProfileSnapshots snapshots;
+    private final ChannelService channels;
+    private final SourceTexts sources;
 
     TopicController(TopicService topics, TopicRepository topicRepo, StoryRepository stories,
-            CharacterStore characters, VideoProfiles profiles, ProfileSnapshots snapshots) {
+            CharacterStore characters, VideoProfiles profiles, ProfileSnapshots snapshots, ChannelService channels,
+            SourceTexts sources) {
+        this.channels = channels;
+        this.sources = sources;
         this.profiles = profiles;
         this.snapshots = snapshots;
         this.topics = topics;
@@ -71,6 +79,17 @@ class TopicController {
             model.addAttribute("overrides", ProfileSnapshots.overridesAsYaml(topic.getProfileOverrides()));
             model.addAttribute("lookNotes", topic.getLookNotes());
         }
+        model.addAttribute("channels", channels.all());
+        model.addAttribute("sourceIds", sources.ids());
+        if (!model.containsAttribute("allowlist")) {
+            model.addAttribute("allowlist", String.join("\n", LookNotesCheck.allowlist(topic.getNameAllowlist())));
+        }
+        if (topic.getSourceId() != null) {
+            sources.find(topic.getSourceId()).ifPresent(s -> {
+                model.addAttribute("source", s);
+                model.addAttribute("sourceHasText", sources.hasText(s.id()));
+            });
+        }
         if (topic.getProfileId() != null) {
             try {
                 model.addAttribute("effective", snapshots.effective(topic.getProfileId(),
@@ -94,6 +113,20 @@ class TopicController {
             flash.addFlashAttribute("profileId", profileId);
             flash.addFlashAttribute("overrides", overrides);
             flash.addFlashAttribute("lookNotes", lookNotes);
+        }
+        return "redirect:/topics/" + id;
+    }
+
+    @PostMapping("/topics/{id}/series")
+    String setSeries(@PathVariable long id, @RequestParam long channelId,
+            @RequestParam(defaultValue = "false") boolean series, @RequestParam(required = false) String sourceId,
+            @RequestParam(required = false) String allowlist, RedirectAttributes flash) {
+        try {
+            topics.setSeries(id, channelId, series, sourceId, allowlist, Actor.LOCAL);
+            flash.addFlashAttribute("notice", "Saved. Stories already running keep the channel they started with.");
+        } catch (InvalidInputException e) {
+            flash.addFlashAttribute("seriesErrors", e.fieldErrors());
+            flash.addFlashAttribute("allowlist", allowlist);
         }
         return "redirect:/topics/" + id;
     }

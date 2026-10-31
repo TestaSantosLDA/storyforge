@@ -25,13 +25,15 @@ class StoryStatusServiceTest extends DbTest {
     @Autowired
     TopicRepository topics;
     @Autowired
+    com.storyforge.series.ChannelRepository channels;
+    @Autowired
     StatusChangeRepository changes;
 
     Topic topic;
 
     @BeforeEach
     void topic() {
-        topic = topics.save(new Topic("Fox & Owl in Whisperwood", "A misty wood where small animals learn big lessons."));
+        topic = topics.save(new Topic("Fox & Owl in Whisperwood", "A misty wood where small animals learn big lessons.", channels.findDefault()));
     }
 
     Story add(String concept) {

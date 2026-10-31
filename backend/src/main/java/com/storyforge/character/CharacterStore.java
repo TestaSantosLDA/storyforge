@@ -26,17 +26,23 @@ public class CharacterStore {
     private static final Pattern ID = Pattern.compile("[a-z0-9][a-z0-9-]*");
 
     private final Path dir;
+    private final int diedBefore;
     private final YAMLMapper yaml = YAMLMapper.builder()
             .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
             .build();
 
     @Autowired
     CharacterStore(StoryforgeProperties props) {
-        this(props.paths().charactersDir());
+        this(props.paths().charactersDir(), props.profiles().historicalDiedBefore());
     }
 
     CharacterStore(Path dir) {
+        this(dir, 1900);
+    }
+
+    CharacterStore(Path dir, int diedBefore) {
         this.dir = dir.toAbsolutePath().normalize();
+        this.diedBefore = diedBefore;
     }
 
     public List<CharacterFile> all() {
@@ -80,6 +86,10 @@ public class CharacterStore {
     }
 
     private void write(CharacterFile c) {
+        List<String> problems = c.problems(diedBefore);
+        if (!problems.isEmpty()) {
+            throw new IllegalArgumentException(String.join(" ", problems));
+        }
         try {
             Files.createDirectories(dir);
             Path tmp = Files.createTempFile(dir, ".char-", ".tmp");

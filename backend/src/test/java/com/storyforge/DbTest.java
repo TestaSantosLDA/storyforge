@@ -31,5 +31,10 @@ public abstract class DbTest {
         jdbc.sql("truncate entity_change, attempt, status_change, story, topic, music_track, clip_job, source_video restart identity cascade")
                 .update();
         jdbc.sql("update gpu_lease set holder = null, acquired_at = null, expires_at = null").update();
+        // Channels outlive topics; keep only the default (fables) channel, as V15 created it.
+        jdbc.sql("delete from channel where not is_default").update();
+        jdbc.sql("update channel set name = 'Fables', youtube_handle = null, tiktok_account = null, instagram_account = null, "
+                + "narrator_voice = null, closing_line_text = 'Watch the rest of the episode on our channel!', "
+                + "made_for_kids = false, music_moods = null").update();
     }
 }

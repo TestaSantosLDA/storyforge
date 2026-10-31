@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="fields(f, errs)">
+        <label>Name
+            <input name="name" th:value="${f.name()}">
+            <small class="err" th:if="${errs?.get('name')}" th:text="${errs.get('name')}"></small>
+        </label>
+        <label>YouTube handle
+            <input name="youtubeHandle" th:value="${f.youtubeHandle()}" placeholder="@channelname">
+            <small class="err" th:if="${errs?.get('youtubeHandle')}" th:text="${errs.get('youtubeHandle')}"></small>
+        </label>
+        <label>TikTok account <input name="tiktokAccount" th:value="${f.tiktokAccount()}"></label>
+        <label>Instagram account <input name="instagramAccount" th:value="${f.instagramAccount()}"></label>
+        <label>Narrator voice <input name="narratorVoice" th:value="${f.narratorVoice()}" placeholder="am_adam"></label>
+        <label>Closing line for Shorts
+            <input name="closingLineText" th:value="${f.closingLineText()}" placeholder="Watch the full episode on our channel!">
+            <small class="muted">Recorded once in the narrator's voice and approved before the first clip.</small>
+        </label>
+        <label>Music moods <input name="musicMoods" th:value="${f.musicMoods()}" placeholder="epic, playful"></label>
+        <label class="row"><input type="checkbox" name="madeForKids" value="true" th:checked="${f.madeForKids()}"> Made for kids</label>
+</th:block>
+</body>
+</html>

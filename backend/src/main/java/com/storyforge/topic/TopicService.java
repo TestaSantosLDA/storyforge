@@ -5,6 +5,8 @@ import com.storyforge.log.ChangeLog;
 import com.storyforge.profile.LookNotesCheck;
 import com.storyforge.profile.ProfileException;
 import com.storyforge.profile.ProfileSnapshots;
+import com.storyforge.series.ChannelRepository;
+import com.storyforge.series.SourceTexts;
 import com.storyforge.story.Story;
 import com.storyforge.story.StoryQueueService;
 import com.storyforge.story.StoryRepository;
@@ -26,9 +28,14 @@ public class TopicService {
     private final ChangeLog changeLog;
     private final ProfileSnapshots profiles;
     private final LookNotesCheck names;
+    private final ChannelRepository channels;
+    private final SourceTexts sources;
 
     TopicService(TopicRepository topics, StoryRepository stories, StoryQueueService queue, CharacterStore characters,
-            ChangeLog changeLog, ProfileSnapshots profiles, LookNotesCheck names) {
+            ChangeLog changeLog, ProfileSnapshots profiles, LookNotesCheck names, ChannelRepository channels,
+            SourceTexts sources) {
+        this.channels = channels;
+        this.sources = sources;
         this.profiles = profiles;
         this.names = names;
         this.topics = topics;
@@ -57,7 +64,8 @@ public class TopicService {
         if (!errors.isEmpty()) {
             throw new InvalidInputException(errors);
         }
-        Topic topic = topics.save(new Topic(name.strip(), description.strip()));
+        // New topics start on the default (fables) channel; the topic page can move them (C2).
+        Topic topic = topics.save(new Topic(name.strip(), description.strip(), channels.findDefault()));
         changeLog.record("topic", topic.getId(), "create", null, details(topic), by);
         return topic;
     }
@@ -87,7 +95,8 @@ public class TopicService {
         String id = profileId == null || profileId.isBlank() ? null : profileId.strip();
         String notes = lookNotes == null || lookNotes.isBlank() ? null : lookNotes.strip();
         Map<String, String> errors = new LinkedHashMap<>();
-        names.findBanned(notes).ifPresent(n -> errors.put("lookNotes", LookNotesCheck.refusal(n)));
+        names.findBanned(notes, LookNotesCheck.allowlist(topic.getNameAllowlist()))
+                .ifPresent(n -> errors.put("lookNotes", LookNotesCheck.refusal(n)));
         Map<String, Object> overrides = Map.of();
         try {
             overrides = ProfileSnapshots.parseOverrides(overridesYaml);
@@ -105,6 +114,47 @@ public class TopicService {
         Map<String, Object> before = details(topic);
         topic.setProfile(id, ProfileSnapshots.toJson(overrides), notes);
         changeLog.record("topic", topicId, "profile", before, details(topic), by);
+        return topic;
+    }
+
+    /**
+     * Sets the topic's channel and series fields (docs/series/lusiadas.md C2, C5, C9): whether its stories are
+     * numbered episodes, the public-domain source text under sources/ (blank for none), and the names from that
+     * source allowed in prompts, scripts and look notes (one per line). Applies to stories added or run afterwards.
+     */
+    @Transactional
+    public Topic setSeries(long topicId, long channelId, boolean isSeries, String sourceId, String allowlistText,
+            String by) {
+        Topic topic = topics.findById(topicId).orElseThrow();
+        Map<String, String> errors = new LinkedHashMap<>();
+        var channel = channels.findById(channelId);
+        if (channel.isEmpty()) {
+            errors.put("channelId", "That channel no longer exists.");
+        }
+        String source = sourceId == null || sourceId.isBlank() ? null : sourceId.strip();
+        if (source != null && sources.find(source).isEmpty()) {
+            errors.put("sourceId", "There is no source text sources/" + source + "/source.yaml.");
+        }
+        if (source != null && !isSeries) {
+            errors.put("sourceId", "A source text is for a series; tick \"Series\" or clear the source.");
+        }
+        List<String> allow = allowlistText == null ? List.of() : allowlistText.lines().map(String::strip)
+                .filter(l -> !l.isEmpty()).distinct().toList();
+        for (String n : allow) {
+            names.findBanned(n).ifPresent(b -> errors.put("nameAllowlist", "\"" + n + "\" names " + b
+                    + ", a studio, franchise or copyrighted character; only names from the public-domain source may "
+                    + "be allowed."));
+        }
+        if (!allow.isEmpty() && source == null) {
+            errors.put("nameAllowlist", "Allowed names come from the topic's public-domain source; pick one first.");
+        }
+        if (!errors.isEmpty()) {
+            throw new InvalidInputException(errors);
+        }
+        Map<String, Object> before = details(topic);
+        topic.setChannel(channel.get());
+        topic.setSeries(isSeries, source, allow.isEmpty() ? null : LookNotesCheck.allowlistJson(allow));
+        changeLog.record("topic", topicId, "series", before, details(topic), by);
         return topic;
     }
 
@@ -133,6 +183,10 @@ public class TopicService {
         m.put("profile_id", t.getProfileId());
         m.put("profile_overrides", t.getProfileOverrides());
         m.put("look_notes", t.getLookNotes());
+        m.put("channel_id", t.getChannel() == null ? null : t.getChannel().getId());
+        m.put("is_series", t.isSeries());
+        m.put("source_id", t.getSourceId());
+        m.put("name_allowlist", t.getNameAllowlist());
         return m;
     }
 }

@@ -31,6 +31,23 @@
             <small class="err" th:if="${errors?.get('targetLengthMin')}" th:text="${errors.get('targetLengthMin')}"></small>
         </label>
         <label>Notes <textarea name="notes" rows="3" th:text="${form.notes()}"></textarea></label>
+        <fieldset class="grid" th:if="${anySeries}">
+            <legend>Episode <small class="muted">(series topics only)</small></legend>
+            <label>Season
+                <input name="season" type="number" min="1" th:value="${form.season()}">
+                <small class="err" th:if="${errors?.get('season')}" th:text="${errors.get('season')}"></small>
+            </label>
+            <label>Episode number
+                <input name="episodeNumber" type="number" min="0" th:value="${form.episodeNumber()}">
+                <small class="err" th:if="${errors?.get('episodeNumber')}" th:text="${errors.get('episodeNumber')}"></small>
+            </label>
+            <label>Source excerpt
+                <input name="sourceExcerpt" th:value="${form.sourceExcerpt()}" placeholder="I 19-41">
+                <small class="muted">The exact stanzas the episode covers: canto and stanza range, several separated by ";".</small>
+                <small class="err" th:if="${errors?.get('sourceExcerpt')}" th:text="${errors.get('sourceExcerpt')}"></small>
+            </label>
+            <label class="row"><input type="checkbox" name="recapEnabled" value="true" th:checked="${form.recapEnabled()}"> Start with a short "previously on" recap</label>
+        </fieldset>
         <label>Look notes
             <textarea name="lookNotes" rows="2" th:text="${form.lookNotes()}"
                       placeholder="open on a big number"></textarea>

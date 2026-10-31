@@ -18,6 +18,38 @@
     </section>
 
     <section class="card">
+        <h2>Channel and series</h2>
+        <p class="flash error" th:if="${seriesErrors}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+        <form th:action="@{/topics/{id}/series(id=${topic.id})}" method="post" class="grid">
+            <label>Channel
+                <select name="channelId">
+                    <option th:each="c : ${channels}" th:value="${c.id}" th:text="${c.name}"
+                            th:selected="${c.id == topic.channel.id}"></option>
+                </select>
+                <small class="err" th:if="${seriesErrors?.get('channelId')}" th:text="${seriesErrors.get('channelId')}"></small>
+            </label>
+            <label class="row"><input type="checkbox" name="series" value="true" th:checked="${topic.series}"> Series: stories are numbered episodes with a season</label>
+            <label>Source text
+                <select name="sourceId">
+                    <option value="">None</option>
+                    <option th:each="s : ${sourceIds}" th:value="${s}" th:text="${s}" th:selected="${s == topic.sourceId}"></option>
+                </select>
+                <small class="muted">A public-domain work under sources/ that each episode quotes and is grounded in.</small>
+                <small class="err" th:if="${seriesErrors?.get('sourceId')}" th:text="${seriesErrors.get('sourceId')}"></small>
+            </label>
+            <label>Allowed names from the source
+                <textarea name="allowlist" rows="4" th:text="${allowlist}" placeholder="Adamastor&#10;Venus"></textarea>
+                <small class="muted">One per line. Characters and people from the public-domain source that prompts, scripts and look notes may name. Never a studio, franchise or copyrighted character.</small>
+                <small class="muted" th:if="${source}" th:text="|Suggested by ${source.title()}: ${#strings.listJoin(source.names(), ', ')}|"></small>
+                <small class="err" th:if="${seriesErrors?.get('nameAllowlist')}" th:text="${seriesErrors.get('nameAllowlist')}"></small>
+            </label>
+            <p class="small warn" th:if="${source != null and !sourceHasText}"
+               th:text="|The text of ${source.title()} isn't imported yet, so episodes can't be grounded in it. Run sources/tools/import_gutenberg.py once.|"></p>
+            <div><button type="submit">Save channel and series</button></div>
+        </form>
+    </section>
+
+    <section class="card">
         <h2>Video profile</h2>
         <p class="muted small">Pick a profile for Motion Pictures topics (Pipeline D); leave it empty for a fable topic.</p>
         <p class="flash error" th:if="${profileErrors}" role="alert">Fix the fields marked below. Nothing was saved.</p>

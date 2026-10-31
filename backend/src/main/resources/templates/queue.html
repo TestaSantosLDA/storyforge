@@ -14,7 +14,10 @@
                 <span th:text="${inFlight}">0</span> of <span th:text="${cap}">1</span> in flight
             </p>
         </div>
-        <form th:action="@{/queue/run}" method="post">
+        <form th:action="@{/queue/run}" method="post" th:data-warning="${runWarning}"
+              th:onsubmit="${runWarning != null} ? 'return confirm(this.dataset.warning + &quot; Run it anyway?&quot;)'">
+            <input type="hidden" name="confirm" value="true" th:if="${runWarning != null}">
+            <p class="small warn" th:if="${runWarning != null}" th:text="${runWarning}"></p>
             <button class="primary" type="submit" th:disabled="${!canRun}"
                     th:title="${stories.isEmpty()} ? 'Nothing to run' : (${inFlight >= cap} ? ${'Already ' + inFlight + ' in flight (limit ' + cap + ')'} : 'Start the story at the top')">
                 Run top story
@@ -29,7 +32,7 @@
             <span class="grip" aria-hidden="true">⋮⋮</span>
             <span class="pos" th:text="${it.count}">1</span>
             <div class="body">
-                <a th:href="@{/stories/{id}(id=${s.id})}" th:text="${s.concept}">Concept</a>
+                <a th:href="@{/stories/{id}(id=${s.id})}" th:text="${s.episodeLabel != null} ? ${s.episodeLabel + ' · ' + s.concept} : ${s.concept}">Concept</a>
                 <span class="muted" th:text="${s.topic.name} + ' · ' + ${s.targetLengthMin} + ' min'">Topic · 4 min</span>
             </div>
             <a class="small" th:href="@{/stories/{id}/edit(id=${s.id})}">Edit</a>

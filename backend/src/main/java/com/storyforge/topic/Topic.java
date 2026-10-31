@@ -1,10 +1,14 @@
 package com.storyforge.topic;
 
+import com.storyforge.series.Channel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import java.time.Instant;
@@ -34,15 +38,31 @@ public class Topic {
 
     private String lookNotes;
 
+    /** Where the topic's videos are published (series C2). */
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "channel_id")
+    private Channel channel;
+
+    /** Episodes with a season and number (series C5). */
+    private boolean isSeries;
+
+    /** Folder under sources/ with the topic's public-domain source text, or null. */
+    private String sourceId;
+
+    /** Names from the public-domain source allowed in prompts, scripts and look notes (C9), as a JSON list. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String nameAllowlist;
+
     private Instant createdAt;
     private Instant updatedAt;
 
     protected Topic() {
     }
 
-    public Topic(String name, String description) {
+    public Topic(String name, String description, Channel channel) {
         this.name = name;
         this.description = description;
+        this.channel = channel;
     }
 
     @PrePersist
@@ -87,5 +107,31 @@ public class Topic {
         this.profileId = profileId;
         this.profileOverrides = profileOverrides;
         this.lookNotes = lookNotes;
+    }
+
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
+    }
+
+    public boolean isSeries() {
+        return isSeries;
+    }
+
+    public String getSourceId() {
+        return sourceId;
+    }
+
+    public String getNameAllowlist() {
+        return nameAllowlist;
+    }
+
+    public void setSeries(boolean isSeries, String sourceId, String nameAllowlist) {
+        this.isSeries = isSeries;
+        this.sourceId = sourceId;
+        this.nameAllowlist = nameAllowlist;
     }
 }

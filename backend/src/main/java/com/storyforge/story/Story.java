@@ -66,6 +66,20 @@ public class Story {
     @JdbcTypeCode(SqlTypes.JSON)
     private String profileSnapshot;
 
+    /** Series episode fields (docs/series/lusiadas.md C5); null for a story outside a series. */
+    private Integer season;
+    private Integer episodeNumber;
+
+    /** JSON list of {canto, from_stanza, to_stanza}; see {@link com.storyforge.series.SourceExcerpt}. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String sourceExcerpt;
+
+    private boolean recapEnabled;
+
+    /** The topic's channel captured at Run (C2). */
+    @JdbcTypeCode(SqlTypes.JSON)
+    private String channelSnapshot;
+
     private Instant autoResumeAt;
 
     private int storyQaRetries;
@@ -145,6 +159,17 @@ public class Story {
         this.profileSnapshot = profileSnapshot;
     }
 
+    void setEpisode(Integer season, Integer episodeNumber, String sourceExcerpt, boolean recapEnabled) {
+        this.season = season;
+        this.episodeNumber = episodeNumber;
+        this.sourceExcerpt = sourceExcerpt;
+        this.recapEnabled = recapEnabled;
+    }
+
+    void setChannelSnapshot(String channelSnapshot) {
+        this.channelSnapshot = channelSnapshot;
+    }
+
     void setLookNotes(String lookNotes) {
         this.lookNotes = lookNotes;
     }
@@ -165,6 +190,10 @@ public class Story {
         m.put("target_length_min", targetLengthMin);
         m.put("notes", notes);
         m.put("look_notes", lookNotes);
+        m.put("season", season);
+        m.put("episode_number", episodeNumber);
+        m.put("source_excerpt", sourceExcerpt);
+        m.put("recap_enabled", recapEnabled);
         m.put("queue_position", queuePosition);
         m.put("format", format.dbValue());
         m.put("status", status.dbValue());
@@ -247,6 +276,36 @@ public class Story {
 
     public String getProfileSnapshot() {
         return profileSnapshot;
+    }
+
+    public Integer getSeason() {
+        return season;
+    }
+
+    public Integer getEpisodeNumber() {
+        return episodeNumber;
+    }
+
+    /** "S1 · Ep.03" for a series episode, else null. */
+    public String getEpisodeLabel() {
+        return episodeNumber == null ? null : String.format("S%d · Ep.%02d", season == null ? 1 : season, episodeNumber);
+    }
+
+    public String getSourceExcerpt() {
+        return sourceExcerpt;
+    }
+
+    /** "Canto I, st. 19–41" for display, or null. */
+    public String getSourceExcerptLabel() {
+        return sourceExcerpt == null ? null : com.storyforge.series.SourceExcerpt.fromJson(sourceExcerpt).label();
+    }
+
+    public boolean isRecapEnabled() {
+        return recapEnabled;
+    }
+
+    public String getChannelSnapshot() {
+        return channelSnapshot;
     }
 
     public int getStoryQaRetries() {

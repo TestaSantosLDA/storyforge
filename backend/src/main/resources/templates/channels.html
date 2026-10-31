@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Channels')}"></head>
+<body>
+<header th:replace="~{fragments/layout :: nav('channels')}"></header>
+<main>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <h1>Channels</h1>
+    <p class="muted">Where a topic's videos and Shorts are published. Every topic has one; new topics start on the default channel.</p>
+
+    <section class="card" th:each="row : ${rows}" th:with="c=${row.channel()}">
+        <h2><span th:text="${c.name}">Fables</span> <small class="muted" th:if="${c.isDefault()}">default</small></h2>
+        <p class="flash error" th:if="${editId == c.id}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+        <form th:action="@{/channels/{id}(id=${c.id})}" method="post" class="grid">
+            <div th:replace="~{fragments/channel :: fields(${row.form()}, ${editId == c.id ? editErrors : null})}"></div>
+            <div><button type="submit">Save channel</button></div>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>New channel</h2>
+        <p class="flash error" th:if="${errors}" role="alert">Fix the fields marked below. Nothing was saved.</p>
+        <form th:action="@{/channels}" method="post" class="grid">
+            <div th:replace="~{fragments/channel :: fields(${form}, ${errors})}"></div>
+            <div><button class="primary" type="submit">Create channel</button></div>
+        </form>
+    </section>
+
+</main>
+</body>
+</html>
